@@ -12,9 +12,21 @@ if (CMAKE_VERSION VERSION_LESS "3.1")
 	    set (CMAKE_CXX_STANDARD 11)
 endif ()
 
-#Get our ROOT libraries and such
-FIND_PROGRAM(ROOT_CONFIG root-config)
-EXEC_PROGRAM(${ROOT_CONFIG} ARGS --cflags --glibs OUTPUT_VARIABLE ROOT_CXX_FLAGS)
+
+FIND_PACKAGE(ROOT)# COMPONENTS Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
+
+if(ROOT_FOUND) 
+	message("Found ROOT using CMAKE FIND_PACKAGE")
+	include(${ROOT_USE_FILE})
+ELSE()
+	message("ROOT not compiled using CMAKE, use root-config")
+	#Get our ROOT libraries and such
+	FIND_PROGRAM(ROOT_CONFIG root-config)
+	EXEC_PROGRAM(${ROOT_CONFIG} ARGS --cflags --glibs OUTPUT_VARIABLE ROOT_CXX_FLAGS)
+	message("ROOT cxx flags set to: ${ROOT_CXX_FLAGS}")
+ENDIF()
+
+
 
 #Get our GSL libraries
 FIND_PROGRAM(GSL_CONFIG gsl-config)
