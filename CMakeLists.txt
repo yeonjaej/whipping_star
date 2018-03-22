@@ -26,7 +26,7 @@ ELSE()
 	message("ROOT cxx flags set to: ${ROOT_CXX_FLAGS}")
 ENDIF()
 
-
+find_package(GSL)
 
 #Get our GSL libraries
 FIND_PROGRAM(GSL_CONFIG gsl-config)
