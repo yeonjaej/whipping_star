@@ -13,7 +13,7 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 
 	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
 	MfracCov.ResizeTo(num_bins_total, num_bins_total);
-	
+
 	if(fullnames.size() !=in.fullnames.size()){
 		std::cerr<<"ERROR: SBNchi::SBNchi | Selected covariance matrix and background spectrum are different sizes!"<<std::endl;
 		exit(EXIT_FAILURE);
@@ -40,11 +40,11 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkgSpec(in){
 	lastChi = -9999999;
 	stat_only= false;
-	
+
 	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
 	Msys.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
 	MfracCov.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
-	
+
 	MfracCov = Msysin;
 	Msys.Zero();
 
@@ -54,12 +54,12 @@ SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkg
 
 SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in), stat_only(is_stat_only){
 	lastChi = -9999999;
-	
+
 	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
 	Msys.ResizeTo(num_bins_total, num_bins_total);
 	MfracCov.ResizeTo(num_bins_total, num_bins_total);
 
-	
+
 	if(is_stat_only){
 		MfracCov.Zero();	
 		Msys.Zero();
@@ -68,7 +68,7 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 		MfracCov = sys_fill_direct();
 		Msys.Zero();
 	}
-	
+
 
 	this->reload_core_spec(&bkgSpec);
 
@@ -84,11 +84,11 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Begininning to reload core spec! First set new core spec"<<std::endl;
 	bkgSpec = *bkgin;
 	bkgSpec.compressVector();
-	
+
 	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Clear all previous chi^2 data"<<std::endl;
 	lastChi_vec.clear();
 	lastChi_vec.resize(num_bins_total_compressed, std::vector<double>( num_bins_total_compressed,0) );
-	
+
 	//Reset Msys to fractional
 	if(isVerbose)std::cout<<"SBNchi::reload_core_spec, Reseting Msys to MfracCov"<<std::endl;
 	Msys = MfracCov;
@@ -127,7 +127,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	TMatrixT <double> Mstat(num_bins_total, num_bins_total);
 	stats_fill(Mstat, bkgSpec.fullVec);
 
-	
+
 
 	if(Mstat.IsSymmetric()){
 		if(isVerbose)std::cout<<"Stat matrix is symmetric (it is just diagonal core)"<<std::endl;
@@ -154,9 +154,9 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	if(isVerbose)std::cout<<"Mtotal: "<<Mtotal.GetNrows()<<" x "<<Mtotal.GetNcols()<<std::endl;
 
 	if(Mtotal.IsSymmetric() ){
-	if(isVerbose)	std::cout<<"Total Mstat +Msys is symmetric"<<std::endl;
+		if(isVerbose)	std::cout<<"Total Mstat +Msys is symmetric"<<std::endl;
 	}else{
-		
+
 		double tol = 1e-13;
 		double biggest_deviation = 0;
 		int bi =0;
@@ -174,8 +174,8 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 			}
 		}	
 
-	if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Biggest Relative Deviation from symmetry is i:"<<bi<<" j: "<<bj<<" of order "<<biggest_deviation<<" M(j,i)"<<Mtotal(bj,bi)<<" M(i,j)"<<Mtotal(bi,bj)<<std::endl;
-	
+		if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Biggest Relative Deviation from symmetry is i:"<<bi<<" j: "<<bj<<" of order "<<biggest_deviation<<" M(j,i)"<<Mtotal(bj,bi)<<" M(i,j)"<<Mtotal(bi,bj)<<std::endl;
+
 		if(biggest_deviation >tol){
 
 			std::cerr<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) Thats too unsymettric, killing."<<std::endl;
@@ -183,7 +183,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 			exit(EXIT_FAILURE);
 		}else{
 
-		if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Thats within tolderence. Continuing."<<std::endl;
+			if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Thats within tolderence. Continuing."<<std::endl;
 		}
 	}
 
@@ -197,31 +197,31 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 
 	TMatrixD McI(num_bins_total_compressed,num_bins_total_compressed);
 	McI.Zero();	
-	
+
 	std::cout<<"About to do a SVD decomposition"<<std::endl;	
 	TDecompSVD svd(Mctotal);
-  	 if (!svd.Decompose()) {
-  	    std::cout << "Decomposition failed, matrix not symettric?" << std::endl;
-	    std::cout<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The matrix to invert failed a SVD decomp!"<<std::endl;
-			exit(EXIT_FAILURE);
+	if (!svd.Decompose()) {
+		std::cout << "Decomposition failed, matrix not symettric?" << std::endl;
+		std::cout<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The matrix to invert failed a SVD decomp!"<<std::endl;
+		exit(EXIT_FAILURE);
 
 
-  	 } else {
-  	    McI = svd.Invert();
-   	}
+	} else {
+		McI = svd.Invert();
+	}
 	std::cout<<"Inverted!"<<std::endl;
 	vMcI = to_vector(McI);
 
-	
+
 	//std::cout<<"Going to invert the stats+sys matrix now"<<std::endl;
 	//McI = Mctotal.Invert(&invdet);
-	
+
 	if( !McI.IsValid()){
-			std::cerr<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The inverted matrix isnt valid"<<std::endl;
-			exit(EXIT_FAILURE);
+		std::cerr<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The inverted matrix isnt valid"<<std::endl;
+		exit(EXIT_FAILURE);
 
 	}
-	
+
 
 
 	// test for validity
@@ -233,7 +233,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	TMatrixDEigen eigen (Mtotal);
 	TVectorD eigen_values = eigen.GetEigenValuesRe();
 
-	
+
 
 	for(int i=0; i< eigen_values.GetNoElements(); i++){
 		if(eigen_values(i)<0){
@@ -247,9 +247,9 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 
 
 	if(is_small_negative_eigenvalue){	
-	if(isVerbose)	std::cout<<"Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
+		if(isVerbose)	std::cout<<"Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
 	}else{
-	if(isVerbose)	std::cout<<"Generated covariance matrix is also positive semi-definite."<<std::endl;
+		if(isVerbose)	std::cout<<"Generated covariance matrix is also positive semi-definite."<<std::endl;
 	}
 
 
@@ -322,6 +322,41 @@ int SBNchi::load_bkg(){
 }
 
 
+int SBNchi::fillCollapsedCovarianceMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j);
+		}
+	}
+
+	return 0;
+}
+
+
+int SBNchi::fillCollapsedCorrelationMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j)/(sqrt(vMc.at(j).at(j))*sqrt(vMc.at(i).at(i)));
+		}
+	}
+
+	return 0;
+}
+
+int SBNchi::fillCollapsedFractionalMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j)/(bkgSpec.compVec.at(i)*bkgSpec.compVec.at(j));
+		}
+	}
+
+	return 0;
+}
+
+
 TMatrixT<double> * SBNchi::getCompressedMatrix(){
 	TMatrixT<double> * tmp = new TMatrixT<double>(num_bins_total_compressed,num_bins_total_compressed);
 	for(int i=0; i<num_bins_total_compressed;i++){
@@ -359,28 +394,28 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 	double tchi = 0;	
 
 	if(sigSpec->compVec.size()==0){
-	if(isVerbose)	std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
+		if(isVerbose)	std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
 		sigSpec->compressVector();
 	}
 
 	int k=0;
 
 	/* THIS IS SIMPLIER CHI
-	for(int i =0; i<num_bins_total_compressed; i++){
-		double ank = pow(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i),2.0)*vMcI.at(i).at(i);
-		tchi+=ank;
-		//std::cout<<"AGHR: "<<i<<"\t\t"<<ank<<"\t\t"<<tchi<<"\t\t"<<bkgSpec.compVec.at(i)<<"\t\t"<<sigSpec->compVec.at(i)<<"\t\t"<<vMcI.at(i).at(i)<<"\t\t"<<1.0/vMc.at(i).at(i)<<" "<<vMc.at(i).at(i)<<" "<<MfracCov(i,i)<<std::endl;
-				
+	   for(int i =0; i<num_bins_total_compressed; i++){
+	   double ank = pow(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i),2.0)*vMcI.at(i).at(i);
+	   tchi+=ank;
+	//std::cout<<"AGHR: "<<i<<"\t\t"<<ank<<"\t\t"<<tchi<<"\t\t"<<bkgSpec.compVec.at(i)<<"\t\t"<<sigSpec->compVec.at(i)<<"\t\t"<<vMcI.at(i).at(i)<<"\t\t"<<1.0/vMc.at(i).at(i)<<" "<<vMc.at(i).at(i)<<" "<<MfracCov(i,i)<<std::endl;
+
 	}
 	return tchi;
 	*/
-	
+
 	for(int i =0; i<num_bins_total_compressed; i++){
 		for(int j =0; j<num_bins_total_compressed; j++){
 			k++;
-		//	if(i!=j && vMcI.at(i).at(j) != 0){
-		//		std::cout<<"ITS NOT SYM"<<std::endl;
-		//	} 
+			//	if(i!=j && vMcI.at(i).at(j) != 0){
+			//		std::cout<<"ITS NOT SYM"<<std::endl;
+			//	} 
 			if(i==j && vMcI.at(i).at(j)<0){
 				std::cout<<"ERROR: SBNchi::CalcChi || diagonal of inverse covariance is negative!"<<std::endl;
 			}
@@ -526,7 +561,7 @@ void SBNchi::stats_fill(TMatrixT <double> &M, std::vector<double> diag){
 		//This was just for wierd MiniBooNE run
 		//if(i>=11 && i< 30) continue;
 		//if(i>=41) continue;
-			M(i,i) = diag.at(i);	
+		M(i,i) = diag.at(i);	
 
 	}
 
@@ -719,12 +754,120 @@ TH2D SBNchi::getChiogram(){
 
 }
 
+int SBNchi::printMatricies(std::string fileout){
+	TFile* fout = new TFile(fileout.c_str(),"recreate");
+	fout->cd();
+
+
+	gStyle->SetOptStat(0);
+
+	TMatrixD full, frac, corr;
+	this->fillCollapsedCovarianceMatrix(&full);
+	this->fillCollapsedFractionalMatrix(&frac);
+	this->fillCollapsedCorrelationMatrix(&corr);
+
+	corr.Write();
+	TH2D h2_corr(corr);
+	h2_corr.Write();
+	TCanvas *c_corr = new TCanvas("collapsed correlation matrix");
+	c_corr->cd();
+	c_corr->SetFixedAspectRatio();
+	h2_corr.Draw("colz");
+	h2_corr.SetTitle("Collapsed correlation matrix");
+	h2_corr.GetXaxis()->SetTitle("Reco Bin i");
+	h2_corr.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_corr->SetRightMargin(0.150);
+
+	int use_corr =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_corr, num_bins_total_compressed, num_bins.at(ic)+use_corr);
+				TLine *lh = new TLine(num_bins.at(ic)+use_corr,0, num_bins.at(ic)+use_corr, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_corr+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_corr->Write();	
+
+
+	frac.Write();
+	TH2D h2_frac(frac);
+	h2_frac.Write();
+	TCanvas *c_frac = new TCanvas("collapsed fractional covariance matrix");
+	c_frac->cd();
+	c_frac->SetFixedAspectRatio();
+	h2_frac.Draw("colz");
+	h2_frac.SetTitle("Collapsed fractional covariance matrix");
+	h2_frac.GetXaxis()->SetTitle("Reco Bin i");
+	h2_frac.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_frac->SetRightMargin(0.150);
+
+	int use_frac =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_frac, num_bins_total_compressed, num_bins.at(ic)+use_frac);
+				TLine *lh = new TLine(num_bins.at(ic)+use_frac,0, num_bins.at(ic)+use_frac, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_frac+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_frac->Write();	
+
+
+	full.Write();
+	TH2D h2_full(full);
+	h2_full.Write();
+	TCanvas *c_full = new TCanvas("collapsed covariance matrix");
+	c_full->cd();
+	c_full->SetFixedAspectRatio();
+	h2_full.Draw("colz");
+	h2_full.SetTitle("Collapsed covariance matrix");
+	h2_full.GetXaxis()->SetTitle("Reco Bin i");
+	h2_full.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_full->SetRightMargin(0.150);
+
+	int use_full =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_full, num_bins_total_compressed, num_bins.at(ic)+use_full);
+				TLine *lh = new TLine(num_bins.at(ic)+use_full,0, num_bins.at(ic)+use_full, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_full+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_full->Write();	
+
+
+
+	fout->Close();
+	return 0;
+}
+
+
 
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
 TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 	double center = this->CalcChi(specin);
 	int nlower=0;
-	
+
 	TRandom3 *rangen = new TRandom3(0);
 
 	TH1D ans("","",100,0,50);
@@ -736,12 +879,12 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 		SBNspec tmp = *specin;
 		tmp.poissonScale(rangen);
 		tmp.compressVector(); //this line important isnt it!
-		//tmp.printFullVec();
+		//tmp.printfull_vectorFullVec();
 
 		double thischi = this->CalcChi(&tmp);
 		ans.Fill(thischi);
 		if(thischi<=center)nlower++;
-			
+
 		if(i%100==0) std::cout<<"SBNchi::toyMC_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;
@@ -756,7 +899,7 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
 std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
 	std::vector<int> nlower(chival.size(),0);
-	
+
 
 	TRandom3 *rangen = new TRandom3(0);
 
@@ -773,11 +916,11 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 
 		double thischi = this->CalcChi(&tmp);
 		ans.Fill(thischi);
-		
-	for(int j=0; j< chival.size(); j++){
+
+		for(int j=0; j< chival.size(); j++){
 			if(thischi>=chival.at(j)) nlower.at(j)++;
 		}
-			
+
 		if(i%1000==0) std::cout<<"SBNchi::toyMC_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::vector<double> pval;
@@ -799,13 +942,13 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
 	double center = this->CalcChi(specin);
 	int nlower=0;
-	
+
 	TRandom3 *rangen = new TRandom3(0);
 
 	TH1D ans("MCans","MCans",100,center-100,center+200);
 	//So save the core one that we will sample for
 	SBNspec core  = bkgSpec;
-	
+
 	isVerbose = false;
 	for(int i=0; i<num_MC;i++){
 
@@ -815,7 +958,7 @@ TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
 		double thischi = this->CalcChi(specin);
 		ans.Fill(thischi);
 		if(thischi<=center)nlower++;
-			
+
 		if(i%1000==0) std::cout<<"SBNchi::toyMC_varyCore(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;

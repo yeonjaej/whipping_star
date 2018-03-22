@@ -18,6 +18,7 @@
 #include "TSystem.h"
 #include "TMatrixT.h"
 #include "TRandom.h"
+#include "TStyle.h"
 #include "TError.h"
 #include "TCanvas.h"
 #include "TH2F.h"
@@ -81,16 +82,24 @@ int main(int argc, char* argv[])
 
 	}
 
-	// Load up background. Keep in mind that UBooNE was considered for double POT for SBN, so we'll amend that here
-	SBNspec bkg_spec(bkg.c_str(),xml);
-	bkg_spec.Scale("uboone",uboonepot);
+	
+	TFile *fin = new TFile("covariance_matrix_ALL.root","read");
+	TMatrixD * m = (TMatrixD*)fin->Get("TMatrixT<double>;2");
+
+	SBNspec cv_spec("SBN_CV.root",xml);
+	SBNspec bkg_spec = cv_spec;
+	bkg_spec.Scale("nu_uBooNE_elike_signal",0.0);
+	
+	cv_spec.compressVector();
 	bkg_spec.compressVector();
 
-	SBNchi test_chi(bkg_spec);
+	SBNchi mychi(cv_spec, *m);
 
-	SBNspec sig_spec(sig.c_str(),xml);
-	sig_spec.compressVector();
 
- 	double tchi = test_chi.CalcChi(sig_spec);
-	std::cout << "The two spectra agree with a chi2 of " << tchi << std::endl;
+	std::cout<<"CHI^2: "<<mychi.CalcChi(&bkg_spec)<<std::endl;
+
+
+	mychi.printMatricies("test_coll.root");
+
+
 }

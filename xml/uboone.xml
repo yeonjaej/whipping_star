@@ -32,5 +32,4 @@
 
 	
 <covariance file="rootfiles/covariance_matrices_xcheck_690x690.root" name="TMatrixT<float>;7" />
-	
 <data path="../../data/" />

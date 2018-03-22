@@ -12,6 +12,8 @@
 #include "TMatrixT.h"
 #include "TRandom3.h"
 #include "TFile.h"
+#include "TStyle.h"
+#include "TLine.h"
 
 #include <ctime>
 #include "params.h"
@@ -74,6 +76,9 @@ int load_bkg();
 	void collapse_layer3(TMatrixT <double> & M, TMatrixT <double> & Mc);
 
 	TMatrixT<double> * getCompressedMatrix();
+	int fillCollapsedCovarianceMatrix(TMatrixT<double>*);
+	int fillCollapsedCorrelationMatrix(TMatrixT<double>*);
+	int fillCollapsedFractionalMatrix(TMatrixT<double>*);
 
 	//Return chi^2 from eith a SBnspec (RECCOMENDED as it checks to make sure xml compatable)
 	double CalcChi(SBNspec sigSpec);
@@ -84,6 +89,8 @@ int load_bkg();
 	double CalcChi(SBNspec *sigSpec, SBNspec *obsSpec);
 	//or a log ratio (miniboone esque)
 	double CalcChiLog(SBNspec *sigSpec);
+	
+	int printMatricies(std::string);
 
 
 	TH1D toyMC_varyCore(SBNspec *specin, int num_MC);

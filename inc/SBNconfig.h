@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <time.h>
 
 #include "TH1D.h"
 #include "TFile.h"
@@ -117,18 +118,24 @@ class SBNconfig {
 	//For generating a covariance matrix from scratch, this contains the number of multisims (weights in weight vector) and their names.
 	// For some reason I have decided that the first multisim, weight[0] must be the central value, =1
 	int num_multisim_files;
-	std::vector<int> num_multisim;
+	//std::vector<int> num_multisim;
 	std::vector<std::string> multisim_name;	
 	std::vector<std::string> multisim_file;	
 	std::vector<double> pot_scaling;
 	std::vector<double> pot;
 	
 	std::vector<std::vector<std::string>> parameter_names;	
-	
+
+	std::vector<std::vector<std::string>> branch_names;	
+	std::vector<std::vector<std::string>> branch_types;
+	std::vector<std::vector<std::string>> branch_asso_hists;	
+
+	//obsol below	
 	std::vector<std::vector<std::string>> branch_names_int;
 	std::vector<std::vector<std::string>> branch_names_int_array;
 	std::vector<std::vector<std::string>> branch_names_double;
 	std::vector<std::vector<std::string>> branch_names_double_array;
+
 	std::vector<std::vector<int>> branch_names_double_array_dimension;
 
 

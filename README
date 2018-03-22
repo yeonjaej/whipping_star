@@ -129,3 +129,6 @@ if you are just passing it lots of a SBNchi for example.
 
 TODO: 
 make it so the absolute path for data/ is taken in by cmake.
+
+
+have it so that you pass in the exact tag that should be filled! in xml

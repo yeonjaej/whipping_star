@@ -4,16 +4,18 @@
 using namespace sbn;
 
 SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
-	std::string dict_location = "../../src/AutoDict_map_string__vector_double____cxx.so";
+	
+/*	std::string dict_location = "../../src/AutoDict_map_string__vector_double____cxx.so";
 	gROOT->ProcessLine("#include <map>");
 	gROOT->ProcessLine("#include <vector>");
 	gROOT->ProcessLine("#include <string>");
+*/
 	//	gSystem->Load("/uboone/app/users/markrl/sbnfit/whipping_star/src/mdict_h.so");
-
+/*
 	std::cout<<"Trying to load dictionary: "<<dict_location<<std::endl;
 	gSystem->Load(  (dict_location).c_str());
 	gStyle->SetOptStat(0);
-
+*/
 
 	universes_used = 0;
 	tolerence_positivesemi = 1e-5;

@@ -119,7 +119,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	pDet =  doc.FirstChildElement("detector");
 	pChan = doc.FirstChildElement("channel");
 	pCov  = doc.FirstChildElement("covariance");
-	pMC   = doc.FirstChildElement("MCevents");
+	pMC   = doc.FirstChildElement("MultisimFile");
 	pData   = doc.FirstChildElement("data");
 
 
@@ -230,10 +230,9 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		if(isVerbose)	std::cout<<"SBNcongig::SBNconfig || Loading a MC config. This is quite depreciated here."<<std::endl;
 		while(pMC)
 		{	
-			pot.push_back(strtof(pMC->Attribute("pot"),&end));
-			pot_scaling.push_back(strtof(pMC->Attribute("potscale"),&end));
-			num_multisim.push_back(strtod(pMC->Attribute("multisim"),&end));
-			multisim_name.push_back(pMC->Attribute("name"));
+			//pot.push_back(strtof(pMC->Attribute("pot"),&end));
+			//pot_scaling.push_back(strtof(pMC->Attribute("potscale"),&end));
+			multisim_name.push_back(pMC->Attribute("treename"));
 			multisim_file.push_back(pMC->Attribute("filename"));
 
 			TiXmlElement *pParams = pMC->FirstChildElement("parameters");
@@ -248,49 +247,28 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-			TiXmlElement *pBranchT;
-			pBranchT = pMC->FirstChildElement("btype");
-			//			std::cout<<"Starting run over branch types"<<std::endl;
-			std::vector<std::string> TEMP_branch_names_int;
-			std::vector<std::string> TEMP_branch_names_int_array;
-			std::vector<std::string> TEMP_branch_names_double;
-			std::vector<std::string> TEMP_branch_names_double_array;
-			std::vector<int> TEMP_branch_names_double_array_dimension;
-
-			while(pBranchT){
-				TiXmlElement *pBranch;
-				pBranch = pBranchT->FirstChildElement("branch");
-
-				while(pBranch){
-					//std::cout<<pBranch->Attribute("name")<<" Type: "<<pBranchT->Attribute("type") <<std::endl;
-					if( strtod(pBranchT->Attribute("type"),&end)  == 0){
-						//std::cout<<pBranch->Attribute("name")<<" num_multisim"<<num_multisim<<" int"<<std::endl;
-						TEMP_branch_names_int.push_back(pBranch->Attribute("name"));
-					}
-					else if (strtod(pBranchT->Attribute("type"),&end)  == 1){
-						//std::cout<<pBranch->Attribute("name")<<" num_multisim"<<num_multisim<<" double"<<std::endl;
-						TEMP_branch_names_double.push_back(pBranch->Attribute("name"));
-					}
-					else if (strtod(pBranchT->Attribute("type"),&end)  == 2){
-						TEMP_branch_names_int_array.push_back(pBranch->Attribute("name"));
-					}
-					else if (strtod(pBranchT->Attribute("type"),&end)  == 3){
-						//std::cout<<pBranch->Attribute("name")<<" num_multisim"<<num_multisim<<" double"<<std::endl;
-						TEMP_branch_names_double_array.push_back(pBranch->Attribute("name"));
-						//std::cout<<"Hi: "<<strtod(pBranch->Attribute("dimension"),&end)<<std::endl; 
-						TEMP_branch_names_double_array_dimension.push_back(strtod(pBranch->Attribute("dimension"),&end));
-					}
-					pBranch = pBranch->NextSiblingElement("branch");	
-				}
-				pBranchT= pBranchT->NextSiblingElement("btype");
+			TiXmlElement *pBranch;
+			pBranch = pMC->FirstChildElement("branch");
+			
+			
+			std::vector<std::string> TEMP_branch_names;
+			std::vector<std::string> TEMP_branch_types;
+			std::vector<std::string> TEMP_branch_asso_hists;
+			while(pBranch){
+			
+				TEMP_branch_names.push_back(pBranch->Attribute("name"));
+				TEMP_branch_types.push_back(pBranch->Attribute("type"));
+				TEMP_branch_asso_hists.push_back(pBranch->Attribute("associated_hist"));	
+							
+	
+				pBranch = pBranch->NextSiblingElement("branch");	
 			}
-			branch_names_double.push_back(TEMP_branch_names_double);
-			branch_names_double_array.push_back(TEMP_branch_names_double_array);
-			branch_names_double_array_dimension.push_back(TEMP_branch_names_double_array_dimension);
-
-			branch_names_int_array.push_back(TEMP_branch_names_int_array);
-			branch_names_int.push_back(TEMP_branch_names_int);
-			pMC=pMC->NextSiblingElement("MCevents");
+			branch_names.push_back(TEMP_branch_names);	
+			branch_types.push_back(TEMP_branch_types);	
+			branch_asso_hists.push_back(TEMP_branch_asso_hists);	
+			
+			//next file
+			pMC=pMC->NextSiblingElement("MultisimFile");
 		}
 	}
 

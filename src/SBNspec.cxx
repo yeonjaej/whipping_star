@@ -41,7 +41,7 @@ SBNspec::SBNspec(const char * name, std::string whichxml, bool isverbose) : SBNc
 	//Contruct from a prexisting histograms!
 
 	char namei[200];
-	sprintf(namei,"%s.root",name);	
+	sprintf(namei,"%s",name);	
 	TFile f(namei);
 
 	//Loop over all filenames that should be there, and load up the histograms.
