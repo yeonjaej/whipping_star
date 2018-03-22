@@ -1,5 +1,5 @@
-#ifndef SBNCOVAR_H_
-#define SBNCOVAR_H_
+#ifndef SBNMULTISIM_H_
+#define SBNMULTISIM_H_
 
 #include <cmath>
 #include <vector>
@@ -17,6 +17,7 @@
 #include "TTree.h"
 #include "TH2D.h"
 #include "TNtuple.h"
+#include "TLine.h"
 
 #include "TROOT.h"
 #include "TRint.h"
@@ -34,7 +35,7 @@
 namespace sbn{
 
 
-class SBNcovar : public SBNconfig{
+class SBNmultisim : public SBNconfig{
 	bool is_small_negative_eigenvalue;
 	
 
@@ -42,6 +43,10 @@ class SBNcovar : public SBNconfig{
 	double tolerence_positivesemi;
 	int universes_used;
 	int Nfiles;
+	double abnormally_large_weight;
+
+	std::vector<std::string> variations;
+	
 
 	SBNspec spec_CV;	
 	SBNspec spec_sig;
@@ -53,14 +58,14 @@ class SBNcovar : public SBNconfig{
 
 	SBNspec template_spec;	
 	SBNspec spec_CV2;	
-	SBNcovar(std::string xmlname);
+	SBNmultisim(std::string xmlname);
 
 	// a vector of num_multisim vectors, with a vector of subchannel*bin histograms in each	
 	std::vector<SBNspec> multi_sbnspec;
 	std::vector<std::vector<double>> multi_vecspec;
 	std::vector<std::vector<double>> multi_vecspec2D;
 	std::vector<double> vecspec2DCV;
-	int formCovarianceMatrix();
+	int formCovarianceMatrix(std::string fileout);
 	int writeOut();
 
 	TMatrixD full_covariance;
@@ -79,6 +84,7 @@ class SBNcovar : public SBNconfig{
 
 
 
+	std::vector<std::vector<double> > vars;
 
 	std::vector<std::vector<int> > vars_i;
 	std::vector<std::vector<double> > vars_d;
@@ -103,6 +109,7 @@ class SBNcovar : public SBNconfig{
 	//one for each file
 
 
+	int printMatricies(std::string fileout);
 
 	THnSparseD *frac_covariance_4d;
 
