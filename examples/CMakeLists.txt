@@ -1,15 +1,9 @@
-# "demo.cxx" and "demo_b.cxx". The extensions are automatically found.
-
-
 add_executable (exampledemo examples.cxx)
 add_executable (quickplot quickplot.cxx)
 add_executable (unit unit_test.cxx)
 add_executable (gentest gentest.cxx)
 add_executable (probtest probtest.cxx)
 
-# Link the executable to the Hello library. Since the Hello library has
-# public include directories we will use those link directories when building
-# helloDemo
 include_directories ( ${CMAKE_SOURCE_DIR}/inc)
 target_link_libraries (exampledemo SBNfitlib)
 target_link_libraries (exampledemo tinyxmllib)
