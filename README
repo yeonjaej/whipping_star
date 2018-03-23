@@ -18,8 +18,10 @@
  *The authors make no guarrentee of the behaviour, stability or bug-free-ness of this code.
  *Use is at own risk.
 ################################################################################
+For a somewhat uo to date: https://docs.google.com/presentation/d/1vLYPDaID0a4nbx5rnKTda_RzhdTavLdyrkpkGMVZLgE/edit#slide=id.g35c91f84c5_0_194
+
 Installation.
-The CMakeLists should be a standard and generic enough to work on most machines, although I have not tested it everywhere. It should also be simple enough to fix if it doesn't work out-of-the-box. 
+The CMakeLists should be a standard and generic enough to work on most machines, although I have not tested it everywhere. It should also be simple enough to fix if it doesn't work out-of-the-box. Any issues I suggest you check cmake is up to date, setup cmake on GPVMs
 
 Instructions:
 
@@ -41,6 +43,15 @@ these can be loaded into LEEfit for a chi^2
 $ ./LEEfit --xml build_uboone_covar.xml
 
 SBNfit_collapsed_matrix_plots_LEEtest.root
+
+
+
+############################################################################
+##############		TODO 	     ########################################
+############################################################################
+
+(1) being able to fill SBNfit histograms from functions of inputted variables. e.g fill "ereco" to nu_uBooNE_elike_intrinsic if "nupdg==1" or nu_uBooNE_mlike_otherwise
+
 
 
 ############################################################################
