@@ -315,11 +315,6 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	frac_covariance.ResizeTo(num_bins_total, num_bins_total);
 	full_correlation.ResizeTo(num_bins_total, num_bins_total);
 
-	//prepare three TH2D for plotting 
-	TH2D * hist_frac_cov = new TH2D("Full Fractional Covariance","Full Fraction Covariance",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
-	TH2D * hist_full_cor = new TH2D("Full Correlation","Full Correlation",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
-	TH2D * hist_full_cov = new TH2D("Full Covvariance","Full Covariance",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
-
 	for(auto &h: multi_sbnspec){
 		h.calcFullVector();
 	}
@@ -328,8 +323,8 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	spec_CV.calcFullVector();	
 	std::vector<double> CV = spec_CV.fullVec;
 
-	std::cout<<"SBNmultisim::formCovariancematrix\t|| multi_sbnspec.size(): "<<multi_vecspec.size()<<" universes_used: "<<universes_used<<std::endl;
 
+	std::cout<<"SBNmultisim::formCovariancematrix\t|| Begining to form the "<<num_bins_total<<"X"<<num_bins_total<<" covariance matrix.\n";
 	for(int i=0; i<num_bins_total; i++){
 		for(int j=0; j<num_bins_total; j++){
 
@@ -355,16 +350,11 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 
 
 
+	std::cout<<"SBNmultisim::formCovariancematrix\t|| Now calculating fractional covariance and correlation matrix from full covariance."<<std::endl;
 	for(int i=0; i<num_bins_total; i++){
 		for(int j=0; j<num_bins_total; j++){
-
 			frac_covariance(i,j) = full_covariance(i,j)/(spec_CV.fullVec[i]*spec_CV.fullVec[j]) ;
 			full_correlation(i,j)= full_covariance(i,j)/(sqrt(full_covariance(i,i))*sqrt(full_covariance(j,j)));
-			//	std::cout<<i<<" "<<j<<" "<<full_correlation(i,j)<<" "<<full_covariance(i,j)<<" "<<full_covariance(i,i)<<" "<<full_covariance(j,j)<<" uni-1 "<<universes_used-1.0<<std::endl;
-			hist_frac_cov->SetBinContent(i+1,j+1,frac_covariance(i,j));
-			hist_full_cor->SetBinContent(i+1,j+1,full_correlation(i,j));
-			hist_full_cov->SetBinContent(i+1,j+1,full_covariance(i,j));
-
 		}
 	}
 
@@ -441,7 +431,7 @@ int SBNmultisim::qualityTesting(){
 
 
 int SBNmultisim::printMatricies(std::string tag){
-	TFile* fout = new TFile(("SBNfit_matrix_plots_"+tag+".root").c_str(),"recreate");
+	TFile* fout = new TFile(("SBNfit_covariance_plots_"+tag+".root").c_str(),"recreate");
 	fout->cd();
 
 
@@ -449,14 +439,18 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//correlation
 	TH2D h2_corr(full_correlation);
-	h2_corr.Write();
+	//h2_corr.Write();
 	TCanvas *c_corr = new TCanvas("full correlation matrix");
-	c_corr->cd();
+	TPad *p_corr = (TPad*)c_corr->cd();
 	c_corr->SetFixedAspectRatio();
 	h2_corr.Draw("colz");
-	h2_corr.SetTitle("Full covariance matrix");
+	h2_corr.SetTitle("Full correlation matrix");
 	h2_corr.GetXaxis()->SetTitle("Reco Bin i");
 	h2_corr.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_corr->SetFrameFillColor(kWhite);
+	c_corr->SetFillColor(kWhite);
+	p_corr->SetFillColor(kWhite);
 
 	c_corr->SetRightMargin(0.150);
 	int use_corr =0;
@@ -494,7 +488,7 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//full covariance
 	TH2D h2_full(full_covariance);
-	h2_full.Write();
+	//h2_full.Write();
 	TCanvas *c_full = new TCanvas("full covariance matrix");
 	c_full->cd();
 	c_full->SetFixedAspectRatio();
@@ -539,7 +533,7 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//fracelation
 	TH2D h2_frac(frac_covariance);
-	h2_frac.Write();
+	//h2_frac.Write();
 	TCanvas *c_frac = new TCanvas("full fractional covariance matrix");
 	c_frac->cd();
 	c_frac->SetFixedAspectRatio();

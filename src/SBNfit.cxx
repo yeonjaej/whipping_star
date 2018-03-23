@@ -58,7 +58,7 @@ double SBNfit::MinimizerCalcChi(const double * X){
 		fOsc.Scale(v.first, X[v.second] );
 	}	
 
-	fOsc.compressVector();	
+	fOsc.collapseVector();	
 
 	lastChi =this->CalcChi(fOsc);
 

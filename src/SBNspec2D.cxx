@@ -150,7 +150,7 @@ int SBNspec::ScaleAll(double sc){
 	for(auto& h: hist){
 		h.Scale(sc, "nosw2");
 	}
-	this->compressVector();
+	this->collapseVector();
 
 	return 0;
 }
@@ -166,7 +166,7 @@ int SBNspec::Scale(std::string name, double val){
 
 	}
 
-	this->compressVector();
+	this->collapseVector();
 	return 0;
 }
 
@@ -205,7 +205,7 @@ int SBNspec::calcFullVector(){
 	return 0;
 }
 
-int SBNspec::compressVector(){
+int SBNspec::collapseVector(){
 
 	compVec.clear();
 	//This needs to be confirmed and checked. Looks good, mark 24th april

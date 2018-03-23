@@ -3,11 +3,7 @@ using namespace sbn;
 
 
 
-SBNspec::SBNspec(std::string whichxml): SBNspec(whichxml,-1,true){
-}
 
-SBNspec::SBNspec(std::string whichxml, int which_universe): SBNspec(whichxml,which_universe, true){
-}
 
 SBNspec::SBNspec(std::string whichxml, int which_universe, bool isverbose) : SBNconfig(whichxml,isverbose){
 
@@ -38,46 +34,36 @@ SBNspec::SBNspec(std::string whichxml, int which_universe, bool isverbose) : SBN
 
 	has_been_scaled = false;
 
+	this->collapseVector();	
 
 }
 
-SBNspec::SBNspec(const char * name, std::string whichxml, bool isverbose) : SBNconfig(whichxml, isverbose) {
-	//Contruct from a prexisting histograms!
+SBNspec::SBNspec(std::string whichxml): SBNspec(whichxml,-1,true){}
+SBNspec::SBNspec(std::string whichxml, int which_universe): SBNspec(whichxml,which_universe, true){}
 
-	char namei[200];
-	sprintf(namei,"%s",name);	
-	TFile f(namei);
-
-	//Loop over all filenames that should be there, and load up the histograms.
-	for(auto fn: fullnames){
-		//std::cout<<"Attempting to load: "<<fn.c_str()<<" from: "<<namei<<std::endl;
-		hist.push_back(*((TH1D*)f.Get(fn.c_str()))); 
-	}
+SBNspec::SBNspec(std::string rootfile, std::string whichxml, bool isverbose) : SBNconfig(whichxml, isverbose) {
+         //Contruct from a prexisting histograms that exist in a rootfile
+         TFile *f = new TFile(rootfile.c_str(),"read");
+ 
+         //Loop over all filenames that should be there, and load up the histograms.
+         for(auto fn: fullnames){
+                 hist.push_back(*((TH1D*)f->Get(fn.c_str()))); 
+         }
+         
 	has_been_scaled=false;
+ 
 
+         f->Close();
+ 
+ 
+ }
 
-	f.Close();
-
-
-}//end constructor
-
-
-
-SBNspec::SBNspec(const char * name, std::string whichxml) : SBNspec(name, whichxml, true)  {
-
-}//end constructor
-
-
-int SBNspec::Clear(){
-	for(auto &h: hist){
-		h.Reset();
-	}	
-
-	return 0;
-}
+SBNspec::SBNspec(std::string rootfile, std::string whichxml) : SBNspec(rootfile, whichxml, true){ };
 
 
 
+
+ 
 int SBNspec::Add(SBNspec *in){
 	//Addes all hists together
 	if(xmlname != in->xmlname){ std::cout<<"ERROR: SBNspec::Add, trying to add differently configured SBNspecs!"<<std::endl; exit(EXIT_FAILURE);}
@@ -86,7 +72,7 @@ int SBNspec::Add(SBNspec *in){
 		hist[i].Add( &(in->hist[i]));
 	}	
 
-
+	this->collapseVector();
 	return 0;
 }
 
@@ -170,7 +156,7 @@ int SBNspec::ScaleAll(double sc){
 	for(auto& h: hist){
 		h.Scale(sc);
 	}
-	this->compressVector();
+	this->collapseVector();
 
 	return 0;
 }
@@ -190,7 +176,7 @@ int SBNspec::Scale(std::string name, double val){
 	scale_hist_name =name;
 	scale_hist_val = val;
 
-	this->compressVector();
+	this->collapseVector();
 	return 0;
 }
 
@@ -229,12 +215,10 @@ int SBNspec::calcFullVector(){
 	return 0;
 }
 
-int SBNspec::compressVector(){
+int SBNspec::collapseVector(){
 
 	compVec.clear();
-	//This needs to be confirmed and checked. Looks good, mark 24th april
 	calcFullVector();
-	//std::cout<<"num_modes: "<<num_modes<<" num_detectors: "<<num_detectors<<" num_channels: "<<num_channels<<std::endl;
 
 	for(int im = 0; im < num_modes; im++){
 		for(int id =0; id < num_detectors; id++){
@@ -246,7 +230,6 @@ int SBNspec::compressVector(){
 				for(int j=0; j< num_bins.at(ic); j++){
 
 					double tempval=0;
-
 
 					for(int sc = 0; sc < num_subchannels.at(ic); sc++){
 

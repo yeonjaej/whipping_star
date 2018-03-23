@@ -30,8 +30,8 @@ class SBNosc : public SBNspec{
 	int which_mode;
 	double mStepSize;	//has to be 0.04 for now
 
-	SBNosc(const char *, std::string); //constructor
-	SBNosc(const char *, std::string, neutrinoModel); //constructor
+	SBNosc(std::string, std::string); //constructor
+	SBNosc(std::string, std::string, neutrinoModel); //constructor
 
 	//find all the frequencies! Needs to know if a frequency corresponds to 41 51 54..etc.. so thats the int
 	std::vector< std::pair <double, int>> mass_splittings;	

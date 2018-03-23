@@ -28,7 +28,7 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 
 	MfracCov = sys_fill_direct();
 	lastChi = -9999999;
-	bkgSpec.compressVector();
+	bkgSpec.collapseVector();
 	Msys.ResizeTo(num_bins_total,num_bins_total);
 	Msys.Zero();
 	Msys=MfracCov;
@@ -83,7 +83,7 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 int SBNchi::reload_core_spec(SBNspec *bkgin){
 	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Begininning to reload core spec! First set new core spec"<<std::endl;
 	bkgSpec = *bkgin;
-	bkgSpec.compressVector();
+	bkgSpec.collapseVector();
 
 	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Clear all previous chi^2 data"<<std::endl;
 	lastChi_vec.clear();
@@ -253,7 +253,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	}
 
 
-	bkgSpec.compressVector();
+	bkgSpec.collapseVector();
 
 
 	return 0;
@@ -265,7 +265,7 @@ int SBNchi::load_bkg(){
 	lastChi_vec.clear();
 	lastChi_vec.resize(num_bins_total_compressed, std::vector<double>( num_bins_total_compressed,0) );
 
-	bkgSpec.compressVector();
+	bkgSpec.collapseVector();
 	bkgSpec.calcFullVector();
 
 	TMatrixT <double> McI(num_bins_total_compressed,num_bins_total_compressed);
@@ -373,7 +373,7 @@ double SBNchi::CalcChiLog(SBNspec *sigSpec){
 
 	if(sigSpec->compVec.size()==0){
 		std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		sigSpec->compressVector();
+		sigSpec->collapseVector();
 	}
 
 	for(int i =0; i<num_bins_total_compressed; i++){
@@ -395,27 +395,15 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 
 	if(sigSpec->compVec.size()==0){
 		if(isVerbose)	std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		sigSpec->compressVector();
+		sigSpec->collapseVector();
 	}
 
 	int k=0;
 
-	/* THIS IS SIMPLIER CHI
-	   for(int i =0; i<num_bins_total_compressed; i++){
-	   double ank = pow(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i),2.0)*vMcI.at(i).at(i);
-	   tchi+=ank;
-	//std::cout<<"AGHR: "<<i<<"\t\t"<<ank<<"\t\t"<<tchi<<"\t\t"<<bkgSpec.compVec.at(i)<<"\t\t"<<sigSpec->compVec.at(i)<<"\t\t"<<vMcI.at(i).at(i)<<"\t\t"<<1.0/vMc.at(i).at(i)<<" "<<vMc.at(i).at(i)<<" "<<MfracCov(i,i)<<std::endl;
-
-	}
-	return tchi;
-	*/
-
 	for(int i =0; i<num_bins_total_compressed; i++){
 		for(int j =0; j<num_bins_total_compressed; j++){
 			k++;
-			//	if(i!=j && vMcI.at(i).at(j) != 0){
-			//		std::cout<<"ITS NOT SYM"<<std::endl;
-			//	} 
+			
 			if(i==j && vMcI.at(i).at(j)<0){
 				std::cout<<"ERROR: SBNchi::CalcChi || diagonal of inverse covariance is negative!"<<std::endl;
 			}
@@ -423,7 +411,6 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 
 			lastChi_vec.at(i).at(j) =(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i))*vMcI.at(i).at(j)*(bkgSpec.compVec.at(j)-sigSpec->compVec.at(j) ); 
 			tchi += lastChi_vec.at(i).at(j);
-			//std::cout<<"AGHR: "<<k<<" "<<i<<" "<<j<<" "<<tchi<<" minv: "<<vMcI.at(i).at(j)<<" bi "<<bkgSpec.compVec.at(i)<<" si "<<sigSpec->compVec.at(i)<<" bj "<<bkgSpec.compVec.at(j)<<" sj "<<sigSpec->compVec.at(j)<<std::endl;
 		}
 	}
 
@@ -431,27 +418,6 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 	return tchi;
 }
 
-
-//Obsoloete version
-double SBNchi::CalcChi(SBNspec sigSpec){
-	double tchi = 0;	
-
-	if(sigSpec.compVec.size()==0){
-		std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		sigSpec.compressVector();
-	}
-
-
-	for(int i =0; i<num_bins_total_compressed; i++){
-		for(int j =0; j<num_bins_total_compressed; j++){
-			lastChi_vec.at(i).at(j) =(bkgSpec.compVec[i]-sigSpec.compVec[i])*vMcI[i][j]*(bkgSpec.compVec[j]-sigSpec.compVec[j] ); 
-			tchi += lastChi_vec.at(i).at(j);
-		}
-	}
-
-	lastChi = tchi;
-	return tchi;
-}
 
 
 double SBNchi::CalcChi(std::vector<double> sigVec){
@@ -477,12 +443,12 @@ double SBNchi::CalcChi(SBNspec *sigSpec, SBNspec *obsSpec){
 	double tchi=0;
 	if(sigSpec->compVec.size()==0){
 		std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		sigSpec->compressVector();
+		sigSpec->collapseVector();
 	}
 
 	if(obsSpec->compVec.size()==0){
 		std::cout<<"WARNING: SBNchi::CalcChi, inputted obsSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		obsSpec->compressVector();
+		obsSpec->collapseVector();
 	}
 
 
@@ -754,8 +720,8 @@ TH2D SBNchi::getChiogram(){
 
 }
 
-int SBNchi::printMatricies(std::string fileout){
-	TFile* fout = new TFile(fileout.c_str(),"recreate");
+int SBNchi::printMatricies(std::string tag){
+	TFile* fout = new TFile(("SBNfit_collapsed_matrix_plots"+tag+".root").c_str(),"recreate");
 	fout->cd();
 
 
@@ -878,7 +844,7 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 
 		SBNspec tmp = *specin;
 		tmp.poissonScale(rangen);
-		tmp.compressVector(); //this line important isnt it!
+		tmp.collapseVector(); //this line important isnt it!
 		//tmp.printfull_vectorFullVec();
 
 		double thischi = this->CalcChi(&tmp);
@@ -911,7 +877,7 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 
 		SBNspec tmp = *specin;
 		tmp.poissonScale(rangen);
-		tmp.compressVector(); //this line important isnt it!
+		tmp.collapseVector(); //this line important isnt it!
 		//tmp.printFullVec();
 
 		double thischi = this->CalcChi(&tmp);

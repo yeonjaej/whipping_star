@@ -1,13 +1,13 @@
 #include "SBNosc.h"
 using namespace sbn;
 
-SBNosc::SBNosc(const char * name, std::string whichxml) : SBNspec(name, whichxml) {
+SBNosc::SBNosc(std::string name, std::string whichxml) : SBNspec(name, whichxml) {
 	workingModel.zero();
 	mStepSize = 0.04;
 	which_mode = BOTH_ONLY;
 }
 
-SBNosc::SBNosc(const char * name, std::string whichxml, neutrinoModel in) : SBNosc(name, whichxml) {
+SBNosc::SBNosc(std::string name, std::string whichxml, neutrinoModel in) : SBNosc(name, whichxml) {
 	load_model(in);
 
 }
@@ -65,7 +65,7 @@ int SBNosc::calcMassSplittings(){
 
 int SBNosc::OscillateThis(){
 		this->calcFullVector();
-		this->compressVector();
+		this->collapseVector();
 
 	calcMassSplittings();
 
@@ -204,7 +204,7 @@ int SBNosc::OscillateThis(){
 	}//Done looping over
 
 	this->calcFullVector();
-	this->compressVector();
+	this->collapseVector();
 
 
 	return 0;
@@ -223,7 +223,7 @@ std::vector<double> SBNosc::Oscillate(double scale){
 std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
 		this->calcFullVector();
-		this->compressVector();
+		this->collapseVector();
 
 	std::vector<double > temp = compVec;
 
@@ -268,11 +268,11 @@ std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
 
 			single_frequency.calcFullVector();
-			single_frequency.compressVector();
+			single_frequency.collapseVector();
 			
 
 			single_frequency_square.calcFullVector();
-			single_frequency_square.compressVector();
+			single_frequency_square.collapseVector();
 	
 			for(int i=0;i<temp.size(); i++){
 				temp[i] += single_frequency.compVec[i];
@@ -289,7 +289,7 @@ std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 std::vector<double> SBNosc::Oscillate(){
 
 		this->calcFullVector();
-		this->compressVector();
+		this->collapseVector();
 
 	std::vector<double > temp = compVec;
 
@@ -422,11 +422,11 @@ std::vector<double> SBNosc::Oscillate(){
 
 
 			single_frequency.calcFullVector();
-			single_frequency.compressVector();
+			single_frequency.collapseVector();
 			
 
 			single_frequency_square.calcFullVector();
-			single_frequency_square.compressVector();
+			single_frequency_square.collapseVector();
 	
 			for(int i=0;i<temp.size(); i++){
 				temp[i] += single_frequency.compVec[i];

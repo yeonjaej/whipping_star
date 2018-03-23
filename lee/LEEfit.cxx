@@ -39,21 +39,14 @@ using namespace sbn;
 
 int main(int argc, char* argv[])
 {
-	std::string xml = "default.xml";
-	std::string bkg = "../../data/precomp/SBN_bkg_all";
-	std::string sig = "../../data/precomp/SBN_bkg_all";
+	std::string xml = "build_uboone_covar.xml";
 	int iarg = 0;
 	opterr=1;
 	int index;
 	
-	// uboone pot scaling factor (explained below)
-	double uboonepot = 0.5;	
-	
 	const struct option longopts[] = 
 	{
 		{"xml", 		required_argument, 	0, 'x'},
-		{"bkg",			required_argument,	0, 'b'},
-		{"sig",			required_argument,	0, 's'},
 		{0,			no_argument, 		0,  0},
 	};
 
@@ -66,13 +59,6 @@ int main(int argc, char* argv[])
 			case 'x':
 				xml = optarg;
 				break;
-			case 'b':
-				bkg = optarg;
-				uboonepot = 1.0;
-				break;
-			case 's':
-				sig = optarg;
-				break;	
 			case '?':
 			case 'h':
 				std::cout<<"Allowed arguments:"<<std::endl;
@@ -82,24 +68,26 @@ int main(int argc, char* argv[])
 
 	}
 
+	std::string tag = "LEEtest";
+
+	//Load up the calculated (or another) spectrum.
+	SBNspec central_value_spec("LEEtest.SBNspec.root",xml);
+
+	//Create a second SBNspec for a BKG-only cv spectrum
+	SBNspec bkg_only_spec = central_value_spec;
+	//But remove the signal componants
+	bkg_only_spec.Scale("elike_signal",0.0);
+
+
+	//Load up the calculated fractional covariance matrix	
+	TFile *covar_file = new TFile("LEEtest.SBNcovar.root","read");
+	TMatrixD *full_fractional_covariance = (TMatrixD*)covar_file->Get("full_covariance_LEEtest");
 	
-	TFile *fin = new TFile("covariance_matrix_ALL.root","read");
-	TMatrixD * m = (TMatrixD*)fin->Get("TMatrixT<double>;2");
+	SBNchi uboone_chi(central_value_spec, *full_fractional_covariance);
 
-	SBNspec cv_spec("SBN_CV.root",xml);
-	SBNspec bkg_spec = cv_spec;
-	bkg_spec.Scale("nu_uBooNE_elike_signal",0.0);
-	
-	cv_spec.compressVector();
-	bkg_spec.compressVector();
+	std::cout<<"CHI^2: "<<uboone_chi.CalcChi(&bkg_only_spec)<<std::endl;
 
-	SBNchi mychi(cv_spec, *m);
-
-
-	std::cout<<"CHI^2: "<<mychi.CalcChi(&bkg_spec)<<std::endl;
-
-
-	mychi.printMatricies("test_coll.root");
+	uboone_chi.printMatricies(tag);
 
 
 }
