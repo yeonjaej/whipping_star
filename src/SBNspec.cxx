@@ -303,7 +303,7 @@ int SBNspec::writeOut(std::string tag){
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
 
-	std::vector<int> mycol = {416-6, 800+3, 616+1, 632-7, 600-7, 432+1, 900}; 				
+	std::vector<int> mycol = {kGreen+1, kRed-7, kBlue-4, kOrange-3, kMagenta+1, kCyan-3,kYellow,  632+1, 900}; 				
 	
 	TFile *f2 = new TFile((tag+".SBNspec.root").c_str(),"recreate"); 
 
@@ -316,41 +316,44 @@ int SBNspec::writeOut(std::string tag){
 	TFile *f = new TFile(("SBNfit_spectrum_plots_"+tag+".root").c_str(),"RECREATE"); 
 	f->cd();
 
-	std::vector<TH1D> temp = hist;
+	std::vector<TH1D> temp_hists = hist;
 
 
+	for(int im = 0; im <mode_names.size(); im++){
+	for(int id = 0; id <detector_names.size(); id++){
+	for(int ic = 0; ic <channel_names.size(); ic++){
 
-	for(auto m: mode_names){
-		for(auto d: detector_names){
-			for(auto c: channel_names){
-
-				std::string canvas_name = m+"_"+d+"_"+c;
+			
+				std::string canvas_name = mode_names.at(im)+"_"+detector_names.at(id)+"_"+channel_names.at(ic);
 
 				bool this_run = false;
 
 				TCanvas* Cstack= new TCanvas(canvas_name.c_str(),canvas_name.c_str());
 				Cstack->cd();
 				THStack * hs 	   = new THStack(canvas_name.c_str(),  canvas_name.c_str());
-				TLegend legStack(0.6,0.35,0.875,0.875);
+				TLegend legStack(0.59,0.59,0.89,0.89);
 				int n=0;
-				for(auto &h : temp){
+
+				for(auto &h : temp_hists){
 					std::string test = h.GetName();
 					if(test.find(canvas_name)!=std::string::npos ){
+
+
+						std::ostringstream numberofevents;
+						numberofevents << std::setprecision(6) << h.GetSumOfWeights();
+
+
 						h.Sumw2(false);
 						h.Scale(1,"width,nosw2");
-						h.GetYaxis()->SetTitle("Events/GeV");
-						h.SetMarkerStyle(20);
+											h.SetMarkerStyle(20);
 						h.SetMarkerColor(mycol[n]);
 						h.SetFillColor(mycol[n]);
 						h.SetLineColor(kBlack);
 						h.SetTitle(h.GetName());
-						h.Write();
+						//h.Write();
 
-						std::ostringstream out;
-						out << std::setprecision(6) << h.GetSumOfWeights();
-						std::string hmm = " , Total : ";
-						std::string tmp = h.GetName() +hmm+ out.str();
-						legStack.AddEntry(&h, tmp.c_str() , "f");
+						std::string legend_name = h.GetName()  + numberofevents.str();
+						legStack.AddEntry(&h, legend_name.c_str() , "f");
 
 						hs->Add(&h);
 						n++;
@@ -359,14 +362,14 @@ int SBNspec::writeOut(std::string tag){
 
 					}
 				}
-				/****Not sure why but this next line seg faults...******
-				 *	hs->GetYaxis()->SetTitle("Events/GeV");
-				 ******************************************************/
+				
 				if(this_run){
 					hs->Draw();
+					hs->GetYaxis()->SetTitle(("Events/"+channel_units.at(ic)).c_str());
+					hs->GetXaxis()->SetTitle(channel_units.at(ic).c_str());
 					Cstack->Update();
 					legStack.Draw();	
-					Cstack->Write("hist");
+					Cstack->Write();
 				}
 
 			}

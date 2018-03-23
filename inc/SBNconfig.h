@@ -79,6 +79,7 @@ class SBNconfig {
 	std::vector<std::string> mode_names; 			
 	std::vector<std::string> detector_names; 		
 	std::vector<std::string> channel_names; 		
+	std::vector<std::string> channel_units; 		
 	std::vector<std::vector<std::string >> subchannel_names; 
 
 

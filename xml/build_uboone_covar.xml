@@ -5,7 +5,7 @@
 
 <channel name="elike" use="1" numbins="15">
 		<bins 
-			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.25 1.5 1.75 2.0 2.5 3.0"
+			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
 
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
@@ -14,19 +14,19 @@
 
 <channel name="mlike" use="1" numbins="15">
 		<bins 
-			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.25 1.5 1.75 2.0 2.5 3.0"
+			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 </channel>
 
 <channel name="ccpi0" use="1" numbins="10">
 		<bins 
-			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 2.0"
+			edges="100 200 300 400 500 600 700 800 900 1000 2000"
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 </channel>
 <!-- ############################# MultiSims #####################################################-->	
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" maxevents="10000" >
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" maxevents="500" >
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
@@ -34,7 +34,7 @@
 		associated_hist="nu_uBooNE_elike_intrinsic"/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root" maxevents="10000">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root" maxevents="500">
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
@@ -42,7 +42,7 @@
 		associated_hist ="nu_uBooNE_elike_signal" />
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1m1p.root" maxevents="10000" >
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1m1p.root" maxevents="500" >
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
@@ -50,7 +50,7 @@
 		associated_hist ="nu_uBooNE_mlike_intrinsic"/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/ccpi0.root" maxevents = "10000">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/ccpi0.root" maxevents = "500">
 	<parameters names = "ALL" />
 	<branch
 		name="ereco" 
@@ -58,8 +58,6 @@
 		associated_hist = "nu_uBooNE_ccpi0_intrinsic"
 	/>
 </MultisimFile>
-
-
 
 
 <data path="/uboone/app/users/markrl/sbnfit/whipping_star/data/" />

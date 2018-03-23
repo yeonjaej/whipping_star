@@ -173,6 +173,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 		// Read in how many bins this channel uses
 		channel_names.push_back(pChan->Attribute("name"));
+		channel_units.push_back(pChan->Attribute("unit"));
 		channel_bool.push_back(strtod(pChan->Attribute("use"),&end));
 		num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));	
 	

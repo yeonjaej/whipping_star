@@ -26,13 +26,13 @@ ELSE()
 	message("ROOT cxx flags set to: ${ROOT_CXX_FLAGS}")
 ENDIF()
 
-find_package(GSL)
+#find_package(GSL)
 
 #Get our GSL libraries
 FIND_PROGRAM(GSL_CONFIG gsl-config)
 EXEC_PROGRAM(${GSL_CONFIG} ARGS --cflags OUTPUT_VARIABLE GSL_CXX_FLAGS)
 EXEC_PROGRAM(${GSL_CONFIG} ARGS --libs OUTPUT_VARIABLE GSL_LIBS)
-set (CMAKE_CXX_FLAGS "${ROOT_CXX_FLAGS} ${GSL_LIBS} ${GSL_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${ROOT_CXX_FLAGS} ${GSL_LIBS} ${GSL_CXX_FLAGS} ${CMAKE_CXX_FLAGS} -Wdeprecated-declarations ")
 
 
 include_directories(${PROJECT_BINARY_DIR})

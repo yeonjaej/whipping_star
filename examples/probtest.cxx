@@ -29,7 +29,6 @@
 #include "SBNdet.h"
 #include "SBNspec.h"
 #include "SBNosc.h"
-#include "SBgeN.h"
 #include "SBNfit.h"
 #include "SBNfit3pN.h"
 #include "prob.h"
