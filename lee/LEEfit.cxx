@@ -79,11 +79,11 @@ int main(int argc, char* argv[])
 	bkg_only_spec.Scale("elike_signal",0.0);
 
 
-	//Load up the calculated fractional covariance matrix	
+	//Load up the calculated covariance matrix	
 	TFile *covar_file = new TFile("LEEtest.SBNcovar.root","read");
-	TMatrixD *full_fractional_covariance = (TMatrixD*)covar_file->Get("full_covariance_LEEtest");
+	TMatrixD *full_covariance = (TMatrixD*)covar_file->Get("full_covariance_LEEtest");
 	
-	SBNchi uboone_chi(central_value_spec, *full_fractional_covariance);
+	SBNchi uboone_chi(central_value_spec, *full_covariance);
 
 	std::cout<<"CHI^2: "<<uboone_chi.calcChi(&bkg_only_spec)<<std::endl;
 

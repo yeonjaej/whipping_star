@@ -47,6 +47,8 @@ class SBNchi : public SBNconfig{
 	//Initialise a stat_only one;
 	SBNchi(SBNspec, bool is_stat_only);
 	
+	SBNchi(std::string);
+	
 
 	int reload_core_spec(SBNspec *bkgin);
 

@@ -45,7 +45,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tinyxml/)
 add_subdirectory(tinyxml)
 add_subdirectory(src)
 add_subdirectory(examples)
-add_subdirectory(miniboone)
 add_subdirectory(lee)
 
 

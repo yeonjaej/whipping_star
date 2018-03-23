@@ -439,6 +439,7 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//correlation
 	TH2D h2_corr(full_correlation);
+	h2_corr.SetName("corr");
 	//h2_corr.Write();
 	TCanvas *c_corr = new TCanvas("full correlation matrix");
 	TPad *p_corr = (TPad*)c_corr->cd();
@@ -488,6 +489,7 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//full covariance
 	TH2D h2_full(full_covariance);
+	h2_full.SetName("full");
 	//h2_full.Write();
 	TCanvas *c_full = new TCanvas("full covariance matrix");
 	c_full->cd();
@@ -533,6 +535,7 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	//fracelation
 	TH2D h2_frac(frac_covariance);
+	h2_frac.SetName("frac");
 	//h2_frac.Write();
 	TCanvas *c_frac = new TCanvas("full fractional covariance matrix");
 	c_frac->cd();
@@ -575,6 +578,119 @@ int SBNmultisim::printMatricies(std::string tag){
 		}
 	}
 	c_frac->Write();	
+
+
+
+	//Print the collapsed matricies too: Need to fudge this a bit
+	SBNchi collapse_chi(xmlname);
+
+	TMatrixT<double > coll_correlation(num_bins_total_compressed,num_bins_total_compressed);
+	TMatrixT<double > coll_frac_covariance(num_bins_total_compressed,num_bins_total_compressed);
+	TMatrixT<double > coll_covariance(num_bins_total_compressed,num_bins_total_compressed);
+
+	collapse_chi.collapse_layer3(full_covariance, coll_covariance);
+
+	for(int i=0; i<num_bins_total; i++){
+		for(int j=0; j<num_bins_total; j++){
+			coll_frac_covariance(i,j) = coll_covariance(i,j)/(spec_CV.fullVec.at(i)*spec_CV.fullVec.at(j)) ;
+			coll_correlation(i,j)= coll_covariance(i,j)/(sqrt(coll_covariance(i,i))*sqrt(coll_covariance(j,j)));
+		}
+	}
+
+
+
+
+
+	TH2D h2_coll_corr(coll_correlation);
+	h2_coll_corr.SetName("coll_corr");
+	TCanvas *c_coll_corr = new TCanvas("collapsed correlation matrix");
+	c_coll_corr->cd();
+	c_coll_corr->SetFixedAspectRatio();
+	h2_coll_corr.Draw("colz");
+	h2_coll_corr.SetTitle("Collapsed correlation matrix");
+	h2_coll_corr.GetXaxis()->SetTitle("Reco Bin i");
+	h2_coll_corr.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_coll_corr->SetRightMargin(0.150);
+
+	int use_coll_corr =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_corr, num_bins_total_compressed, num_bins.at(ic)+use_coll_corr);
+				TLine *lh = new TLine(num_bins.at(ic)+use_coll_corr,0, num_bins.at(ic)+use_coll_corr, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_coll_corr+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_coll_corr->Write();	
+
+
+	TH2D h2_coll_frac(coll_correlation);
+	h2_coll_frac.SetName("coll_frac");
+	TCanvas *c_coll_frac = new TCanvas("collapsed fractional covariance matrix");
+	c_coll_frac->cd();
+	c_coll_frac->SetFixedAspectRatio();
+	h2_coll_frac.Draw("colz");
+	h2_coll_frac.SetTitle("Collapsed fractional covariance matrix");
+	h2_coll_frac.GetXaxis()->SetTitle("Reco Bin i");
+	h2_coll_frac.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_coll_frac->SetRightMargin(0.150);
+
+	int use_coll_frac =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_frac, num_bins_total_compressed, num_bins.at(ic)+use_coll_frac);
+				TLine *lh = new TLine(num_bins.at(ic)+use_coll_frac,0, num_bins.at(ic)+use_coll_frac, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_coll_frac+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_coll_frac->Write();	
+
+
+	TH2D h2_coll_full(coll_covariance);
+	h2_coll_full.SetName("coll_full");
+	TCanvas *c_coll_full = new TCanvas("collapsed covariance matrix");
+	c_coll_full->cd();
+	c_coll_full->SetFixedAspectRatio();
+	h2_coll_full.Draw("colz");
+	h2_coll_full.SetTitle("Collapsed covariance matrix");
+	h2_coll_full.GetXaxis()->SetTitle("Reco Bin i");
+	h2_coll_full.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_coll_full->SetRightMargin(0.150);
+
+	int use_coll_full =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_full, num_bins_total_compressed, num_bins.at(ic)+use_coll_full);
+				TLine *lh = new TLine(num_bins.at(ic)+use_coll_full,0, num_bins.at(ic)+use_coll_full, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_coll_full+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	c_coll_full->Write();	
+
+
+
+
+
 
 
 

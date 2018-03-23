@@ -7,6 +7,7 @@
 
 #include "SBNspec.h"
 #include "SBNconfig.h"
+#include "SBNchi.h"
 
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"

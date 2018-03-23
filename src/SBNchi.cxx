@@ -6,6 +6,7 @@ using namespace sbn;
  *		Constructors
  * ********************************************/
 
+SBNchi::SBNchi(std::string xml) : SBNconfig(xml,false){};
 
 SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkgSpec(in){
 	lastChi = -9999999;
@@ -87,6 +88,7 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 int SBNchi::reload_core_spec(SBNspec *bkgin){
 	otag = "SBNchi::reload_core_spec\t|| ";
 
+	bool is_fractional = false;
 
 	if(isVerbose)std::cout<<otag<<"Begininning to reload core spec! First set new core spec"<<std::endl;
 	bkgSpec = *bkgin;
@@ -115,7 +117,9 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	{
 		for(int j =0; j<Msys.GetNrows(); j++)
 		{
-			Msys(i,j)=Msys(i,j)*bkgSpec.fullVec.at(i)*bkgSpec.fullVec.at(j);
+			if(is_fractional){
+				Msys(i,j)=Msys(i,j)*bkgSpec.fullVec.at(i)*bkgSpec.fullVec.at(j);
+			}
 		}
 	}
 
@@ -667,7 +671,8 @@ int SBNchi::printMatricies(std::string tag){
 
 	corr.Write();
 	TH2D h2_corr(corr);
-	h2_corr.Write();
+	h2_corr.SetName("corr");
+	//h2_corr.Write();
 	TCanvas *c_corr = new TCanvas("collapsed correlation matrix");
 	c_corr->cd();
 	c_corr->SetFixedAspectRatio();
@@ -697,7 +702,8 @@ int SBNchi::printMatricies(std::string tag){
 
 	frac.Write();
 	TH2D h2_frac(frac);
-	h2_frac.Write();
+	//h2_frac.Write();
+	h2_frac.SetName("frac");
 	TCanvas *c_frac = new TCanvas("collapsed fractional covariance matrix");
 	c_frac->cd();
 	c_frac->SetFixedAspectRatio();
@@ -727,7 +733,8 @@ int SBNchi::printMatricies(std::string tag){
 
 	full.Write();
 	TH2D h2_full(full);
-	h2_full.Write();
+	//h2_full.Write();
+	h2_corr.SetName("full");
 	TCanvas *c_full = new TCanvas("collapsed covariance matrix");
 	c_full->cd();
 	c_full->SetFixedAspectRatio();
