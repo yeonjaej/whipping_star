@@ -1,7 +1,7 @@
 
 
 
-add_library (SBNfitlib SBNmultisim.cxx SBNconfig.cxx SBNspec.cxx SBNfit.cxx SBNchi.cxx prob.cxx SBNfit3pN.cxx SBNosc.cxx SBNdet.cxx SBNprob.cxx )
+add_library (SBNfitlib SBNmultisim.cxx SBNconfig.cxx SBNspec.cxx SBNfit.cxx SBNchi.cxx prob.cxx SBNfit3pN.cxx SBNosc.cxx SBNprob.cxx )
 
 include_directories ( ${CMAKE_SOURCE_DIR}/inc/)
 include_directories ( ${CMAKE_SOURCE_DIR}/src/)

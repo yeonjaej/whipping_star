@@ -1,98 +1,14 @@
 #include "SBNconfig.h"
 using namespace sbn;
 
-SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> detin, std::vector<std::string> chanin, std::vector<std::vector<std::string>> subchanin, std::vector<std::vector<double>> binin){
-
-	otag = "SBNconfig::SBNconfig\t|| ";
-	isVerbose = true;
-
-	num_detectors = detin.size();
-	num_channels = chanin.size();
-	num_modes = modein.size();
-
-	if(subchanin.size() != chanin.size()){
-		std::cout<<otag<<"ERROR SUBCHAN.size() != chanin.size()"<<std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	for(auto sb: subchanin){
-		num_subchannels.push_back( sb.size());
-	}
-
-	for(auto bn: binin){
-		num_bins.push_back(bn.size()-1);
-	}
-
-	this->calcTotalBins();
-
-	xmlname = "NULL";	
 
 
-	//the xml names are the way we track which channels and subchannels we want to use later
-	mode_names = modein; 			
-	detector_names = detin; 		
-	channel_names = chanin; 		
-	subchannel_names = subchanin; 
-
-	for(auto c: chanin){
-		channel_bool.push_back(true);
-	}
-	for(auto m: modein){
-		mode_bool.push_back(true);
-	}
-	for(auto d: detin){
-		detector_bool.push_back(true);
-	}
-	for(auto c: chanin){
-		std::vector<bool> tml;
-		for(int i=0; i< num_subchannels.size(); i++){
-			tml.push_back(true);
-		}
-		subchannel_bool.push_back(tml);
-	}
-
-	//self explanatory
-	bin_edges = binin;
-
-	for(auto binedge: bin_edges){
-		std::vector<double> binwidth;
-		for(int b = 0; b<binedge.size()-1; b++){
-			binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
-		}
-		bin_widths.push_back(binwidth);	
-	}
-
-	// The order is IMPORTANT its the same as defined in xml
-	for(auto m: mode_names){
-		for(auto d: detector_names){
-			for(int c = 0; c< num_channels; c++){
-				for(auto sb: subchannel_names.at(c)){
-					std::string tmp = m +"_"+ d+"_"+channel_names.at(c)+"_"+sb;
-					fullnames.push_back(tmp);
-				}
-			}
-		}
-	}
-
-
-	for(int i=0; i< num_bins_total; i++){
-		used_bins.push_back(i);
-	}
-
-
-};
-
-
-SBNconfig::SBNconfig(std::string whichxml): SBNconfig(whichxml, true) {}
-
+//standard constructor given an .xml 
 SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
-	//standard constructor given an xml.
-	//Using a very simple xml format that I directly coppied from an old project.
 	otag = "SBNconfig::SBNconfig\t|| ";
 
 	isVerbose = isverbose;
 	has_oscillation_patterns = false;
-
 
 	//max subchannels 100?
 	subchannel_names.resize(100);
@@ -104,15 +20,15 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	TiXmlDocument doc( whichxml.c_str() );
 	bool loadOkay = doc.LoadFile();
 	if(loadOkay){
-		if(isVerbose)	std::cout<<otag<<"Loaded "<<whichxml<<std::endl;
+		if(isVerbose)	std::cout<<otag<<"Loaded XML configuration file: "<<whichxml<<std::endl;
 	}else{
-		std::cerr<<otag<<"Failed to load "<<whichxml<<std::endl;
+		std::cout<<otag<<"ERROR: Failed to load XML configuration file:  "<<whichxml<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 	TiXmlHandle hDoc(&doc);
 
 
-	// we have Modes, Detectors, Channels, Covariance matricies, MC multisim data, oscillation pattern matching
+	// we have Modes, Detectors, Channels
 	TiXmlElement *pMode, *pDet, *pChan, *pCov, *pMC, *pData;
 
 
@@ -124,107 +40,97 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	pMC   = doc.FirstChildElement("MultisimFile");
 	pData   = doc.FirstChildElement("data");
 
+	if(!pMode){
+		std::cout<<otag<<"ERROR: Need at least 1 mode defined in xml./n";
+	}else{	
+		while(pMode){
+			// What modes are we running in (e.g nu, nu bar, horn current=XXvolts....) Can have as many as we want
+			mode_names.push_back(pMode->Attribute("name"));	
+			mode_bool.push_back(strtod(pMode->Attribute("use"),&end));	
 
+			pMode = pMode->NextSiblingElement("mode");
+			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading mode: "<<mode_names.back()<<" with use_bool "<<mode_bool.back()<<std::endl;
 
-	//Where is the "data" folder that keeps pre-computed spectra and rootfiles
-	//Will eventuall just configure this in CMake
-	while(pData){
-		data_path = pData->Attribute("path");
-		pData = pData->NextSiblingElement("data");
-		if(isVerbose)std::cout<<otag<<"data path loaded as: "<<data_path<<std::endl;
+		}
 	}
-
-
-	// Where is the covariance matrix you want to use, and whats its name in the root file.
-	while(pCov){
-		correlation_matrix_rootfile = data_path + pCov->Attribute("file");
-		correlation_matrix_name = pCov->Attribute("name");
-		pCov = pCov->NextSiblingElement("covariance");
-	}
-
-
-	// What modes are we running in (e.g nu, nu bar, horn current=XXvolts....) Can have as many as we want
-	while(pMode)
-	{
-		mode_names.push_back(pMode->Attribute("name"));	
-		mode_bool.push_back(strtod(pMode->Attribute("use"),&end));	
-
-		pMode = pMode->NextSiblingElement("mode");
-		if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading mode: "<<mode_names.back()<<" with use_bool "<<mode_bool.back()<<std::endl;
-
-	}
-
 
 	// How many detectors do we want! 
-	pDet = doc.FirstChildElement("detector");
-	while(pDet)
-	{
-		//std::cout<<"Detector: "<<pDet->Attribute("name")<<" "<<pDet->Attribute("use")<<std::endl;
-		detector_names.push_back(pDet->Attribute("name"));
-		detector_bool.push_back(strtod(pDet->Attribute("use"),&end));
-		pDet = pDet->NextSiblingElement("detector");	
-		if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading detector: "<<detector_names.back()<<" with use_bool "<<detector_bool.back()<<std::endl;
+	if(!pDet){
+		std::cout<<otag<<"ERROR: Need at least 1 detector defined in xml./n";
+	}else{	
+
+		while(pDet){
+			//std::cout<<"Detector: "<<pDet->Attribute("name")<<" "<<pDet->Attribute("use")<<std::endl;
+			detector_names.push_back(pDet->Attribute("name"));
+			detector_bool.push_back(strtod(pDet->Attribute("use"),&end));
+			pDet = pDet->NextSiblingElement("detector");	
+			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading detector: "<<detector_names.back()<<" with use_bool "<<detector_bool.back()<<std::endl;
+		}
 	}
 
 	//How many channels do we want! At the moment each detector must have all channels
 	int nchan = 0;
-	while(pChan)
-	{
+	if(!pChan){
+		std::cout<<otag<<"ERROR: Need at least 1 channel defined in xml./n";
+	}else{	
 
-		// Read in how many bins this channel uses
-		channel_names.push_back(pChan->Attribute("name"));
-		channel_units.push_back(pChan->Attribute("unit"));
-		channel_bool.push_back(strtod(pChan->Attribute("use"),&end));
-		num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));	
-	
-		if(isVerbose)	std::cout<<otag<<"Loading Channel : "<<channel_names.back()<<" with use_bool: "<<channel_bool.back()<<std::endl;
 
-		// What are the bin edges and bin widths (bin widths just calculated from edges now)
-		TiXmlElement *pBin = pChan->FirstChildElement("bins");
-		std::stringstream iss(pBin->Attribute("edges"));
+		while(pChan){
+			// Read in how many bins this channel uses
+			channel_names.push_back(pChan->Attribute("name"));
+			channel_units.push_back(pChan->Attribute("unit"));
+			channel_bool.push_back(strtod(pChan->Attribute("use"),&end));
+			num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));	
 
-		double number;
-		std::vector<double> binedge;
-		std::vector<double> binwidth;
-		while ( iss >> number ) binedge.push_back( number );
-		
-		for(int b = 0; b<binedge.size()-1; b++){
-			binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
-		}			
-		if(binedge.size() != num_bins.back()+1){
-			std::cout<<otag<<"ERROR: num_bins: "<<num_bins.back()<<" but we have "<<binedge.size()<<" binedges! should be num+1"<<std::endl;
-			exit(EXIT_FAILURE);
-		}
+			if(isVerbose)	std::cout<<otag<<"Loading Channel : "<<channel_names.back()<<" with use_bool: "<<channel_bool.back()<<std::endl;
 
-		bin_edges.push_back(binedge);
-		bin_widths.push_back(binwidth);
+			// What are the bin edges and bin widths (bin widths just calculated from edges now)
+			TiXmlElement *pBin = pChan->FirstChildElement("bins");
+			std::stringstream iss(pBin->Attribute("edges"));
 
-		// Now loop over all this channels subchanels. Not the names must be UNIQUE!!
-		TiXmlElement *pSubChan;
+			double number;
+			std::vector<double> binedge;
+			std::vector<double> binwidth;
+			while ( iss >> number ) binedge.push_back( number );
 
-		pSubChan = pChan->FirstChildElement("subchannel");
-		int nsubchan=0;
-		while(pSubChan){
-			//std::cout<<"Subchannel: "<<pSubChan->Attribute("name")<<" use: "<<pSubChan->Attribute("use")<<" osc: "<<pSubChan->Attribute("osc")<<std::endl;
-			subchannel_names[nchan].push_back(pSubChan->Attribute("name"));
-			subchannel_bool[nchan].push_back(strtod(pSubChan->Attribute("use"),&end));
-			//0 means dont oscillate, 11 means electron disapearance, -11 means antielectron dis..etc..
-			if(pSubChan->Attribute("osc"))
-			{
-				has_oscillation_patterns = true;
+			for(int b = 0; b<binedge.size()-1; b++){
+				binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
+			}			
+			if(binedge.size() != num_bins.back()+1){
+				std::cout<<otag<<"ERROR: num_bins: "<<num_bins.back()<<" but we have "<<binedge.size()<<" binedges! should be num+1"<<std::endl;
+				exit(EXIT_FAILURE);
 			}
 
-			subchannel_osc_patterns.at(nchan).push_back(strtod(pSubChan->Attribute("osc"), &end));
+			bin_edges.push_back(binedge);
+			bin_widths.push_back(binwidth);
 
-			if(isVerbose)	std::cout<<otag<<"--> Subchannel: "<<subchannel_names.at(nchan).back()<<" with use_bool "<<subchannel_bool.at(nchan).back()<<" and osc_pattern "<<subchannel_osc_patterns.at(nchan).back()<<std::endl;
+			// Now loop over all this channels subchanels. Not the names must be UNIQUE!!
+			TiXmlElement *pSubChan;
 
-			nsubchan++;
-			pSubChan = pSubChan->NextSiblingElement("subchannel");	
+			pSubChan = pChan->FirstChildElement("subchannel");
+			int nsubchan=0;
+			while(pSubChan){
+				//std::cout<<"Subchannel: "<<pSubChan->Attribute("name")<<" use: "<<pSubChan->Attribute("use")<<" osc: "<<pSubChan->Attribute("osc")<<std::endl;
+				subchannel_names[nchan].push_back(pSubChan->Attribute("name"));
+				subchannel_bool[nchan].push_back(strtod(pSubChan->Attribute("use"),&end));
+				//0 means dont oscillate, 11 means electron disapearance, -11 means antielectron dis..etc..
+				if(pSubChan->Attribute("osc"))
+				{
+					has_oscillation_patterns = true;
+				}
+
+				subchannel_osc_patterns.at(nchan).push_back(strtod(pSubChan->Attribute("osc"), &end));
+
+				if(isVerbose)	std::cout<<otag<<"--> Subchannel: "<<subchannel_names.at(nchan).back()<<" with use_bool "<<subchannel_bool.at(nchan).back()<<" and osc_pattern "<<subchannel_osc_patterns.at(nchan).back()<<std::endl;
+
+				nsubchan++;
+				pSubChan = pSubChan->NextSiblingElement("subchannel");	
+			}
+			num_subchannels.push_back(nsubchan);
+
+			nchan++;
+			pChan = pChan->NextSiblingElement("channel");	
 		}
-		num_subchannels.push_back(nsubchan);
-
-		nchan++;
-		pChan = pChan->NextSiblingElement("channel");	
 	}
 
 	// if wea re creating a covariance matrix using a ntuple and weights, here is the info
@@ -256,11 +162,11 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 			TiXmlElement *pBranch;
 			pBranch = pMC->FirstChildElement("branch");
-			
-			
+
+
 			std::vector<branch_var*> TEMP_branch_variables;
 			while(pBranch){
-			
+
 				std::string bnam = pBranch->Attribute("name");
 				std::string btype = pBranch->Attribute("type");
 				std::string bhist = pBranch->Attribute("associated_hist");
@@ -276,14 +182,30 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					std::cout<<otag<<"ERROR: currently only int, double, float, allowed for reco variables\n";
 					exit(EXIT_FAILURE);
 				}
-					
-	
+
+
 				pBranch = pBranch->NextSiblingElement("branch");	
 			}
 			branch_variables.push_back(TEMP_branch_variables);	
 			//next file
 			pMC=pMC->NextSiblingElement("MultisimFile");
 		}
+	}
+
+	//Where is the "data" folder that keeps pre-computed spectra and rootfiles
+	//Will eventuall just configure this in CMake
+	while(pData){
+		data_path = pData->Attribute("path");
+		pData = pData->NextSiblingElement("data");
+		if(isVerbose)std::cout<<otag<<"data path loaded as: "<<data_path<<std::endl;
+	}
+
+
+	// Where is the covariance matrix you want to use, and whats its name in the root file.
+	while(pCov){
+		correlation_matrix_rootfile = data_path + pCov->Attribute("file");
+		correlation_matrix_name = pCov->Attribute("name");
+		pCov = pCov->NextSiblingElement("covariance");
 	}
 
 
@@ -318,10 +240,10 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 					tempn = mode_names[im] +"_" +detector_names[id]+"_"+channel_names[ic]+"_"+subchannel_names[ic][sc];
 					if(isVerbose)std::cout<<otag<<""<<tempn<<" "<<im<<" "<<id<<" "<<ic<<" "<<sc<<std::endl;
-				
+
 					// This is where you choose NOT to use some fields	
 					if(mode_bool[im] && detector_bool[id] && channel_bool[ic] && subchannel_bool[ic][sc]){					
-				
+
 						fullnames.push_back(tempn);
 						for(int k = indexcount; k < indexcount+num_bins.at(ic); k++){
 							used_bins.push_back(k);
@@ -426,7 +348,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	channel_bool.clear();
 	subchannel_bool.clear();
 	detector_bool.clear();
-	
+
 	subchannel_osc_patterns.clear();
 
 
@@ -448,7 +370,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		detector_bool.push_back(temp_detector_bool.at(d));
 		//if(isVerbose) std::cout<<otag<<"Using Detector: "<<detector_names.back()<<std::endl;
 	}
-	
+
 	for(int m: mode_used){
 		mode_names.push_back(temp_mode_names.at(m));
 		mode_bool.push_back(temp_mode_bool.at(m));
@@ -458,11 +380,11 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 	if(isVerbose) {
 
-	//	std::cout<<"--> num_channels: "<<num_channels<<" channel_bool.size(): "<<channel_bool.size()<<" channel_names.size(): "<<channel_names.size()<<std::endl;
-	//	std::cout<<"--> num_modes: "<<num_modes<<" mode_bool.size(): "<<mode_bool.size()<<" mode_names.size(): "<<mode_names.size()<<std::endl;
-	//	std::cout<<"--> num_detectors: "<<num_detectors<<" detector_bool.size(): "<<detector_bool.size()<<" detector_names.size(): "<<detector_names.size()<<std::endl;
+		//	std::cout<<"--> num_channels: "<<num_channels<<" channel_bool.size(): "<<channel_bool.size()<<" channel_names.size(): "<<channel_names.size()<<std::endl;
+		//	std::cout<<"--> num_modes: "<<num_modes<<" mode_bool.size(): "<<mode_bool.size()<<" mode_names.size(): "<<mode_names.size()<<std::endl;
+		//	std::cout<<"--> num_detectors: "<<num_detectors<<" detector_bool.size(): "<<detector_bool.size()<<" detector_names.size(): "<<detector_names.size()<<std::endl;
 		for(int i=0; i< num_channels; i++){
-	//		std::cout<<"--> num_subchannels: "<<num_subchannels.at(i)<<" subchannel_bool.size(): "<<subchannel_bool.at(i).size()<<" subchannel_names.at(i).size(): "<<subchannel_names.at(i).size()<<std::endl;
+			//		std::cout<<"--> num_subchannels: "<<num_subchannels.at(i)<<" subchannel_bool.size(): "<<subchannel_bool.at(i).size()<<" subchannel_names.at(i).size(): "<<subchannel_names.at(i).size()<<std::endl;
 		}
 	}
 
@@ -477,6 +399,90 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 }//end constructor
+
+SBNconfig::SBNconfig(std::string whichxml): SBNconfig(whichxml, true) {}
+
+//Constructor to build a SBNspec from scratch, not reccomended often
+SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> detin, std::vector<std::string> chanin, std::vector<std::vector<std::string>> subchanin, std::vector<std::vector<double>> binin){
+
+	otag = "SBNconfig::SBNconfig\t|| ";
+	isVerbose = true;
+
+	num_detectors = detin.size();
+	num_channels = chanin.size();
+	num_modes = modein.size();
+
+	if(subchanin.size() != chanin.size()){
+		std::cout<<otag<<"ERROR SUBCHAN.size() != chanin.size()"<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	for(auto sb: subchanin){
+		num_subchannels.push_back( sb.size());
+	}
+
+	for(auto bn: binin){
+		num_bins.push_back(bn.size()-1);
+	}
+
+	this->calcTotalBins();
+
+	xmlname = "NULL";	
+
+
+	//the xml names are the way we track which channels and subchannels we want to use later
+	mode_names = modein; 			
+	detector_names = detin; 		
+	channel_names = chanin; 		
+	subchannel_names = subchanin; 
+
+	for(auto c: chanin){
+		channel_bool.push_back(true);
+	}
+	for(auto m: modein){
+		mode_bool.push_back(true);
+	}
+	for(auto d: detin){
+		detector_bool.push_back(true);
+	}
+	for(auto c: chanin){
+		std::vector<bool> tml;
+		for(int i=0; i< num_subchannels.size(); i++){
+			tml.push_back(true);
+		}
+		subchannel_bool.push_back(tml);
+	}
+
+	//self explanatory
+	bin_edges = binin;
+
+	for(auto binedge: bin_edges){
+		std::vector<double> binwidth;
+		for(int b = 0; b<binedge.size()-1; b++){
+			binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
+		}
+		bin_widths.push_back(binwidth);	
+	}
+
+	// The order is IMPORTANT its the same as defined in xml
+	for(auto m: mode_names){
+		for(auto d: detector_names){
+			for(int c = 0; c< num_channels; c++){
+				for(auto sb: subchannel_names.at(c)){
+					std::string tmp = m +"_"+ d+"_"+channel_names.at(c)+"_"+sb;
+					fullnames.push_back(tmp);
+				}
+			}
+		}
+	}
+
+
+	for(int i=0; i< num_bins_total; i++){
+		used_bins.push_back(i);
+	}
+
+
+};
 
 
 int SBNconfig::calcTotalBins(){

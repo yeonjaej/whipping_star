@@ -111,7 +111,7 @@ int oscillate(double dm, double sinth, TH1D* input){
 
    };
 
-   double MinimizerCalcChi(const double * X){
+   double MinimizercalcChi(const double * X){
    num_func_calls++;
    SBNspec tempspec = bk_spec; 
 
@@ -125,7 +125,7 @@ int oscillate(double dm, double sinth, TH1D* input){
 
    std::vector<double> ans = tempOsc.Oscillate();
 
-   lastChi =this->CalcChi(ans);
+   lastChi =this->calcChi(ans);
    return lastChi;
 
    };
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 
 	double xstep = (Xmax-Xmin)/numX;
 	double ystep = (Ymax-Ymin)/numY;
-	obs_spec.compressVector();
+	obs_spec.collapseVector();
 
 	SBNspec prev_spec = bkg_spec;
 	double prev_min = 1e10;
@@ -287,8 +287,8 @@ int main(int argc, char* argv[])
 				oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(0), tup );
 			//	oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(0), tupB );
 				oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(3), tupB );
-				sig_spec.compressVector();
-				tchi = uchi->CalcChi(&sig_spec,&obs_spec);
+				sig_spec.collapseVector();
+				tchi = uchi->calcChi(&sig_spec,&obs_spec);
 				//std::cout<<"Dm^2: "<<m<<" sin^2 th: "<<sins2<<" chi^2: "<<tchi<<std::endl;
 				//and save wherever you like , this si just a quick hodge podge example
 				hcontz->SetBinContent( 1+floor(-(Xmin-sins2)/xstep+0.00001) , 1+floor(-(Ymin-m)/ystep+0.00001), tchi);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
 		//	oscillateFast( pow(10,minM)  , pow(10,minS), &prev_spec.hist.at(0), tupB );
 			oscillateFast( pow(10,minM)  , pow(10,minS), &prev_spec.hist.at(0), tup );
 			oscillateFast( pow(10,minM)  , pow(10,minS), &prev_spec.hist.at(3), tupB );
-		prev_spec.compressVector();
+		prev_spec.collapseVector();
 
 		std::cout<<std::setprecision(15)<<"On Iteration: "<<i<<" and Minimum chi is "<<min<<" at m: "<<minM<<" and "<<minS<<std::endl;
 		

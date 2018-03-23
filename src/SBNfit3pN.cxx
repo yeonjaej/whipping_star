@@ -27,7 +27,7 @@ double SBNfit3pN::MinimizerCalcChi(const double * X){
 		std::vector<double> ans = tempOsc.Oscillate();
 	
 
-		lastChi =this->CalcChi(ans);
+		lastChi =this->calcChi(ans);
 	return lastChi;
 
 }
@@ -53,7 +53,7 @@ double SBNfit3p1::MinimizerCalcChi(const double * X){
 
 	std::vector<double> ans = tempOsc.Oscillate();
 	
-	lastChi =this->CalcChi(ans);
+	lastChi =this->calcChi(ans);
 
 	return lastChi;
 }

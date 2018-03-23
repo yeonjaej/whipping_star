@@ -111,7 +111,7 @@ int oscillate(double dm, double sinth, TH1D* input){
 
    };
 
-   double MinimizerCalcChi(const double * X){
+   double MinimizercalcChi(const double * X){
    num_func_calls++;
    SBNspec tempspec = bk_spec; 
 
@@ -125,7 +125,7 @@ int oscillate(double dm, double sinth, TH1D* input){
 
    std::vector<double> ans = tempOsc.Oscillate();
 
-   lastChi =this->CalcChi(ans);
+   lastChi =this->calcChi(ans);
    return lastChi;
 
    };
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 
 	double xstep = (Xmax-Xmin)/numX;
 	double ystep = (Ymax-Ymin)/numY;
-	obs_spec.compressVector();
+	obs_spec.collapseVector();
 
 
 	SBNspec test = bkg_spec;
@@ -281,12 +281,12 @@ int main(int argc, char* argv[])
 
 
 
-	test.compressVector();
+	test.collapseVector();
 	SBNchi tt(test);
 
-//	std::cout<<std::setprecision(10)<<tt.CalcChiLog(&obs_spec)<<" "<<175.90411377<<" "<<tt.CalcChiLog(&obs_spec)/175.90411377<<std::endl;
+//	std::cout<<std::setprecision(10)<<tt.calcChiLog(&obs_spec)<<" "<<175.90411377<<" "<<tt.calcChiLog(&obs_spec)/175.90411377<<std::endl;
 
-	std::cout<<std::setprecision(10)<<tt.CalcChiLog(&obs_spec)<<" "<<145.39331055<<" "<<tt.CalcChiLog(&obs_spec)/145.39331055*100<<std::endl;
+	std::cout<<std::setprecision(10)<<tt.calcChiLog(&obs_spec)<<" "<<145.39331055<<" "<<tt.calcChiLog(&obs_spec)/145.39331055*100<<std::endl;
 
 	exit(EXIT_FAILURE);
 
@@ -299,9 +299,9 @@ int main(int argc, char* argv[])
 			oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(0), tup );
 		//		oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(0), tupB );
 				oscillateFast( pow(10,m)  , pow(10,sins2), &sig_spec.hist.at(3), tupB );
-			sig_spec.compressVector();
+			sig_spec.collapseVector();
 			SBNchi uchi(sig_spec);
-			tchi = uchi.CalcChiLog(&obs_spec);
+			tchi = uchi.calcChiLog(&obs_spec);
 			//std::cout<<"Dm^2: "<<m<<" sin^2 th: "<<sins2<<" chi^2: "<<tchi<<std::endl;
 			//and save wherever you like , this si just a quick hodge podge example
 			hcontz->SetBinContent( 1+floor(-(Xmin-sins2)/xstep+0.00001) , 1+floor(-(Ymin-m)/ystep+0.00001), tchi);

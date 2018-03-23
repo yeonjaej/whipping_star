@@ -286,8 +286,8 @@ int SBNspec::writeOut(std::string tag){
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
 
-	std::vector<int> mycol = {kGreen+1, kRed-7, kBlue-4, kOrange-3, kMagenta+1, kCyan-3,kYellow,  632+1, 900}; 				
-	
+	std::vector<int> mycol = {kGreen+1, kRed-7, kBlue-4, kOrange-3, kMagenta+1, kCyan-3,kYellow, kGreen-3 }; 				
+	int colindex;
 	TFile *f2 = new TFile((tag+".SBNspec.root").c_str(),"recreate"); 
 
 	for(auto& h: hist){
@@ -320,7 +320,8 @@ int SBNspec::writeOut(std::string tag){
 				for(auto &h : temp_hists){
 					std::string test = h.GetName();
 					if(test.find(canvas_name)!=std::string::npos ){
-
+						colindex++;
+						if(colindex ==mycol.size()-1) colindex=0;
 
 						std::ostringstream numberofevents;
 						numberofevents << std::setprecision(6) << h.GetSumOfWeights();
@@ -329,8 +330,8 @@ int SBNspec::writeOut(std::string tag){
 						h.Sumw2(false);
 						h.Scale(1,"width,nosw2");
 											h.SetMarkerStyle(20);
-						h.SetMarkerColor(mycol[n]);
-						h.SetFillColor(mycol[n]);
+						h.SetMarkerColor(mycol.at( colindex ) );
+						h.SetFillColor(mycol.at(colindex));
 						h.SetLineColor(kBlack);
 						h.SetTitle(h.GetName());
 						//h.Write();

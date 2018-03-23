@@ -3,7 +3,7 @@
 <mode name="nu" use="1"/>
 <detector name="uBooNE" use="1" />
 
-<channel name="elike" use="1" numbins="15">
+<channel name="elike" unit="MeV" use="1" numbins="15">
 		<bins 
 			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
 
@@ -12,21 +12,21 @@
 		<subchannel name="signal" use="1" osc = "0"/>
 </channel>
 
-<channel name="mlike" use="1" numbins="15">
+<channel name="mlike" unit="MeV" use="1" numbins="15">
 		<bins 
 			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 </channel>
 
-<channel name="ccpi0" use="1" numbins="10">
+<channel name="ccpi0" unit="MeV" use="1" numbins="10">
 		<bins 
 			edges="100 200 300 400 500 600 700 800 900 1000 2000"
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 </channel>
 <!-- ############################# MultiSims #####################################################-->	
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" maxevents="500" >
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" maxevents="5000" >
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 

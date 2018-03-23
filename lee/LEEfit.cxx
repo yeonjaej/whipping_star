@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 	
 	SBNchi uboone_chi(central_value_spec, *full_fractional_covariance);
 
-	std::cout<<"CHI^2: "<<uboone_chi.CalcChi(&bkg_only_spec)<<std::endl;
+	std::cout<<"CHI^2: "<<uboone_chi.calcChi(&bkg_only_spec)<<std::endl;
 
 	uboone_chi.printMatricies(tag);
 

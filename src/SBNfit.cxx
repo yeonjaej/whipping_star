@@ -60,7 +60,7 @@ double SBNfit::MinimizerCalcChi(const double * X){
 
 	fOsc.collapseVector();	
 
-	lastChi =this->CalcChi(fOsc);
+	lastChi =this->calcChi(&fOsc);
 
 	return lastChi;
 

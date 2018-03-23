@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 		SBNspec bkg_spec("../../data/precomp/SBN_bkg_all", xml);
 		std::cout<<"test_mode 1 || loaded"<<std::endl;
 		//and compress down the subchannels into a channel only vector
-		bkg_spec.compressVector();
+		bkg_spec.collapseVector();
 
 		//initilize a SBNchi class with your background and covariance matrix as located in xml file
 		SBNchi test_chi(bkg_spec);
@@ -120,12 +120,12 @@ int main(int argc, char* argv[])
 
 			//Scale the dummy spectra, scaling only histograms that match "elike_misphoton" if you used Scale.("elike") it would scale ALL elikle subchannels
 			loop_spec.Scale("elike_misphoton", scale);
-			loop_spec.compressVector();
+			loop_spec.collapseVector();
 
 			//Set these for plotting later
 			x[i]=scale;
 			//And calculate the chi^2
-			chi[i]=test_chi.CalcChi(loop_spec);
+			chi[i]=test_chi.calcChi(&loop_spec);
 
 			std::cout<<"scaling: "<<scale<<" "<<"Chi^2: "<<chi[i]<<std::endl;
 		}
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 		//not exactly likely but bear with me
 		bkg_spec.Scale("uBooNE_elike_mismuon", 2);
 		bkg_spec.Scale("uBooNE_mlike_intrinsic", 0.5);
-		bkg_spec.compressVector();
+		bkg_spec.collapseVector();
 
 		SBNchi test_chi(bkg_spec);
 
@@ -185,10 +185,10 @@ int main(int argc, char* argv[])
 			//this is a HIST level so its calling the fucntion at Bin centers!
 			SBNspec loop_spec = sig_spec;
 			loop_spec.Scale("uBooNE_elike_intrinsic", fLan);
-			loop_spec.compressVector();
+			loop_spec.collapseVector();
 
 			x[i]=mpv;
-			chi2[i]=test_chi.CalcChi(loop_spec);
+			chi2[i]=test_chi.calcChi(&loop_spec);
 
 			std::cout<<"MPV: "<<mpv<<" chi^2: "<<chi2[i]<<std::endl;
 
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
 		double uboonepot=0.5;
 		SBNspec bkg_spec("../../data/precomp/SBN_bkg_all", xml);
 		bkg_spec.Scale("uBooNE", uboonepot);
-		bkg_spec.compressVector();
+		bkg_spec.collapseVector();
 
 		//again create a SBNchi from this spectra
 		SBNchi test_chi(bkg_spec);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
 				std::vector<double> ans = oscSig.Oscillate();
 
 				//Then calculate a chu^2
-				double tchi=test_chi.CalcChi(ans); 
+				double tchi=test_chi.calcChi(ans); 
 
 				std::cout<<"Dm^2: "<<m<<" sin^2 th: "<<sins2<<" chi^2: "<<tchi<<std::endl;
 				//and save wherever you like , this si just a quick hodge podge example
@@ -297,18 +297,18 @@ int main(int argc, char* argv[])
 
 		//SBNfit is the class that does some of the fitting and links to roots minimization schemes
 		//It is like SBNspec, it contains basic functionality but you probably have to extend it with our own model dependant classes. provided that the 
-		// your class superseeds the virtual MinimizeCalcChi  that SBNfit has.
+		// your class superseeds the virtual MinimizecalcChi  that SBNfit has.
 		//
 		// It inherits from SBNchi, loading the correlation matrix in the same manner
 
 		//set up usual signal and background
 		SBNspec bkg_spec("../../data/precomp/SBN_bkg_all", xml);
-		bkg_spec.compressVector();
+		bkg_spec.collapseVector();
 
 		SBNchi test_chi(bkg_spec);
 
 		SBNspec sig_spec("../../data/precomp/SBN_bkg_all",xml);
-		sig_spec.compressVector();
+		sig_spec.collapseVector();
 
 
 		//So someone asks, lets see what normalisation shifts on elike mis-ided muon and mulike intrinics looks like, maybe we can match observations better?
@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
 		inject_sig.OscillateThis();
 		//and give it some poisson noise
 		inject_sig.poissonScale();
-		inject_sig.compressVector();
+		inject_sig.collapseVector();
 
 		//here you can see what it looks like!
 		inject_sig.writeOut("example_5_injected_signal.root");
@@ -438,7 +438,7 @@ int main(int argc, char* argv[])
 		double uboonepot=2;
 		SBNspec bkg_spec("../../data/precomp/SBN_bkg_all", xml);
 		bkg_spec.Scale("uBooNE", uboonepot);
-		bkg_spec.compressVector();
+		bkg_spec.collapseVector();
 
 		//again create a SBNchi from this spectra
 		SBNchi test_chi(bkg_spec);
@@ -485,9 +485,9 @@ int main(int argc, char* argv[])
 			dSig.OscillateThis();
 
 			//Then calculate a chu^2
-			double tchi1=test_chi.CalcChi(aSig); 
-			double tchi2=test_chi.CalcChi(bSig); 
-			double tchi3=test_chi.CalcChi(dSig); 
+			double tchi1=test_chi.calcChi(&aSig); 
+			double tchi2=test_chi.calcChi(&bSig); 
+			double tchi3=test_chi.calcChi(&dSig); 
 
 			std::cout<<"th_14: "<<th_14<<" th_24: "<<th_24<<" Ue4: "<<Ue4<<" Um4: "<<Um4<<" Deltam: "<<pow(m4,2)<<" log(Dm): "<<2*im<<" Chi^2 App: "<<tchi1<<" Chi^2 Dis: "<<tchi3<<" Chi^2 Both: "<<tchi2<<std::endl;
 		}
@@ -557,9 +557,9 @@ int main(int argc, char* argv[])
 
 
 				//Then calculate a chu^2
-				double tchi1=test_chi1.CalcChi(ans1); 
-				double tchi2=test_chi2.CalcChi(ans2); 
-				double tchi05=test_chi05.CalcChi(ans05); 
+				double tchi1=test_chi1.calcChi(ans1); 
+				double tchi2=test_chi2.calcChi(ans2); 
+				double tchi05=test_chi05.calcChi(ans05); 
 
 				//for(int i=0; i<ans1.size(); i++){
 				//	std::cout<<"#@# "<<ans1[i]<<" "<<ans2[i]<<" "<<ans05[i]<<" "<<test_chi1.bkgSpec.compVec[i]<<" "<<test_chi2.bkgSpec.compVec[i]<<" "<<test_chi05.bkgSpec.compVec[i]<<std::endl;
@@ -618,8 +618,8 @@ int main(int argc, char* argv[])
 		//sig_spec.Scale("elike", kal_in/bkg_spec.hist[0].GetSumOfWeights() );
 
 
-		bkg_spec.compressVector();
-		sig_spec.compressVector();
+		bkg_spec.collapseVector();
+		sig_spec.collapseVector();
 
 
 
@@ -654,12 +654,12 @@ int main(int argc, char* argv[])
 			}
 
 
-			loop_spec.compressVector();
+			loop_spec.collapseVector();
 
 			//Set these for plotting later
 			x[i]=scale;
 			//And calculate the chi^2
-			chi[i]=test_chi.CalcChi(loop_spec);
+			chi[i]=test_chi.calcChi(&loop_spec);
 
 			std::cout<<scale<<" "<<chi[i]<<std::endl;
 		}

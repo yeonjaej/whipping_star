@@ -48,11 +48,8 @@ class SBNchi : public SBNconfig{
 	SBNchi(SBNspec, bool is_stat_only);
 	
 
-
-int load_bkg();
 	int reload_core_spec(SBNspec *bkgin);
 
-	//int setStatOnly(bool in);
 
 	TMatrixT<double> Msys;
 	TMatrixT<double> MfracCov;
@@ -65,7 +62,6 @@ int load_bkg();
 
 	void fake_fill(TMatrixT <double>&  M);
 	void stats_fill(TMatrixT <double>&  M, std::vector<double> diag);
-
 
 	// These are the powerhouse of of the SBNchi, the ability to collapse any number of modes,detectors,channels and subchannels down to a physically observable subset
 	// layer 1 is the cheif bit, taking each detector and collapsing the subchannels
@@ -81,14 +77,14 @@ int load_bkg();
 	int fillCollapsedFractionalMatrix(TMatrixT<double>*);
 
 	//Return chi^2 from eith a SBnspec (RECCOMENDED as it checks to make sure xml compatable)
-	double CalcChi(SBNspec sigSpec);
-	double CalcChi(SBNspec *sigSpec);
+	//double calcChi(SBNspec sigSpec);
+	double calcChi(SBNspec *sigSpec);
 	// Or a vector
-	double CalcChi(std::vector<double> );
+	double calcChi(std::vector<double> );
 	//Or you are taking covariance from one, and prediciton from another
-	double CalcChi(SBNspec *sigSpec, SBNspec *obsSpec);
+	double calcChi(SBNspec *sigSpec, SBNspec *obsSpec);
 	//or a log ratio (miniboone esque)
-	double CalcChiLog(SBNspec *sigSpec);
+	double calcChiLog(SBNspec *sigSpec);
 	
 	int printMatricies(std::string);
 
@@ -103,14 +99,6 @@ int load_bkg();
 	std::vector<std::vector<double >> vMc;
 
 	TH2D getChiogram();
-
-	// Todo:
-	std::vector<double >  calc_signal_events(struct neutrinoModel &nuModel);
-
-
-	//int init_minim();
-	//double minim_CalcChi(const double * x);
-	//double minimize(neutrinoModel newModel, double ipot, double ipotbar);
 
 };
 

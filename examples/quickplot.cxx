@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 
 	oscSig.OscillateThis();
 	oscSig.writeOut("zenS.root");
-	oscSig.compressVector();
+	oscSig.collapseVector();
 
 	std::vector<int> cols = {kBlack, kBlack, kBlue-7, kGreen-6, kRed-7,kOrange-3, kMagenta-3, kBlue-7, kRed-7};
 

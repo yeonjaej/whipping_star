@@ -6,8 +6,24 @@ using namespace sbn;
  *		Constructors
  * ********************************************/
 
-SBNchi::SBNchi(SBNspec in) : SBNchi(in,false){}
 
+SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkgSpec(in){
+	lastChi = -9999999;
+	stat_only= false;
+
+	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
+	Msys.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
+	MfracCov.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
+
+	MfracCov = Msysin;
+	Msys.Zero();
+
+	this->reload_core_spec(&bkgSpec);
+
+}
+
+
+//Alternative constrctors
 SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgSpec(in){
 	stat_only = false;
 
@@ -36,21 +52,9 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 	this->reload_core_spec(&in);
 }
 
+SBNchi::SBNchi(SBNspec in) : SBNchi(in,false){}
 
-SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkgSpec(in){
-	lastChi = -9999999;
-	stat_only= false;
 
-	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
-	Msys.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
-	MfracCov.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
-
-	MfracCov = Msysin;
-	Msys.Zero();
-
-	this->reload_core_spec(&bkgSpec);
-
-}
 
 SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in), stat_only(is_stat_only){
 	lastChi = -9999999;
@@ -81,48 +85,41 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
  * ********************************************/
 
 int SBNchi::reload_core_spec(SBNspec *bkgin){
-	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Begininning to reload core spec! First set new core spec"<<std::endl;
+	otag = "SBNchi::reload_core_spec\t|| ";
+
+
+	if(isVerbose)std::cout<<otag<<"Begininning to reload core spec! First set new core spec"<<std::endl;
 	bkgSpec = *bkgin;
 	bkgSpec.collapseVector();
 
-	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Clear all previous chi^2 data"<<std::endl;
+	if(isVerbose)std::cout<<otag<<" || Clear all previous chi^2 data"<<std::endl;
 	lastChi_vec.clear();
 	lastChi_vec.resize(num_bins_total_compressed, std::vector<double>( num_bins_total_compressed,0) );
 
 	//Reset Msys to fractional
-	if(isVerbose)std::cout<<"SBNchi::reload_core_spec, Reseting Msys to MfracCov"<<std::endl;
+	if(isVerbose) std::cout<<otag<<" Reseting Msys to MfracCov"<<std::endl;
 	Msys = MfracCov;
 
-
-	if(Msys.IsSymmetric()){
-		if(isVerbose)std::cout<<"At Start of reload_core_spec Inputted Msys covariance matrix is symmetric"<<std::endl;
-	}else{
-		std::cerr<<"ERROR: SBNchi::reload_core_spec, Msys input is not symmetric!"<<std::endl;
-		//exit(EXIT_FAILURE);
-	}
-
-
 	if(Msys.GetNcols()!=num_bins_total ){
-		std::cerr<<"ERROR: trying to pass a matrix to SBNchi that isnt the right size"<<std::endl;
-		std::cerr<<"ERROR: num_bins_total: "<<num_bins_total<<" and matrix is: "<<Msys.GetNcols()<<std::endl;
+		std::cout<<otag<<"ERROR: trying to pass a matrix to SBNchi that isnt the right size"<<std::endl;
+		std::cout<<otag<<"ERROR: num_bins_total: "<<num_bins_total<<" and matrix is: "<<Msys.GetNcols()<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 
-	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Go from fracCovariance to fullCovariance. Msys.GetNcols(): "<<Msys.GetNcols()<<" Msys.GetNrows(): "<<Msys.GetNrows()<<" core->fullvec.size(): "<<bkgSpec.fullVec.size()<<std::endl;
+	if(isVerbose)std::cout<<otag<<"Go from fracCovariance to fullCovariance. Msys.GetNcols(): "<<Msys.GetNcols()<<" Msys.GetNrows(): "<<Msys.GetNrows()<<" core->fullvec.size(): "<<bkgSpec.fullVec.size()<<std::endl;
 
 	// systematics per scaled event
+	
 	for(int i =0; i<Msys.GetNcols(); i++)
 	{
 		for(int j =0; j<Msys.GetNrows(); j++)
 		{
-
 			Msys(i,j)=Msys(i,j)*bkgSpec.fullVec.at(i)*bkgSpec.fullVec.at(j);
-
 		}
 	}
 
-	if(isVerbose)std::cout<<"SBNchi::reload_core_spec || Filling stats into cov matrix"<<std::endl;
+	if(isVerbose)std::cout<<otag<<"Filling stats into cov matrix"<<std::endl;
 	// Fill stats from the back ground vector
 	TMatrixT <double> Mstat(num_bins_total, num_bins_total);
 	stats_fill(Mstat, bkgSpec.fullVec);
@@ -130,9 +127,9 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 
 
 	if(Mstat.IsSymmetric()){
-		if(isVerbose)std::cout<<"Stat matrix is symmetric (it is just diagonal core)"<<std::endl;
+		if(isVerbose)std::cout<<otag<<"Stat matrix is symmetric (it is just diagonal core)"<<std::endl;
 	}else{
-		std::cerr<<"ERROR: SBNchi::formCovarianceMatrix, stats  is not symmetric!"<<std::endl;
+		std::cout<<otag<<"ERROR: SBNchi::formCovarianceMatrix, stats  is not symmetric!"<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -142,19 +139,19 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	Mtotal.Zero();
 
 	if(stat_only){
-		if(isVerbose)std::cout<<"SBNchi::SBNchi(SBNspec,TMatrixD) || Using stats only in covariance matrix"<<std::endl;
+		if(isVerbose)std::cout<<otag<<"Using stats only in covariance matrix"<<std::endl;
 		Mtotal = Mstat;
 	}else{
-		if(isVerbose)std::cout<<"SBNchi::SBNchi(SBNspec, TMatrixD) || Using stats+sys in covariance matrix"<<std::endl;
+		if(isVerbose)std::cout<<otag<<" Using stats+sys in covariance matrix"<<std::endl;
 		Mtotal = Mstat + Msys;
 	}
 
-	if(isVerbose)std::cout<<"Mstat: "<<Mstat.GetNrows()<<" x "<<Mstat.GetNcols()<<std::endl;
-	if(isVerbose)std::cout<<"Msys: "<<Msys.GetNrows()<<" x "<<Msys.GetNcols()<<std::endl;
-	if(isVerbose)std::cout<<"Mtotal: "<<Mtotal.GetNrows()<<" x "<<Mtotal.GetNcols()<<std::endl;
+	if(isVerbose)std::cout<<otag<<"Mstat: "<<Mstat.GetNrows()<<" x "<<Mstat.GetNcols()<<std::endl;
+	if(isVerbose)std::cout<<otag<<"Msys: "<<Msys.GetNrows()<<" x "<<Msys.GetNcols()<<std::endl;
+	if(isVerbose)std::cout<<otag<<"Mtotal: "<<Mtotal.GetNrows()<<" x "<<Mtotal.GetNcols()<<std::endl;
 
 	if(Mtotal.IsSymmetric() ){
-		if(isVerbose)	std::cout<<"Total Mstat +Msys is symmetric"<<std::endl;
+		if(isVerbose)	std::cout<<otag<<"Total Mstat +Msys is symmetric"<<std::endl;
 	}else{
 
 		double tol = 1e-13;
@@ -162,7 +159,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 		int bi =0;
 		int bj=0;
 
-		if(isVerbose)std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD), stats + sys result appears to be not symmetric!"<<std::endl;
+		if(isVerbose)std::cout<<otag<<"WARNING: Stats + sys result appears to be not symmetric!"<<std::endl;
 		for(int i=0; i<Mtotal.GetNrows(); i++){
 			for(int j=0; j<Mtotal.GetNcols(); j++){
 				double dev = fabs(Mtotal(i,j)-Mtotal(j,i));
@@ -174,16 +171,16 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 			}
 		}	
 
-		if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Biggest Relative Deviation from symmetry is i:"<<bi<<" j: "<<bj<<" of order "<<biggest_deviation<<" M(j,i)"<<Mtotal(bj,bi)<<" M(i,j)"<<Mtotal(bi,bj)<<std::endl;
+		if(isVerbose)	std::cout<<otag<<"WARNING: Biggest Relative Deviation from symmetry is i:"<<bi<<" j: "<<bj<<" of order "<<biggest_deviation<<" M(j,i)"<<Mtotal(bj,bi)<<" M(i,j)"<<Mtotal(bi,bj)<<std::endl;
 
 		if(biggest_deviation >tol){
 
-			std::cerr<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) Thats too unsymettric, killing."<<std::endl;
+			std::cout<<"ERROR: Thats too unsymettric, killing process. Better check your inputs."<<std::endl;
 
 			exit(EXIT_FAILURE);
 		}else{
 
-			if(isVerbose)	std::cerr<<"WARNING: SBNchi::SBNchi(SBNspec, TMatrixD) Thats within tolderence. Continuing."<<std::endl;
+			if(isVerbose)	std::cout<<otag<<"WARNING: Thats within tolderence. Continuing."<<std::endl;
 		}
 	}
 
@@ -198,30 +195,23 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	TMatrixD McI(num_bins_total_compressed,num_bins_total_compressed);
 	McI.Zero();	
 
-	std::cout<<"About to do a SVD decomposition"<<std::endl;	
+	std::cout<<otag<<" About to do a SVD decomposition"<<std::endl;	
 	TDecompSVD svd(Mctotal);
 	if (!svd.Decompose()) {
-		std::cout << "Decomposition failed, matrix not symettric?" << std::endl;
-		std::cout<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The matrix to invert failed a SVD decomp!"<<std::endl;
+		std::cout <<otag<<"Decomposition failed, matrix not symettric?, has nans?" << std::endl;
+		std::cout<<otag<<"ERROR: The matrix to invert failed a SVD decomp!"<<std::endl;
 		exit(EXIT_FAILURE);
-
-
 	} else {
 		McI = svd.Invert();
 	}
-	std::cout<<"Inverted!"<<std::endl;
-	vMcI = to_vector(McI);
-
-
-	//std::cout<<"Going to invert the stats+sys matrix now"<<std::endl;
-	//McI = Mctotal.Invert(&invdet);
-
 	if( !McI.IsValid()){
-		std::cerr<<"ERROR: SBNchi::SBNchi(SBNspec, TMatrixD) The inverted matrix isnt valid"<<std::endl;
+		std::cout<<otag<<"ERROR: The inverted matrix isnt valid! Something went wrong.."<<std::endl;
 		exit(EXIT_FAILURE);
 
 	}
 
+	std::cout<<otag<<"SUCCESS! Inverted."<<std::endl;
+	vMcI = to_vector(McI);
 
 
 	// test for validity
@@ -234,12 +224,11 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	TVectorD eigen_values = eigen.GetEigenValuesRe();
 
 
-
 	for(int i=0; i< eigen_values.GetNoElements(); i++){
 		if(eigen_values(i)<0){
 			is_small_negative_eigenvalue = true;
 			if(fabs(eigen_values(i))> tolerence_positivesemi ){
-				std::cerr<<"ERROR: SBNcovar::formCovarianceMatrix, contains (at least one)  negative eigenvalue: "<<eigen_values(i)<<std::endl;
+				std::cout<<otag<<"covariance matrix contains (at least one)  negative eigenvalue: "<<eigen_values(i)<<std::endl;
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -247,132 +236,82 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 
 
 	if(is_small_negative_eigenvalue){	
-		if(isVerbose)	std::cout<<"Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
+		if(isVerbose)	std::cout<<otag<<"Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
 	}else{
-		if(isVerbose)	std::cout<<"Generated covariance matrix is also positive semi-definite."<<std::endl;
+		if(isVerbose)	std::cout<<otag<<"Generated covariance matrix is also positive semi-definite."<<std::endl;
 	}
-
 
 	bkgSpec.collapseVector();
 
-
 	return 0;
 }
 
 
 
-int SBNchi::load_bkg(){
-	lastChi_vec.clear();
-	lastChi_vec.resize(num_bins_total_compressed, std::vector<double>( num_bins_total_compressed,0) );
-
-	bkgSpec.collapseVector();
-	bkgSpec.calcFullVector();
-
-	TMatrixT <double> McI(num_bins_total_compressed,num_bins_total_compressed);
-	// Fill systematics from pre-computed files
-	TMatrixT <double> Msys(num_bins_total,num_bins_total);
-
-	Msys = sys_fill_direct();
-
-	MfracCov = Msys;
-
-	// systematics per scaled event
-	for(int i =0; i<Msys.GetNcols(); i++)
-	{
-		for(int j =0; j<Msys.GetNrows(); j++)
-		{
-			std::cout<<"#: "<<Msys(i,j)<<" "<<bkgSpec.fullVec[i]<<" "<<bkgSpec.fullVec[j]<<std::endl;
-			Msys(i,j)=Msys(i,j)*bkgSpec.fullVec[i]*bkgSpec.fullVec[j];
-		}
-	}
-
-	// Fill stats from the back ground vector
-	TMatrixT <double> Mstat(num_bins_total,num_bins_total);
-	stats_fill(Mstat, bkgSpec.fullVec);
 
 
-	//And then define the total covariance matrix in all its glory
-	TMatrixT <double > Mtotal(num_bins_total,num_bins_total);
-
-	if(stat_only){
-		std::cout<<"SBNchi::load_bkg() || Using stats only in covariance matrix"<<std::endl;
-		Mtotal = Mstat;
-	}else{
-		//std::cout<<"SBNchi::load_bkg() || Using stats+sys in covariance matrix"<<std::endl;
-		Mtotal = Mstat + Msys;
-	}
-	// Now contract back the larger antimatrix
-	TMatrixT<double > Mctotal(num_bins_total_compressed,num_bins_total_compressed);
-
-	collapse_layer3(Mtotal, Mctotal);
-
-	matrix_collapsed = Mctotal;
-	vMc = to_vector(Mctotal);
-	// just to hold determinant
-	double invdet=0; 
-
-	// Bit o inverting, root tmatrix seems perfectly and sufficiently fast for this, even with anti_mode
-	McI = Mctotal.Invert(&invdet);
-
-	// There is currently a bug, somehow a memory leak perhaps. converting the TMatrix to a vector of vectors fixes it for now. 
-	vMcI = to_vector(McI);
-
-	return 0;
-
-}
 
 
-int SBNchi::fillCollapsedCovarianceMatrix(TMatrixT<double>*in){
-	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
-	for(int i=0; i<num_bins_total_compressed;i++){
-		for(int j=0; j<num_bins_total_compressed;j++){
-			(*in)(i,j) = vMc.at(i).at(j);
-		}
-	}
+/*********************************************
+ *		Different Chi^2 calculations
+ * ******************************************/
 
-	return 0;
-}
-
-
-int SBNchi::fillCollapsedCorrelationMatrix(TMatrixT<double>*in){
-	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
-	for(int i=0; i<num_bins_total_compressed;i++){
-		for(int j=0; j<num_bins_total_compressed;j++){
-			(*in)(i,j) = vMc.at(i).at(j)/(sqrt(vMc.at(j).at(j))*sqrt(vMc.at(i).at(i)));
-		}
-	}
-
-	return 0;
-}
-
-int SBNchi::fillCollapsedFractionalMatrix(TMatrixT<double>*in){
-	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
-	for(int i=0; i<num_bins_total_compressed;i++){
-		for(int j=0; j<num_bins_total_compressed;j++){
-			(*in)(i,j) = vMc.at(i).at(j)/(bkgSpec.compVec.at(i)*bkgSpec.compVec.at(j));
-		}
-	}
-
-	return 0;
-}
-
-
-TMatrixT<double> * SBNchi::getCompressedMatrix(){
-	TMatrixT<double> * tmp = new TMatrixT<double>(num_bins_total_compressed,num_bins_total_compressed);
-	for(int i=0; i<num_bins_total_compressed;i++){
-		for(int j=0; j<num_bins_total_compressed;j++){
-			(*tmp)(i,j) = vMc.at(i).at(j);
-		}
-	}
-
-	return tmp;
-}
-
-double SBNchi::CalcChiLog(SBNspec *sigSpec){
+//Standard chi^2 calculation
+double SBNchi::calcChi(SBNspec *sigSpec){
 	double tchi = 0;	
 
 	if(sigSpec->compVec.size()==0){
-		std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
+		if(isVerbose)	std::cout<<"WARNING: SBNchi::calcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
+		sigSpec->collapseVector();
+	}
+
+	int k=0;
+
+	for(int i =0; i<num_bins_total_compressed; i++){
+		for(int j =0; j<num_bins_total_compressed; j++){
+			k++;
+			
+			if(i==j && vMcI.at(i).at(j)<0){
+				std::cout<<"ERROR: SBNchi::calcChi || diagonal of inverse covariance is negative!"<<std::endl;
+			}
+
+
+			lastChi_vec.at(i).at(j) =(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i))*vMcI.at(i).at(j)*(bkgSpec.compVec.at(j)-sigSpec->compVec.at(j) ); 
+			tchi += lastChi_vec.at(i).at(j);
+		}
+	}
+
+	lastChi = tchi;
+	return tchi;
+}
+
+
+//same as above but passing in a vector instead of whole SBNspec
+double SBNchi::calcChi(std::vector<double> sigVec){
+	double tchi = 0;	
+
+	if(sigVec.size() != num_bins_total_compressed ){
+		std::cerr<<"ERROR: SBNchi::calcChi(std::vector<double>) ~ your inputed vector does not have correct dimensions"<<std::endl;
+		std::cerr<<"sigVec.size(): "<<sigVec.size()<<" num_bins_total_compressed: "<<num_bins_total_compressed<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	for(int i =0; i<num_bins_total_compressed; i++){
+		for(int j =0; j<num_bins_total_compressed; j++){
+			tchi += (bkgSpec.compVec[i]-sigVec[i])*vMcI[i][j]*(bkgSpec.compVec[j]-sigVec[j] );
+		}
+	}
+
+	lastChi = tchi;
+	return tchi;
+}
+
+//A log-lilihood based one used @ MiniBooNE
+double SBNchi::calcChiLog(SBNspec *sigSpec){
+	double tchi = 0;	
+
+	if(sigSpec->compVec.size()==0){
+		std::cout<<"WARNING: SBNchi::calcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
 		sigSpec->collapseVector();
 	}
 
@@ -389,65 +328,16 @@ double SBNchi::CalcChiLog(SBNspec *sigSpec){
 	return tchi+absDetM;
 }
 
-//Use this one
-double SBNchi::CalcChi(SBNspec *sigSpec){
-	double tchi = 0;	
 
-	if(sigSpec->compVec.size()==0){
-		if(isVerbose)	std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
-		sigSpec->collapseVector();
-	}
-
-	int k=0;
-
-	for(int i =0; i<num_bins_total_compressed; i++){
-		for(int j =0; j<num_bins_total_compressed; j++){
-			k++;
-			
-			if(i==j && vMcI.at(i).at(j)<0){
-				std::cout<<"ERROR: SBNchi::CalcChi || diagonal of inverse covariance is negative!"<<std::endl;
-			}
-
-
-			lastChi_vec.at(i).at(j) =(bkgSpec.compVec.at(i)-sigSpec->compVec.at(i))*vMcI.at(i).at(j)*(bkgSpec.compVec.at(j)-sigSpec->compVec.at(j) ); 
-			tchi += lastChi_vec.at(i).at(j);
-		}
-	}
-
-	lastChi = tchi;
-	return tchi;
-}
-
-
-
-double SBNchi::CalcChi(std::vector<double> sigVec){
-	double tchi = 0;	
-
-	if(sigVec.size() != num_bins_total_compressed ){
-		std::cerr<<"ERROR: SBNchi::CalcChi(std::vector<double>) ~ your inputed vector does not have correct dimensions"<<std::endl;
-		std::cerr<<"sigVec.size(): "<<sigVec.size()<<" num_bins_total_compressed: "<<num_bins_total_compressed<<std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	for(int i =0; i<num_bins_total_compressed; i++){
-		for(int j =0; j<num_bins_total_compressed; j++){
-			tchi += (bkgSpec.compVec[i]-sigVec[i])*vMcI[i][j]*(bkgSpec.compVec[j]-sigVec[j] );
-		}
-	}
-
-	lastChi = tchi;
-	return tchi;
-}
-
-double SBNchi::CalcChi(SBNspec *sigSpec, SBNspec *obsSpec){
+double SBNchi::calcChi(SBNspec *sigSpec, SBNspec *obsSpec){
 	double tchi=0;
 	if(sigSpec->compVec.size()==0){
-		std::cout<<"WARNING: SBNchi::CalcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
+		std::cout<<"WARNING: SBNchi::calcChi, inputted sigSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
 		sigSpec->collapseVector();
 	}
 
 	if(obsSpec->compVec.size()==0){
-		std::cout<<"WARNING: SBNchi::CalcChi, inputted obsSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
+		std::cout<<"WARNING: SBNchi::calcChi, inputted obsSpec has un-compressed vector, I am doing it now, but this is inefficient!"<<std::endl;
 		obsSpec->collapseVector();
 	}
 
@@ -465,136 +355,9 @@ double SBNchi::CalcChi(SBNspec *sigSpec, SBNspec *obsSpec){
 
 
 
-
-void SBNchi::fake_fill(TMatrixT <double> &M){
-
-	TRandom3 *rangen = new TRandom3(0);
-
-	//Fills a square matrix of dim matrix_size with random numbers for now.
-
-
-
-	int matrix_size=M.GetNrows();
-
-	if(M.GetNrows()!=M.GetNcols()){std::cout<<"#ERROR: not a square matrix!"<<std::endl;}
-
-	for(int i=0; i<matrix_size; i++){
-		for (int j = i;j<matrix_size;j++){
-			M(i,j)=rangen->Uniform(0,1);
-			M(j,i)=M(i,j);
-		}
-
-	}
-
-	return ;
-}
-
-
-std::vector<std::vector<double >> SBNchi::to_vector(TMatrixT <double > Min)
-{
-	int dimension =  Min.GetNrows();
-
-	std::vector<std::vector<double >>  ans(dimension, std::vector<double>(dimension));
-
-	for(int i = 0; i< dimension; i++){
-		for(int k = 0; k< dimension; k++){
-			ans[i][k]=Min(i,k);
-			if(ans[i][k]==-0){
-				ans[i][k]=0;
-			}
-		}	
-	}
-	return ans;
-
-
-}
-
-
-void SBNchi::stats_fill(TMatrixT <double> &M, std::vector<double> diag){
-	int matrix_size = M.GetNrows();
-
-
-	if(matrix_size != diag.size()){std::cout<<"#ERROR: stats_fill, matrix not equal to diagonal"<<std::endl;}
-	if(M.GetNrows()!=M.GetNcols()){std::cout<<"#ERROR: not a square matrix!"<<std::endl;}
-
-
-	M.Zero();
-
-	for(int i=0; i<matrix_size; i++)
-	{
-
-		//This NEEDS to be removed soon
-		//This was just for wierd MiniBooNE run
-		//if(i>=11 && i< 30) continue;
-		//if(i>=41) continue;
-		M(i,i) = diag.at(i);	
-
-	}
-
-
-
-	return ;
-}
-
-
-
-TMatrixT<double> SBNchi::sys_fill_direct(){
-	return sys_fill_direct(correlation_matrix_rootfile, correlation_matrix_name);
-}
-
-
-TMatrixT<double > SBNchi::sys_fill_direct(std::string rootname, std::string matname){
-
-	std::cout<<"SBNchi::sys_fill_direct || filling from "<<rootname<<std::endl;
-
-	TMatrixT<double> temp2(num_bins_total,num_bins_total);
-	TFile *fm= new TFile(rootname.c_str());
-
-	TMatrixT<float> * temp = (TMatrixT <float>* )fm->Get(matname.c_str());
-	//TMatrixT<double> * temp = (TMatrixT <double>* )fm->Get(matname.c_str());
-
-
-	std::vector<std::vector<double>> mcont;
-
-	for(int p:used_bins){
-		std::vector<double> tvec;
-		for(int u:used_bins){
-			tvec.push_back( (*temp)(p,u) );
-		}					
-		mcont.push_back(tvec);
-	}	
-
-
-
-
-	for(int i =0; i<num_bins_total; i++)
-	{
-		for(int j =0; j<num_bins_total; j++)
-		{
-			temp2(i,j)=mcont[i][j];
-		}
-	}
-	delete temp;
-
-	std::cout<<"SBNchi::sys_fill_direct || loaded with dim : "<<temp2.GetNcols()<<" "<<temp2.GetNrows()<<std::endl;
-
-	fm->Close();
-	delete fm;
-
-	if(temp2.IsSymmetric()){
-		if(isVerbose)std::cout<<"Inputted fracCov covariance matrix is symmetric"<<std::endl;
-	}else{
-		std::cerr<<"ERROR: SBNchi::sys_fill_direct, Msys input is not symmetric!"<<std::endl;
-		//exit(EXIT_FAILURE);
-	}
-
-
-
-
-	return temp2;
-
-
-}
+/**************************************************************************
+ *			Collapsing code
+ * ************************************************************************/
 
 
 //This is the powerhouse, takes each detector matrix filled with num_channels channels of num_subchannels[i] subchannels, and collapses it.
@@ -703,6 +466,176 @@ void SBNchi::collapse_layer3(TMatrixT <double> & M, TMatrixT <double> & Mc){
 	return;
 }
 
+
+
+
+
+/**************************************************************************
+ *			Misc
+ * ************************************************************************/
+
+
+int SBNchi::fillCollapsedCovarianceMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j);
+		}
+	}
+
+	return 0;
+}
+
+
+int SBNchi::fillCollapsedCorrelationMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j)/(sqrt(vMc.at(j).at(j))*sqrt(vMc.at(i).at(i)));
+		}
+	}
+
+	return 0;
+}
+
+int SBNchi::fillCollapsedFractionalMatrix(TMatrixT<double>*in){
+	in->ResizeTo(num_bins_total_compressed,num_bins_total_compressed) ;
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*in)(i,j) = vMc.at(i).at(j)/(bkgSpec.compVec.at(i)*bkgSpec.compVec.at(j));
+		}
+	}
+
+	return 0;
+}
+
+
+TMatrixT<double> * SBNchi::getCompressedMatrix(){
+	TMatrixT<double> * tmp = new TMatrixT<double>(num_bins_total_compressed,num_bins_total_compressed);
+	for(int i=0; i<num_bins_total_compressed;i++){
+		for(int j=0; j<num_bins_total_compressed;j++){
+			(*tmp)(i,j) = vMc.at(i).at(j);
+		}
+	}
+
+	return tmp;
+}
+
+
+
+
+void SBNchi::fake_fill(TMatrixT <double> &M){
+	//Fills a square matrix of dim matrix_size with random numbers for now.
+	TRandom3 *rangen = new TRandom3(0);
+	int matrix_size=M.GetNrows();
+	if(M.GetNrows()!=M.GetNcols()){std::cout<<"#ERROR: not a square matrix!"<<std::endl;}
+	for(int i=0; i<matrix_size; i++){
+		for (int j = i;j<matrix_size;j++){
+			M(i,j)=rangen->Uniform(0,1);
+			M(j,i)=M(i,j);
+		}
+	}
+	return ;
+}
+
+
+std::vector<std::vector<double >> SBNchi::to_vector(TMatrixT <double > Min)
+{
+	int dimension =  Min.GetNrows();
+
+	std::vector<std::vector<double >>  ans(dimension, std::vector<double>(dimension));
+
+	for(int i = 0; i< dimension; i++){
+		for(int k = 0; k< dimension; k++){
+			ans[i][k]=Min(i,k);
+			if(ans[i][k]==-0){
+				ans[i][k]=0;
+			}
+		}	
+	}
+	return ans;
+}
+
+void SBNchi::stats_fill(TMatrixT <double> &M, std::vector<double> diag){
+	int matrix_size = M.GetNrows();
+
+	if(matrix_size != diag.size()){std::cout<<"#ERROR: stats_fill, matrix not equal to diagonal"<<std::endl;}
+	if(M.GetNrows()!=M.GetNcols()){std::cout<<"#ERROR: not a square matrix!"<<std::endl;}
+
+	M.Zero();
+
+	for(int i=0; i<matrix_size; i++)
+	{
+
+		//This NEEDS to be removed soon
+		//This was just for wierd MiniBooNE run
+		//if(i>=11 && i< 30) continue;
+		//if(i>=41) continue;
+		M(i,i) = diag.at(i);	
+
+	}
+
+	return ;
+}
+
+
+
+TMatrixT<double> SBNchi::sys_fill_direct(){
+	return sys_fill_direct(correlation_matrix_rootfile, correlation_matrix_name);
+}
+
+
+TMatrixT<double > SBNchi::sys_fill_direct(std::string rootname, std::string matname){
+	//Pretty much obsolete now, should fill directly really.
+	std::cout<<"SBNchi::sys_fill_direct || filling from "<<rootname<<std::endl;
+
+	TMatrixT<double> temp2(num_bins_total,num_bins_total);
+	TFile *fm= new TFile(rootname.c_str());
+
+	TMatrixT<float> * temp = (TMatrixT <float>* )fm->Get(matname.c_str());
+	//TMatrixT<double> * temp = (TMatrixT <double>* )fm->Get(matname.c_str());
+
+	std::vector<std::vector<double>> mcont;
+
+	for(int p:used_bins){
+		std::vector<double> tvec;
+		for(int u:used_bins){
+			tvec.push_back( (*temp)(p,u) );
+		}					
+		mcont.push_back(tvec);
+	}	
+
+	for(int i =0; i<num_bins_total; i++)
+	{
+		for(int j =0; j<num_bins_total; j++)
+		{
+			temp2(i,j)=mcont[i][j];
+		}
+	}
+	delete temp;
+
+	std::cout<<"SBNchi::sys_fill_direct || loaded with dim : "<<temp2.GetNcols()<<" "<<temp2.GetNrows()<<std::endl;
+
+	fm->Close();
+	delete fm;
+
+	if(temp2.IsSymmetric()){
+		if(isVerbose)std::cout<<"Inputted fracCov covariance matrix is symmetric"<<std::endl;
+	}else{
+		std::cerr<<"ERROR: SBNchi::sys_fill_direct, Msys input is not symmetric!"<<std::endl;
+		//exit(EXIT_FAILURE);
+	}
+
+
+	return temp2;
+
+
+}
+
+
+
+
+
 TH2D SBNchi::getChiogram(){
 	TH2D tmp("","",num_bins_total_compressed,0, num_bins_total_compressed ,num_bins_total_compressed,0, num_bins_total_compressed);
 
@@ -721,7 +654,7 @@ TH2D SBNchi::getChiogram(){
 }
 
 int SBNchi::printMatricies(std::string tag){
-	TFile* fout = new TFile(("SBNfit_collapsed_matrix_plots"+tag+".root").c_str(),"recreate");
+	TFile* fout = new TFile(("SBNfit_collapsed_matrix_plots_"+tag+".root").c_str(),"recreate");
 	fout->cd();
 
 
@@ -831,7 +764,7 @@ int SBNchi::printMatricies(std::string tag){
 
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
 TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
-	double center = this->CalcChi(specin);
+	double center = this->calcChi(specin);
 	int nlower=0;
 
 	TRandom3 *rangen = new TRandom3(0);
@@ -847,7 +780,7 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 		tmp.collapseVector(); //this line important isnt it!
 		//tmp.printfull_vectorFullVec();
 
-		double thischi = this->CalcChi(&tmp);
+		double thischi = this->calcChi(&tmp);
 		ans.Fill(thischi);
 		if(thischi<=center)nlower++;
 
@@ -880,7 +813,7 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 		tmp.collapseVector(); //this line important isnt it!
 		//tmp.printFullVec();
 
-		double thischi = this->CalcChi(&tmp);
+		double thischi = this->calcChi(&tmp);
 		ans.Fill(thischi);
 
 		for(int j=0; j< chival.size(); j++){
@@ -906,7 +839,7 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 
 //This one varies the core spectrum, and as sucn has to recalculate the Msys each stem
 TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
-	double center = this->CalcChi(specin);
+	double center = this->calcChi(specin);
 	int nlower=0;
 
 	TRandom3 *rangen = new TRandom3(0);
@@ -921,7 +854,7 @@ TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
 		SBNspec tmp = core;
 		tmp.poissonScale(rangen);
 		this->reload_core_spec(&tmp);
-		double thischi = this->CalcChi(specin);
+		double thischi = this->calcChi(specin);
 		ans.Fill(thischi);
 		if(thischi<=center)nlower++;
 

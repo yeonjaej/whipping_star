@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
 		std::cout<<"#UNIT_TEST_1:: Constructing SBNspec for passed xml, 'unit.xml'"<<std::endl;
 		SBNspec unit_spec(xml);
-		unit_spec.compressVector();
+		unit_spec.collapseVector();
 
 		std::cout<<"#UNIT_TEST_1:: Creating a toy flat covariance matrix, 0.1 in each entry for nu"<<std::endl;
 		TMatrixT<double> flat_covar(unit_spec.num_bins_total, unit_spec.num_bins_total);
@@ -192,12 +192,12 @@ int main(int argc, char* argv[])
 		SBNspec unit_spec(xml);
 		//unit_spec.setAsGaussian(1,0.2, 10000);	
 		unit_spec.setAsFlat(100);	
-		unit_spec.compressVector();
+		unit_spec.collapseVector();
 		unit_spec.writeOut("test2.root");
 
 		SBNspec unit_spec_inf(xml);
 		unit_spec_inf.setAsFlat(1000000000);
-		unit_spec_inf.compressVector();
+		unit_spec_inf.collapseVector();
 
 
 
@@ -228,19 +228,19 @@ int main(int argc, char* argv[])
 			double scale =0.5+i*0.02;		
 
 			loop_spec.Scale("elike", scale);
-			loop_spec.compressVector();
+			loop_spec.collapseVector();
 
 
 			loop_spec_inf.Scale("elike", scale);
-			loop_spec_inf.compressVector();
+			loop_spec_inf.collapseVector();
 
 			//Set these for plotting later
 			x[i]=scale;
 			//And calculate the chi^2
-			chi_stat_only[i]=unit_chi_stat_only.CalcChi(loop_spec)/20.0;
-			chi1[i]=unit_chi1.CalcChi(loop_spec_inf);
-			chi2[i]=unit_chi2.CalcChi(loop_spec_inf);
-			chi3[i]=unit_chi3.CalcChi(loop_spec_inf);
+			chi_stat_only[i]=unit_chi_stat_only.calcChi(&loop_spec)/20.0;
+			chi1[i]=unit_chi1.calcChi(&loop_spec_inf);
+			chi2[i]=unit_chi2.calcChi(&loop_spec_inf);
+			chi3[i]=unit_chi3.calcChi(&loop_spec_inf);
 
 			std::cout<<"UNIT_TEST_2:: Scaling: "<<scale<<" "<<"Chi^2: "<<chi1[i]<<" "<<chi2[i]<<" "<<chi3[i]<<" Chi^2 Stat Only: "<<chi_stat_only[i]<<std::endl;
 		}
@@ -312,7 +312,7 @@ int main(int argc, char* argv[])
 		std::cout<<"#UNIT_TEST_3:: Constructing SBNspec for passed xml."<<std::endl;
 		SBNspec unit_spec(xml);
 		unit_spec.setAsGaussian(1,0.5, 10000000);	
-		unit_spec.compressVector();
+		unit_spec.collapseVector();
 
 
 		std::cout<<"#UNIT_TEST_3:: Creating a toy flat covariance matrix, 0.1 in each entry for nu"<<std::endl;
@@ -334,13 +334,13 @@ int main(int argc, char* argv[])
 			SBNspec loop_spec = unit_spec;
 			loop_spec.setAsGaussian(1,0.5,fac);
 			loop_spec.NormAll(unit_spec.hist.at(0).GetSumOfWeights());
-			loop_spec.compressVector();
+			loop_spec.collapseVector();
 
 
 			std::cout<<"UNIT_TEST_3:: sum of w: "<<unit_spec.hist.at(0).GetSumOfWeights()<<" "<<loop_spec.hist.at(0).GetSumOfWeights()<<std::endl;
 
 			x[i]=fac;
-			chi_stat_only[i]=unit_chi_stat_only.CalcChi(loop_spec);
+			chi_stat_only[i]=unit_chi_stat_only.calcChi(&loop_spec);
 
 			std::cout<<"UNIT_TEST_3:: n "<<fac<<" Chi^2 Stat Only: "<<chi_stat_only[i]<<std::endl;
 			h_chi_stat_only->Fill(chi_stat_only[i]);
