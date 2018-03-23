@@ -157,6 +157,8 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 			std::vector<double> weights;
 			double global_weight = 1;
+	
+			global_weight = global_weight*multisim_scale.at(j);
 
 
 			if(thisfWeight->count("bnbcorrection_FluxHist")>0){
@@ -590,8 +592,8 @@ int SBNmultisim::printMatricies(std::string tag){
 
 	collapse_chi.collapse_layer3(full_covariance, coll_covariance);
 
-	for(int i=0; i<num_bins_total; i++){
-		for(int j=0; j<num_bins_total; j++){
+	for(int i=0; i<num_bins_total_compressed; i++){
+		for(int j=0; j<num_bins_total_compressed; j++){
 			coll_frac_covariance(i,j) = coll_covariance(i,j)/(spec_CV.fullVec.at(i)*spec_CV.fullVec.at(j)) ;
 			coll_correlation(i,j)= coll_covariance(i,j)/(sqrt(coll_covariance(i,i))*sqrt(coll_covariance(j,j)));
 		}
@@ -630,7 +632,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	c_coll_corr->Write();	
 
 
-	TH2D h2_coll_frac(coll_correlation);
+	TH2D h2_coll_frac(coll_frac_covariance);
 	h2_coll_frac.SetName("coll_frac");
 	TCanvas *c_coll_frac = new TCanvas("collapsed fractional covariance matrix");
 	c_coll_frac->cd();

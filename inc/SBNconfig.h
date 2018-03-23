@@ -126,6 +126,7 @@ class SBNconfig {
 	std::vector<std::string> multisim_name;	
 	std::vector<std::string> multisim_file;	
 	std::vector<int> multisim_maxevents;	
+	std::vector<double> multisim_scale;	
 	
 	std::vector<double> pot_scaling;
 	std::vector<double> pot;

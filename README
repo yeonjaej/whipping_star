@@ -27,7 +27,32 @@ $ cd build
 $ cmake ..
 $ make
  
-This will build the SBNfit source and libraries, as well as executable programs in build/examples and  build/lee
+This will build the SBNfit source and libraries, as well as executable programs in build/lee and build/example (NOTE build/examples not currently working for this version)
+
+$ cd lee
+
+$ ./LEEcovariance --xml build_uboone_covar.xml
+
+should have 4 output files, first two data, second two human readable plots
+LEEtest.SBNspec.root	LEEtest.SBNcovar.root	
+SBNfit_spectrum_plots_LEEtest.root SBNfit_covariance_plots_LEEtest.root
+these can be loaded into LEEfit for a chi^2
+
+$ ./LEEfit --xml build_uboone_covar.xml
+
+SBNfit_collapsed_matrix_plots_LEEtest.root
+
+
+
+############################################################################
+##############		Whats What! ########################################
+############################################################################
+
+
+
+
+
+
 
 
 
@@ -36,7 +61,6 @@ I think they currently are hardcoded to work in build/examples only.
 
 ./exampledemo --xml ../../xml/uboone.xml --test 2
 ./exampledemo --xml ../../xml/sbn.xml --test 1
-
 
 sbn.xml and uboone.xml are included in xml folder, but easily modified
 
@@ -99,9 +123,9 @@ subchannels) to a smaller one used in chi^2 calculations.
 
 To calculate a chi^2 after initilization, you can either pass in a signal
 SBNspec:
-SBNchi->CalcChi(SBNspec sig_spec);
+SBNchi->calcChi(SBNspec *sig_spec);
 or a vector of appropiate length
-SBNchi->CalcChi(std::vector<double>);
+SBNchi->calcChi(std::vector<double>);
 WARNING: by passing a vector you loose some checks on xml config consistancy.
 
 ##### SBNosc.h/.cxx #####
@@ -125,11 +149,3 @@ if you are just passing it lots of a SBNchi for example.
 
 
 
-
-
-
-TODO: 
-make it so the absolute path for data/ is taken in by cmake.
-
-
-have it so that you pass in the exact tag that should be filled! in xml

@@ -147,6 +147,12 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			}else{
 				multisim_maxevents.push_back(strtod(maxevents,&end) );
 			}
+			const char* scale = pMC->Attribute("scale");
+			if(scale==NULL){
+				multisim_scale.push_back(1.0);
+			}else{
+				multisim_scale.push_back(strtod(scale,&end) );
+			}
 
 			TiXmlElement *pParams = pMC->FirstChildElement("parameters");
 

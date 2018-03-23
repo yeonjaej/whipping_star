@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
 {
 
 
+	std::cout<<"Sorry these are currently not working for this version of SBNfit. check back soon"<<std::endl;
+	return 0;
+
 
 
 	std::string xml = "default.xml";
