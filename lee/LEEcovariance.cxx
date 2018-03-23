@@ -46,7 +46,7 @@ using namespace sbn;
 int main(int argc, char* argv[])
 {
 
-std::string xml = "build_covar_uboone.xml";
+std::string xml = "build_uboone_covar.xml";
 int iarg = 0;
 opterr=1;
 int index; 
@@ -73,7 +73,6 @@ while(iarg != -1)
 			xml = optarg;
 			break;
 		case 't':
-			test_mode = strtof(optarg,NULL);
 			break;
 		case '?':
 		case 'h':
@@ -90,15 +89,17 @@ while(iarg != -1)
 time_t start_time = time(0);
 std::cout<<"Begining Covariance Calculation: "<<std::endl;
 
+//a tag to identify outputs 
+std::string tag = "LEEtest";
 
 //Create a SBNmultisim object initilizing with the inputted xml
 SBNmultisim lee_multisim(xml);
 
 //Form the covariance matrix from loaded weights
-lee_multisim.formCovarianceMatrix("lee_covar.root");
+lee_multisim.formCovarianceMatrix(tag);
 
 //and make some plots of the resulting things
-lee_multisim.printMatricies("lee_plots.root");
+lee_multisim.printMatricies(tag);
 
 
 

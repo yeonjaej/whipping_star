@@ -6,10 +6,6 @@ using namespace sbn;
 
 SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
-	//Step one, loads files :: Setups branches 
-	//Step two Gets lists of weights strings from each file and compares.. Prints
-	//Step three Grabs an event and see's how many universes are in it, checks across all files
-	//initilize some parameters
 	universes_used = 0;
 	tolerence_positivesemi = 1e-5;
 	is_small_negative_eigenvalue = false;
@@ -20,13 +16,8 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 	std::map<std::string, int> parameter_sims;
 
 	//Initialise the central value SBNspec.
-	SBNspec tm(xmlname,-1);
+	SBNspec tm(xmlname,-1,false);
 	spec_CV = tm;
-
-
-	//Load all files as per xml
-	std::vector<TFile *> files;	
-	std::vector<TTree *> trees;	
 
 	int Nfiles = multisim_file.size();
 
@@ -38,46 +29,22 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		trees.push_back((TTree*)files.at(i)->Get(multisim_name.at(i).c_str()) );
 	}
 
+
 	std::vector<int> nentries;
 	for(auto &t: trees){
 		nentries.push_back(t->GetEntries());
 	}
-
-	//vars, need to 
-	vars = std::vector<std::vector<double>>(Nfiles   , std::vector<double>(branch_names.at(0).size(), 0.0));
-
-	//	vars_i= std::vector<std::vector<int>>(Nfiles   , std::vector<int>(branch_names_int.at(0).size(), 0));
-	//	vars_d= std::vector<std::vector<double>>(Nfiles   , std::vector<double>(branch_names_double.at(0).size(), 0.0));
 
 	fWeights = new std::vector<std::map<std::string, std::vector<double>>* >(Nfiles,0);
 
 
 	for(int i=0; i< Nfiles; i++){
 		delete fWeights->at(i);	fWeights->at(i) = 0;
-
 		trees.at(i)->SetBranchAddress("weights", &fWeights->at(i) );
-
 		delete fWeights->at(i);	fWeights->at(i) = 0;
-
-		for(int k=0; k<branch_names.at(i).size(); k++){
-			std::cout<<"AA: "<<branch_names.at(i).at(k)<<" "<<branch_types.at(i).at(k)<<" "<<branch_asso_hists.at(i).at(k)<<std::endl;
-
-
-			trees.at(i)->SetBranchAddress( branch_names.at(i).at(k).c_str(), &(vars.at(i).at(k)) );
+		for(int k=0; k<branch_variables.at(i).size(); k++){
+			trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->name.c_str(), branch_variables.at(i).at(k)->getValue() );
 		}
-
-		/*
-		   for(auto &bfni: branch_names_int){
-		   for(int k=0; k< bfni.size();k++){
-		   trees.at(i)->SetBranchAddress(bfni[k].c_str(), &(vars_i.at(i).at(k)));
-		   }
-		   }
-		   for(auto &bfnd: branch_names_double){
-		   for(int k=0; k< bfnd.size();k++){
-		   trees.at(i)->SetBranchAddress(bfnd[k].c_str(), &(vars_d.at(i).at(k)));
-		   }
-		   }
-		   */
 	}
 
 
@@ -87,34 +54,34 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 	//This bit will calculate how many "multisims" the file has. if ALL default is the inputted xml value 
 	int good_event = 1;
 	if(parameter_names.at(0)[0]!="ALL"){
+		/*
+		   if(parameter_names.at(0).at(0) == "bnbcorrection_FluxHist"){
+		   std::cout<<"ERROR!\tSBNmultisim::SBNmultisim ||  bnbcorrection_FluxHist is not a valid varying parameter!\n";
+		   exit(EXIT_FAILURE);	
+		   }
 
-		if(parameter_names.at(0).at(0) == "bnbcorrection_FluxHist"){
-			std::cout<<"ERROR: bnbcorrection_FluxHist is not a valid varying parameter!\n";
-			exit(EXIT_FAILURE);	
-		}
+		   std::vector<int> used_multisims;
+		   for(int j=0; j< Nfiles; j++){
+		   delete fWeights->at(j);
+		   fWeights->at(j)=0;
+		   trees.at(j)->GetEntry(good_event);
+		   std::vector<double> num_sim_here = fWeights->at(j)->at(parameter_names.at(j)[0]);
+		   std::cout<<"SBNmultisim::SBNmultisim || File: "<<j<<" has: "<<num_sim_here.size()<<" universes for parameter: "<<parameter_names.at(j)[0]<<std::endl; 
+		   used_multisims.push_back(num_sim_here.size());
+		   delete fWeights->at(j);
+		   fWeights->at(j)=0;
+		   }
 
-		std::vector<int> used_multisims;
-		for(int j=0; j< Nfiles; j++){
-			delete fWeights->at(j);
-			fWeights->at(j)=0;
-			trees.at(j)->GetEntry(good_event);
-			std::vector<double> num_sim_here = fWeights->at(j)->at(parameter_names.at(j)[0]);
-			std::cout<<"File: "<<j<<" has: "<<num_sim_here.size()<<" universes for parameter: "<<parameter_names.at(j)[0]<<std::endl; 
-			used_multisims.push_back(num_sim_here.size());
-			delete fWeights->at(j);
-			fWeights->at(j)=0;
-		}
+		   for(int i=1; i<Nfiles; i++){
+		   std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
+		   std::cout<<"File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
 
-		for(int i=1; i<Nfiles; i++){
-			std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
-			std::cout<<"File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
-
-			if( used_multisims.at(i)!= used_multisims.at(i-1)){
-				std::cerr<<"ERROR: number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files in "<<"  "<<parameter_names.at(i)[0]<<std::endl;
-				exit(EXIT_FAILURE);
-			}
-			universes_used = used_multisims.at(0);
-		}	
+		   if( used_multisims.at(i)!= used_multisims.at(i-1)){
+		   std::cout<<"ERROR: ERROR! SBNmultisim::SBNmultisim || number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files in "<<"  "<<parameter_names.at(i)[0]<<std::endl;
+		   exit(EXIT_FAILURE);
+		   }
+		   universes_used = used_multisims.at(0);
+		   }*/	
 	}else {
 		//ALL catagory
 		std::vector<int> used_multisims(Nfiles,0);
@@ -127,7 +94,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			{	
 				if(it->first == "bnbcorrection_FluxHist") continue;
 				used_multisims.at(j) += it->second.size();
-				std::cout<<"ALL: "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
+				std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
 				variations.push_back(it->first);
 
 			}
@@ -141,17 +108,17 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 		//make a map and start filling, before filling find if already in map, if it is check size.
 
-		std::cout<<"We have "<<variations.size()<<" unique variations: "<<std::endl;
+		std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
 		for(auto &v: variations){
-			std::cout<<v<<std::endl;
+			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
 		}
 
 
 		for(int i=1; i<Nfiles; i++){
 			//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
-			std::cout<<"File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
+			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
 			if( used_multisims.at(i)!= used_multisims.at(i-1)){
-				std::cerr<<"WARNING: number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
+				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
 				//exit(EXIT_FAILURE);
 			}
 			universes_used = used_multisims.at(0);
@@ -161,21 +128,19 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 	}
 
 
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"Initilizing "<<universes_used<<" universes for "<<parameter_names[0][0]<<std::endl;
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"--------------------------------------------------------------------------------\n";
+	std::cout<<"SBNmultisim::SBNmultisim\t|| -------------------------------------------------------------\n";
+	std::cout<<"SBNmultisim::SBNmultisim\t|| Initilizing "<<universes_used<<" universes for "<<parameter_names[0][0]<<std::endl;
+	std::cout<<"SBNmultisim::SBNmultisim\t|| -------------------------------------------------------------\n";
 
 	std::vector<double> base_vec (spec_CV.num_bins_total,0.0);
 
 
-	std::cout<<"Full vector has : "<<spec_CV.num_bins_total<<std::endl;
+	std::cout<<"SBNmultisim::SBNmultisim\t|| Full concatanated vector has : "<<spec_CV.num_bins_total<<std::endl;
 	for(int m=0; m<universes_used; m++){
-		//if(m%2500==0)std::cout<<"Initilized : "<<m<<" of "<<universes_used<<std::endl;
 		multi_vecspec.push_back(base_vec);
 	}
-	std::cout<<"multi_vecspec now initilized of size :"<<multi_vecspec.size()<<std::endl;
+
+	std::cout<<"SBNmultisim::SBNmultisim\t|| multi_vecspec now initilized of size :"<<multi_vecspec.size()<<std::endl;
 
 	for(int j=0;j<Nfiles;j++){
 
@@ -184,11 +149,11 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 
 
-		for(int i=0; i< std::min(2500,nentries.at(j)); i++){
+		for(int i=0; i< std::min(  multisim_maxevents.at(j)  ,nentries.at(j)); i++){
 			trees.at(j)->GetEntry(i);
 			std::map<std::string, std::vector<double>> * thisfWeight = fWeights->at(j);
 
-			if(i%1000==0) std::cout<<"Event: "<<i<<" of "<<nentries[j]<<" from File: "<<multisim_file[j]<<std::endl;
+			if(i%2500==0) std::cout<<"SBNmultisim::SBNmultisim\t|| On event: "<<i<<" of "<<nentries[j]<<" from File: "<<multisim_file[j]<<std::endl;
 
 			std::vector<double> weights;
 			double global_weight = 1;
@@ -199,14 +164,15 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			}
 
 			if(std::isinf(global_weight) || global_weight != global_weight){
-				std::cout<<"ERROR @  "<<i<<" in File "<<multisim_file.at(j)<<" as its either inf/nan: "<<global_weight<<std::endl;
+				std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR  error @ "<<i<<" in File "<<multisim_file.at(j)<<" as its either inf/nan: "<<global_weight<<std::endl;
 				exit(EXIT_FAILURE);
 			}
 
 
 			if( this->eventSelection(j) ){
+
 				if(parameter_names.at(j).size()!=1){
-					std::cout<<"ERROR: Currently can only do either 1 multi_sim parameter or 'ALL'"<<std::endl;
+					std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR: Currently can only do either 1 multi_sim parameter or 'ALL'"<<std::endl;
 					exit(EXIT_FAILURE);
 
 				}
@@ -228,12 +194,12 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 							bool is_nan = wei!=wei;
 
 							if(is_inf || is_nan){
-								std::cout<<"Killing :: event # "<<i<<" in File "<<multisim_file.at(j)<<" weight: "<<wei<<" global bnb: "<<global_weight<<" in "<<var<<std::endl;
+								std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR! Killing :: event # "<<i<<" in File "<<multisim_file.at(j)<<" weight: "<<wei<<" global bnb: "<<global_weight<<" in "<<var<<std::endl;
 								exit(EXIT_FAILURE);
 							}
 
 							if(wei > abnormally_large_weight){
-								std::cout<<"ATTENTION: HUGE weight: "<<wei<<" at "<<var<<" event "<<i<<" file "<<j<<std::endl;
+								std::cout<<"ATTENTION! SBNmultisim::SBNmultisim\t|| HUGE weight: "<<wei<<" at "<<var<<" event "<<i<<" file "<<j<<std::endl;
 							}
 							weights.push_back(wei*global_weight);
 
@@ -244,6 +210,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 					//So the size of weights must equal global universes ya?
 					if(weights.size() != universes_used || universes_used != multi_vecspec.size()){
+						std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR "<<std::endl;
 						std::cout<<"weights.size() "<<weights.size()<<std::endl;
 						std::cout<<"universes_used "<<universes_used<<std::endl;
 						std::cout<<"multi_vecspec.size() "<<multi_vecspec.size()<<std::endl;
@@ -286,28 +253,28 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 				}
 				*/
 
+				for(int t=0; t<branch_variables.at(j).size();t++){
+					//Need the histogram index, the value, the global bin...
+					int ih = spec_CV.map_hist.at(branch_variables.at(j).at(t)->associated_hist);
+					double reco_var = *(static_cast<double*>(branch_variables.at(j).at(t)->getValue()));
+					int reco_bin = spec_CV.getGlobalBinNumber(reco_var,ih);
+					spec_CV.hist.at(ih).Fill(reco_var,global_weight);
 
-				double reco_var = vars.at(j).at(0)/1000.0;
-				int reco_bin = spec_CV.getGlobalBinNumber(reco_var,j);
+					for(int m=0; m< weights.size(); m++){
+						if(reco_bin>=0)  multi_vecspec.at(m).at(reco_bin)   +=  weights.at(m);
 
-				for(int m=0; m< weights.size(); m++){
+						//important check. failure mode	
+						if(weights.at(m)!=weights.at(m) || std::isinf(weights.at(m)) ){
+							std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR weight has a value of: "<<weights.at(m)<<". So I am killing all. on Dim: "<<m<<" global_eright is "<<global_weight<<std::endl;
+							exit(EXIT_FAILURE);
+						}
 
-					if(reco_bin>=0)  multi_vecspec.at(m).at(reco_bin)   +=  weights.at(m);
-
-					//important check. failure mode	
-					if(weights.at(m)!=weights.at(m) || std::isinf(weights.at(m)) ){
-						std::cout<<"ERROR: weight has a value of: "<<weights.at(m)<<". So I am killing all. on Dim: "<<m<<" energy"<<vars.at(j)[0]<<" global_eright is "<<global_weight<<std::endl;
-						exit(EXIT_FAILURE);
 					}
-
 				}
 
-				//blarg, how will I treat this spectrum
-				spec_CV.hist.at(j).Fill(reco_var,global_weight);
 
 
-
-			}//end of CCQE..interaction type check.. OH no this should be in fillHistograms
+			}	
 		} //end of entry loop
 	}//end of file loop 
 
@@ -342,16 +309,16 @@ int SBNmultisim::fillHistograms(int file, int uni, double wei){
  * ************************************************************/
 
 
-int SBNmultisim::formCovarianceMatrix(std::string fileout){
+int SBNmultisim::formCovarianceMatrix(std::string tag){
 
 	full_covariance.ResizeTo(num_bins_total, num_bins_total);
 	frac_covariance.ResizeTo(num_bins_total, num_bins_total);
 	full_correlation.ResizeTo(num_bins_total, num_bins_total);
 
 	//prepare three TH2D for plotting 
-	TH2D * hist_frac_cov = new TH2D("Frac Cov","",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
-	TH2D * hist_full_cor = new TH2D("Corr","",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
-	TH2D * hist_full_cov = new TH2D("Full Cov","",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
+	TH2D * hist_frac_cov = new TH2D("Full Fractional Covariance","Full Fraction Covariance",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
+	TH2D * hist_full_cor = new TH2D("Full Correlation","Full Correlation",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
+	TH2D * hist_full_cov = new TH2D("Full Covvariance","Full Covariance",num_bins_total,1,num_bins_total, num_bins_total,1,num_bins_total);
 
 	for(auto &h: multi_sbnspec){
 		h.calcFullVector();
@@ -361,7 +328,7 @@ int SBNmultisim::formCovarianceMatrix(std::string fileout){
 	spec_CV.calcFullVector();	
 	std::vector<double> CV = spec_CV.fullVec;
 
-	std::cout<<"multi_sbnspec.size(): "<<multi_vecspec.size()<<" universes_used: "<<universes_used<<std::endl;
+	std::cout<<"SBNmultisim::formCovariancematrix\t|| multi_sbnspec.size(): "<<multi_vecspec.size()<<" universes_used: "<<universes_used<<std::endl;
 
 	for(int i=0; i<num_bins_total; i++){
 		for(int j=0; j<num_bins_total; j++){
@@ -375,7 +342,8 @@ int SBNmultisim::formCovarianceMatrix(std::string fileout){
 
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
-					std::cout<<"ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
+					std::cout<<"SBNmultisim::formCovariancematrix\t|| ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
+					exit(EXIT_FAILURE);
 				}
 
 			}
@@ -401,147 +369,49 @@ int SBNmultisim::formCovarianceMatrix(std::string fileout){
 	}
 
 
+	this->qualityTesting();
 
 
 
 	/************************************************************
 	 *			Saving to file				    *
 	 * *********************************************************/
-	std::string nn = "covariance_matrix_" + parameter_names[0][0]+".root";
-
-	TFile *ftest=new TFile(nn.c_str(),"RECREATE");
-	ftest->cd();
-
-	/*
-	   TCanvas *cspline =  new TCanvas("Splines");
-	   int num_hists = multi_sbnspec.at(0).hist.size();
-	   cspline->Divide(num_hists,1);
-
-	   for(int h=0; h<spec_CV.hist.size(); h++){
-	   cspline->cd(h+1);
-	   spec_CV.hist.at(h).SetLineColor(kBlack);
-	   spec_CV.hist.at(h).SetLineWidth(4);
-	   spec_CV.hist.at(h).SetTitle( (fullnames[h]+" : "+parameter_names[0][0]).c_str() );
-	   spec_CV.hist.at(h).Draw("L SAME");
-	   }
-
-	   TRandom3 * rangen = new TRandom3(0);
-	   for(int m=0; m< universes_used; m++){
-	   for(int h=0; h<multi_sbnspec.at(m).hist.size(); h++){
-	   cspline->cd(h+1);
-	   TGraph *g = new TGraph( );
-	   multi_sbnspec.at(m).hist.at(h).SetLineColor(rangen->Uniform(400,900));
-
-	   multi_sbnspec.at(m).hist.at(h).Draw("L SAME");
-	   }
-	   }
-	   delete rangen;
-
-	   for(int h=0; h<spec_CV.hist.size(); h++){
-	   cspline->cd(h+1);
-	   spec_CV.hist.at(h).SetLineWidth(4);
-	   spec_CV.hist.at(h).Draw("L SAME");
-	   }
+	TFile *fout=new TFile((tag+".SBNcovar.root").c_str(),"RECREATE");
+	fout->cd();
+		full_covariance.Write(("full_covariance_"+tag).c_str(),TObject::kWriteDelete);
+		frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
+		full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
+	fout->Close();
+	//and also writeout 	
+	spec_CV.writeOut(tag);
 
 
-	   cspline->Write();
-	   std::string ppsp = "splines_"+parameter_names[0][0]+".pdf";
-
-	   cspline->SaveAs(ppsp.c_str());
-	   */
+	return 0;
+}
 
 
+int SBNmultisim::qualityTesting(){
 
-
-	//matricies
-	TCanvas *c1 =  new TCanvas("Fractional Covariance Matrix");
-	c1->cd();
-
-	hist_frac_cov->SetTitle("Fractional Covariance Matrix (sys only)");
-	hist_frac_cov->GetYaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_frac_cov->GetXaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_frac_cov->Draw("COLZ");
-	c1->Write();
-
-	TCanvas *c2 =  new TCanvas("Correlation Matrix");
-	c2->cd();
-
-	hist_full_cor->SetTitle("Correlation Matrix (sys only)");
-	hist_full_cor->GetYaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_full_cor->GetXaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_full_cor->Draw("COLZ");
-	c2->Write();	
-
-	TCanvas *c3 =  new TCanvas("Covariance Matrix");
-	c3->cd();
-
-	hist_full_cov->SetTitle("Covariance Matrix (sys only)");
-	hist_full_cov->GetYaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_full_cov->GetXaxis()->SetTitle("E_{#nu}^{truth}");
-	hist_full_cov->Draw("COLZ");
-	c3->Write();
-
-
-
-	std::string pp = "Fractional Covarariance and Correlation: "+parameter_names[0][0];
-	TCanvas *cboth = new TCanvas(pp.c_str());
-	cboth->SetCanvasSize(1800,600);
-	gStyle->SetOptStat(0);
-	hist_frac_cov->SetTitle( ("Fractional Covariance: "+ parameter_names[0][0]).c_str());
-	hist_full_cor->SetTitle( ("Correlation: "+ parameter_names[0][0]).c_str());
-
-	cboth->Divide(2,1);
-
-	cboth->SetFixedAspectRatio();
-	cboth->cd(1);
-	cboth->SetBorderSize(20);
-
-	hist_frac_cov->Draw("COLZ");
-
-	cboth->SetRightMargin(0.30);
-	cboth->cd(2);
-
-
-	hist_full_cor->Draw("COLZ");
-	cboth->SetRightMargin(0.30);
-	cboth->Update();
-	cboth->Write();
-
-	hist_full_cov->Write();
-	hist_frac_cov->Write();
-	hist_full_cor->Write();
-
-	std::string ppdf = "covar_plots_"+parameter_names[0][0]+".pdf";
-	cboth->SaveAs(ppdf.c_str());
-
-
-	frac_covariance.Write();
-	full_covariance.Write();
-	full_correlation.Write();
-
-	spec_CV.writeOut("CV.root");
-	ftest->Close();
 
 
 	/************************************************************
 	 *		Quality Testing Suite			    *
 	 * *********************************************************/
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"Quality Testing Suite"<<std::endl;
-	std::cout<<"--------------------------------------------------------------------------------\n";
-	std::cout<<"--------------------------------------------------------------------------------\n";
+	std::cout<<"SBNmultisim::qualityTesting\t||-----------------------------------------------------\n";
+	std::cout<<"SBNmultisim::qualityTesting\t||----------------Quality Testing Suite"<<std::endl;
+	std::cout<<"SBNmultisim::qualityTesting\t||-----------------------------------------------------\n";
 
 
-	std::cout<<"Checking if generated matrix is indeed a valid covariance matrix.\nFirst checking if matrix is symmetric.\n";
+	std::cout<<"SBNmultisim::qualityTesting\t|| Checking if generated matrix is indeed a valid covariance matrix.\n";
+	std::cout<<"SBNmultisim::qualityTesting\t|| First checking if matrix is symmetric.\n";
 	if(full_covariance.IsSymmetric()){
-		std::cout<<"PASS: Generated covariance matrix is symmetric"<<std::endl;
+		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is symmetric"<<std::endl;
 	}else{
-		std::cerr<<"ERROR: SBNmultisim::formCovarianceMatrix, result is not symmetric!"<<std::endl;
+		std::cout<<"SBNmultisim::qualityTesting\t||  ERROR result is not symmetric!"<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	std::cout<<"Checking if generated matrix is positive semi-definite by looking at eigenvalues.\n";
+	std::cout<<"SBNmultisim::qualityTesting\t|| Checking if generated matrix is positive semi-definite by looking at eigenvalues.\n";
 	//if a matrix is (a) real and (b) symmetric (checked above) then to prove positive semi-definite, we just need to check eigenvalues and >=0;
 	TMatrixDEigen eigen (full_covariance);
 	TVectorD eigen_values = eigen.GetEigenValuesRe();
@@ -551,7 +421,7 @@ int SBNmultisim::formCovarianceMatrix(std::string fileout){
 		if(eigen_values(i)<0){
 			is_small_negative_eigenvalue = true;
 			if(fabs(eigen_values(i))> tolerence_positivesemi ){
-				std::cerr<<"ERROR: SBNmultisim::formCovarianceMatrix, contains (at least one)  negative eigenvalue: "<<eigen_values(i)<<std::endl;
+				std::cout<<"SBNmultisim::qualityTesting\t|| ERROR contains (at least one)  negative eigenvalue: "<<eigen_values(i)<<std::endl;
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -559,20 +429,19 @@ int SBNmultisim::formCovarianceMatrix(std::string fileout){
 
 
 	if(is_small_negative_eigenvalue){	
-		std::cout<<"PASS: Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
+		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
 	}else{
-		std::cout<<"PASS: Generated covariance matrix is positive semi-definite."<<std::endl;
+		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is positive semi-definite."<<std::endl;
 	}
-	std::cout<<"Congratulations, matrix is indeed a valid covariance matrix.\n";
-
-
+	std::cout<<"SBNmultisim::qualityTesting\t|| Congratulations, matrix is indeed a valid covariance matrix.\n";
 
 	return 0;
 }
 
 
-int SBNmultisim::printMatricies(std::string fileout){
-	TFile* fout = new TFile(fileout.c_str(),"recreate");
+
+int SBNmultisim::printMatricies(std::string tag){
+	TFile* fout = new TFile(("SBNfit_matrix_plots_"+tag+".root").c_str(),"recreate");
 	fout->cd();
 
 

@@ -1,11 +1,15 @@
 #include "SBNspec.h"
 using namespace sbn;
 
-SBNspec::SBNspec(std::string whichxml): SBNspec(whichxml,-1){
+
+
+SBNspec::SBNspec(std::string whichxml): SBNspec(whichxml,-1,true){
 }
 
+SBNspec::SBNspec(std::string whichxml, int which_universe): SBNspec(whichxml,which_universe, true){
+}
 
-SBNspec::SBNspec(std::string whichxml, int which_universe) : SBNconfig(whichxml){
+SBNspec::SBNspec(std::string whichxml, int which_universe, bool isverbose) : SBNconfig(whichxml,isverbose){
 
 	//Initialise all the things
 	//for every multisim, create a vector of histograms, one for every subchannel we want 
@@ -294,14 +298,14 @@ int SBNspec::printCompVec(){
 }
 
 
-int SBNspec::writeOut(std::string filename){
+int SBNspec::writeOut(std::string tag){
 	//kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
 
 	std::vector<int> mycol = {416-6, 800+3, 616+1, 632-7, 600-7, 432+1, 900}; 				
-	std::string fn1= "SBN_"+filename;
-	TFile *f2 = new TFile(fn1.c_str(),"RECREATE" ); 
+	
+	TFile *f2 = new TFile((tag+".SBNspec.root").c_str(),"recreate"); 
 
 	for(auto& h: hist){
 		h.Write();
@@ -309,7 +313,7 @@ int SBNspec::writeOut(std::string filename){
 	f2->Close();	
 
 
-	TFile *f = new TFile(filename.c_str(),"RECREATE" ); 
+	TFile *f = new TFile(("SBNfit_spectrum_plots_"+tag+".root").c_str(),"RECREATE"); 
 	f->cd();
 
 	std::vector<TH1D> temp = hist;

@@ -26,7 +26,7 @@
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 </channel>
 <!-- ############################# MultiSims #####################################################-->	
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" maxevents="10000" >
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
@@ -34,7 +34,7 @@
 		associated_hist="nu_uBooNE_elike_intrinsic"/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root" maxevents="10000">
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
@@ -42,15 +42,15 @@
 		associated_hist ="nu_uBooNE_elike_signal" />
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1m1p.root">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1m1p.root" maxevents="10000" >
 	<parameters names = "ALL" />
 	<branch 
 		name="ereco" 
 		type ="double" 
-		associated_hist ="nu_uBooNE_mlike_intrinsc"/>
+		associated_hist ="nu_uBooNE_mlike_intrinsic"/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/ccpi0.root">
+<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/ccpi0.root" maxevents = "10000">
 	<parameters names = "ALL" />
 	<branch
 		name="ereco" 

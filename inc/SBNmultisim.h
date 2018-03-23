@@ -42,7 +42,6 @@ class SBNmultisim : public SBNconfig{
 	public:
 		
 	SBNspec spec_CV;	
-	SBNspec spec_sig;
 
 	std::vector<TH2D> h_spec2d_CV;
 	std::vector<TH2D> h_spec2d_sig;
@@ -50,11 +49,14 @@ class SBNmultisim : public SBNconfig{
 	
 	SBNmultisim(std::string xmlname);
 
-	int formCovarianceMatrix(std::string fileout);
+	int formCovarianceMatrix(std::string tag);
 	int writeOut();
-	int printMatricies(std::string fileout);
+	int printMatricies(std::string tag);
+
+	int qualityTesting();
 	virtual bool eventSelection(int file);
 	virtual int fillHistograms(int file, int uni, double wei);
+	
 
 	std::vector<SBNspec> multi_sbnspec;
 	std::vector<std::vector<double>> multi_vecspec;
@@ -72,7 +74,6 @@ class SBNmultisim : public SBNconfig{
 	double tolerence_positivesemi;
 	int universes_used;
 	double abnormally_large_weight;
-
 
 
 	//Multisim input variables

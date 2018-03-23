@@ -13,7 +13,7 @@
 #include "TFile.h"
 
 #include "tinyxml.h"
-
+#include "branch_variable.h"
 namespace sbn{
 // All declarations are within the namespace scope.
 
@@ -115,30 +115,25 @@ class SBNconfig {
 	//This is going to be a manual setup thing
 
 
+	//Some stringsteam stuff
+	std::string otag;
+
 	//For generating a covariance matrix from scratch, this contains the number of multisims (weights in weight vector) and their names.
 	// For some reason I have decided that the first multisim, weight[0] must be the central value, =1
 	int num_multisim_files;
 	//std::vector<int> num_multisim;
 	std::vector<std::string> multisim_name;	
 	std::vector<std::string> multisim_file;	
+	std::vector<int> multisim_maxevents;	
+	
 	std::vector<double> pot_scaling;
 	std::vector<double> pot;
 	
 	std::vector<std::vector<std::string>> parameter_names;	
+	std::vector<std::vector<branch_var*>> branch_variables;
+	
 
-	std::vector<std::vector<std::string>> branch_names;	
-	std::vector<std::vector<std::string>> branch_types;
-	std::vector<std::vector<std::string>> branch_asso_hists;	
-
-	//obsol below	
-	std::vector<std::vector<std::string>> branch_names_int;
-	std::vector<std::vector<std::string>> branch_names_int_array;
-	std::vector<std::vector<std::string>> branch_names_double;
-	std::vector<std::vector<std::string>> branch_names_double_array;
-
-	std::vector<std::vector<int>> branch_names_double_array_dimension;
-
-
+	
 };
 
 }

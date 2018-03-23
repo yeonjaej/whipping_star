@@ -35,10 +35,13 @@ class SBNspec : public SBNconfig{
 	//This is the compessed vector, collapsing all subchannels down to a single channel
 	std::vector<double > compVec;
 
+	//depreciated, use strings below
 	SBNspec(const char *, std::string); //Load in root file and config file
 	SBNspec(const char *, std::string,bool); //Load in root file and config file, optional verbosity
+
 	SBNspec(std::string); //Load in config file, create EMPTY hists 
 	SBNspec(std::string, int); //Load in config file, create EMPTY hists, with optional numbering (e.g for multisims!) 
+	SBNspec(std::string, int, bool); //Load in config file, create EMPTY hists, with optional numbering (e.g for multisims!) 
 	SBNspec() {};
 
 	int randomScale(); //mainly a debugging function, just randomly scales each hist by 0-2
