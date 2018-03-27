@@ -46,8 +46,11 @@ SBNspec::SBNspec(std::string rootfile, std::string whichxml, bool isverbose) : S
          TFile *f = new TFile(rootfile.c_str(),"read");
  
          //Loop over all filenames that should be there, and load up the histograms.
-         for(auto fn: fullnames){
+        int n=0; 
+	for(auto fn: fullnames){
                  hist.push_back(*((TH1D*)f->Get(fn.c_str()))); 
+		 map_hist[fn] = n;
+		 n++;	
          }
          
 	has_been_scaled=false;
@@ -61,6 +64,34 @@ SBNspec::SBNspec(std::string rootfile, std::string whichxml, bool isverbose) : S
 SBNspec::SBNspec(std::string rootfile, std::string whichxml) : SBNspec(rootfile, whichxml, true){ };
 
 
+ 
+int SBNspec::Add(std::string which_hist, TH1 * histin){
+	//Addes all hists together
+	if(map_hist.count(which_hist) <= 0){
+		std::cout<<"SBNspec::Add || ERROR the passed in histgram name is not one defined in the xml! passsed in: "<<which_hist<<" "<<map_hist.count(which_hist)<<std::endl;
+	
+	        for(std::map<std::string, int >::iterator  it = map_hist.begin(); it != map_hist.end(); ++it){
+			std::cout<<"SBNspec::Add || "<<it->first<<" @ "<<it->second<<std::endl;
+		}		
+			
+
+		exit(EXIT_FAILURE);
+	}	
+
+	int h=map_hist[which_hist];
+	
+	if(hist.at(h).GetNbinsX() != histin->GetNbinsX()){
+		std::cout<<"SBNspec::Add || ERROR the passed in histgram has different number of bins!"<<std::endl;
+		std::cout<<"SBNspec::Add || "<<which_hist<<" : "<<hist.at(h).GetNbinsX()<<std::endl;
+		std::cout<<"SBNspec::Add || Inputted hist : "<<histin->GetNbinsX()<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	hist.at(h).Add(histin);
+
+	this->collapseVector();
+	return 0;
+}
 
 
  

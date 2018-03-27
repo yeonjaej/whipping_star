@@ -78,6 +78,19 @@ int main(int argc, char* argv[])
 	//But remove the signal componants
 	bkg_only_spec.Scale("elike_signal",0.0);
 
+	/******************LEE signal done seperately example ***********************/
+	double bins[4] = {0,500,1000,3000};
+	double made_up_number = 20;
+
+	TH1D  * lee_signal = new TH1D("lee","lee",3, bins);
+	lee_signal->SetBinContent(1,made_up_number); //Fill this anyway you want. Should be scaled to the correct POT.
+
+	//The following line would then add this ad-hoc TH1 to the "nu_uBooNE_elike_intrinsic" spectra
+	//It will break here as the example XML has more than 3 bins! But is here for syntax reasons.
+	//central_value_spec.Add("nu_uBooNE_elike_intrinsic",lee_signal);	
+
+	//WARNING! you must check yourself to make sure POT, scaling, etc..  is correct with this TH1, its outside the SBNfit .xml system so bit more dangerous.
+	/*****************************************/
 
 	//Load up the calculated covariance matrix	
 	TFile *covar_file = new TFile("LEEtest.SBNcovar.root","read");
@@ -88,6 +101,5 @@ int main(int argc, char* argv[])
 	std::cout<<"CHI^2: "<<uboone_chi.calcChi(&bkg_only_spec)<<std::endl;
 
 	uboone_chi.printMatricies(tag);
-
 
 }

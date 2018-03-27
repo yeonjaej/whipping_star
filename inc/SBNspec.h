@@ -88,6 +88,9 @@ class SBNspec : public SBNconfig{
 	//Addes two SBNspec together. must have same xml!
 	int Add(SBNspec*);
 
+ 	//Addes histin to the mode_det_channel_subchannel 
+	int Add(std::string which_hist, TH1 * histin);
+
 };
 
 

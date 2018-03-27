@@ -6,7 +6,6 @@
 <channel name="elike" unit="MeV" use="1" numbins="15">
 		<bins 
 			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
-
 		/>
 		<subchannel name="intrinsic" use="1" osc = "0"/>
 		<subchannel name="signal" use="1" osc = "0"/>
@@ -27,7 +26,7 @@
 </channel>
 <!-- ############################# MultiSims #####################################################-->	
 <MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" scale = "0.2" maxevents ="10000" >
-	<parameters names = "ALL" />
+	<parameters names = "ALL"/>
 	<friend filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" treename ="events"/>
 	<branch 
 		name="events.ereco" 
