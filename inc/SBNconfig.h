@@ -125,6 +125,10 @@ class SBNconfig {
 	//std::vector<int> num_multisim;
 	std::vector<std::string> multisim_name;	
 	std::vector<std::string> multisim_file;	
+        std::map<std::string,std::string> multisim_file_friend_map;
+         std::map<std::string,std::string> multisim_file_friend_treename_map;
+
+
 	std::vector<int> multisim_maxevents;	
 	std::vector<double> multisim_scale;	
 	

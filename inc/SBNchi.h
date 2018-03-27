@@ -100,7 +100,7 @@ class SBNchi : public SBNconfig{
 	std::vector<std::vector<double >> vMcI;
 	std::vector<std::vector<double >> vMc;
 
-	TH2D getChiogram();
+	TH2D* getChiogram();
 
 };
 

@@ -28,8 +28,9 @@
 <!-- ############################# MultiSims #####################################################-->	
 <MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" scale = "0.2" maxevents ="10000" >
 	<parameters names = "ALL" />
+	<friend filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" treename ="events"/>
 	<branch 
-		name="ereco" 
+		name="events.ereco" 
 		type="double" 
 		associated_hist="nu_uBooNE_elike_intrinsic"/>
 </MultisimFile>

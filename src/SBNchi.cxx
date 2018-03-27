@@ -23,7 +23,6 @@ SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkg
 
 }
 
-
 //Alternative constrctors
 SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgSpec(in){
 	stat_only = false;
@@ -640,21 +639,17 @@ TMatrixT<double > SBNchi::sys_fill_direct(std::string rootname, std::string matn
 
 
 
-TH2D SBNchi::getChiogram(){
-	TH2D tmp("","",num_bins_total_compressed,0, num_bins_total_compressed ,num_bins_total_compressed,0, num_bins_total_compressed);
+TH2D* SBNchi::getChiogram(){
+	TH2D *tmp = new TH2D("chi-o-gram","chi-o-gram",num_bins_total_compressed,0, num_bins_total_compressed ,num_bins_total_compressed,0, num_bins_total_compressed);
 
 	for(int i =0; i<num_bins_total_compressed; i++){
 		for(int j =0; j<num_bins_total_compressed; j++){
 
-			tmp.SetBinContent(i+1, j+1, lastChi_vec.at(i).at(j));
+			tmp->SetBinContent(i+1, j+1, lastChi_vec.at(i).at(j));
 		}
-
 	}
 
-
 	return tmp;
-
-
 }
 
 int SBNchi::printMatricies(std::string tag){
@@ -762,6 +757,30 @@ int SBNchi::printMatricies(std::string tag){
 	c_full->Write();	
 
 
+	TCanvas *chiogram = new TCanvas("Chi-o-gram","Chi-o-gram");
+	chiogram->cd();
+	chiogram->SetFixedAspectRatio();
+	
+	TH2D * h_chiogram = (TH2D*)this->getChiogram();
+	h_chiogram->Draw("colz");	
+	h_chiogram->SetTitle("Reco Bin i");
+	h_chiogram->SetTitle("Reco Bin j");
+
+	int use_chio =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){ 	 
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_chio, num_bins_total_compressed, num_bins.at(ic)+use_chio);
+				TLine *lh = new TLine(num_bins.at(ic)+use_chio,0, num_bins.at(ic)+use_chio, num_bins_total_compressed);
+				lv->SetLineWidth(1.5);
+				lh->SetLineWidth(1.5);
+				use_chio+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+			}
+		}
+	}
+	chiogram->Write();
 
 	fout->Close();
 	return 0;
@@ -796,6 +815,18 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;
 
 	isVerbose = true;
+	
+
+
+
+
+
+
+
+
+
+
+
 	return ans;
 
 
@@ -840,8 +871,6 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 
 
 }
-
-
 
 
 //This one varies the core spectrum, and as sucn has to recalculate the Msys each stem

@@ -25,9 +25,20 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		files.push_back(new TFile(fn.c_str()));
 	}
 
+
+
 	for(int i=0; i<multisim_name.size(); i++){
 		trees.push_back((TTree*)files.at(i)->Get(multisim_name.at(i).c_str()) );
 	}
+
+         for(int i=0; i<multisim_file.size(); i++){
+  
+                  if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
+  		std::cout<<"SBNmultisim::SBNmultisim\t|| Adding a friend tree  "<< multisim_file.at(i)<<" to file "<<multisim_file.at(i)<<std::endl;
+
+                          trees.at(i)->AddFriend( multisim_file_friend_treename_map.at(multisim_file.at(i)).c_str()   ,  multisim_file_friend_map.at(multisim_file.at(i)).c_str()   );
+                  }
+         }
 
 
 	std::vector<int> nentries;
@@ -182,7 +193,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 				{
 					//Loop over all variations!
 					for(std::string &var : variations){
-
+						
 						//check if variation is in this file, if it isn't: then just push back 1's of appropiate number to keep universes consistent
 						if(thisfWeight->count(var) <=0 ){
 							for(int g=0; g<fWeights->at(0)->at(var).size(); g++){

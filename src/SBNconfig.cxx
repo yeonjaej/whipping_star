@@ -165,6 +165,15 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			parameter_names.push_back(vstring);
 
 
+                         TiXmlElement *pFriend;
+			 pFriend = pMC->FirstChildElement("friend");
+                         if(pFriend){
+				
+                                 multisim_file_friend_treename_map[multisim_file.back()] = pFriend->Attribute("treename");
+                                 multisim_file_friend_map[multisim_file.back()] = pFriend->Attribute("filename");
+                         }
+
+
 
 			TiXmlElement *pBranch;
 			pBranch = pMC->FirstChildElement("branch");

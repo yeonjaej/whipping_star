@@ -365,6 +365,93 @@ int SBNspec::writeOut(std::string tag){
 	return 0;
 }
 
+	
+
+
+
+int SBNspec::compareSBNspecs(SBNspec * data, TFile* f, std::string tag){
+/*	f->cd();
+
+	std::vector<TH1D> temp_hists = hist;
+	std::vector<TH1D> data_hists = data->hist;
+
+
+	for(int im = 0; im <mode_names.size(); im++){
+	for(int id = 0; id <detector_names.size(); id++){
+	for(int ic = 0; ic <channel_names.size(); ic++){
+
+			
+				std::string canvas_name = mode_names.at(im)+"_"+detector_names.at(id)+"_"+channel_names.at(ic);
+
+				bool this_run = false;
+
+				TCanvas* Cstack= new TCanvas(canvas_name.c_str(),canvas_name.c_str());
+				Cstack->cd();
+				THStack * hs 	   = new THStack(canvas_name.c_str(),  canvas_name.c_str());
+				TLegend legStack(0.59,0.59,0.89,0.89);
+				int n=0;
+
+				
+				for(auto &h : temp_hists){	
+					std::string test = h.GetName();
+					if(test.find(canvas_name)!=std::string::npos){
+						colindex++;
+						if(colindex == mycol.size()-1) colindex=0;
+
+						std::ostringstream numberofevents;
+						numberofevents << std::setprecision(6) << h.GetSumOfWeights();
+
+
+						h.Sumw2(false);
+						h.Scale(1,"width,nosw2");
+						h.SetMarkerStyle(20);
+						h.SetMarkerColor(mycol.at( colindex ) );
+						h.SetFillColor(mycol.at(colindex));
+						h.SetLineColor(kBlack);
+						h.SetTitle(h.GetName());
+						//h.Write();
+
+						std::string legend_name = h.GetName()  + numberofevents.str();
+						legStack.AddEntry(&h, legend_name.c_str() , "f");
+
+						hs->Add(&h);
+						n++;
+
+						this_run=true;
+
+					}
+				}
+			
+	
+				if(this_run){
+					hs->Draw();
+					hs->GetYaxis()->SetTitle(("Events/"+channel_units.at(ic)).c_str());
+					hs->GetXaxis()->SetTitle(channel_units.at(ic).c_str());
+					Cstack->Update();
+					legStack.Draw();	
+					Cstack->Write();
+				}
+
+			}
+		}
+	}
+
+	f->Close();
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+}
 
 
 int SBNspec::getLocalBinNumber(double invar, int which_hist)

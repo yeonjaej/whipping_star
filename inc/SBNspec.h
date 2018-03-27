@@ -84,7 +84,7 @@ class SBNspec : public SBNconfig{
 	int printCompVec();
 	//writeOut saves all to an externam rootfile, each individual subchannel and a stacked channel plot.
 	int writeOut(std::string);
-
+	int compareSBNspecs(SBNspec * data, TFile* f, std::string tag);
 	//Addes two SBNspec together. must have same xml!
 	int Add(SBNspec*);
 
