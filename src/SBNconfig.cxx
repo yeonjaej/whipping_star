@@ -155,7 +155,6 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			}
 
 			TiXmlElement *pParams = pMC->FirstChildElement("parameters");
-
 			std::stringstream sss(pParams->Attribute("names"));
 
 			std::vector<std::string> vstring;
@@ -168,11 +167,18 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
                          TiXmlElement *pFriend;
 			 pFriend = pMC->FirstChildElement("friend");
                          if(pFriend){
-				
-                                 multisim_file_friend_treename_map[multisim_file.back()] = pFriend->Attribute("treename");
-                                 multisim_file_friend_map[multisim_file.back()] = pFriend->Attribute("filename");
-                         }
+				 
+				if( multisim_file_friend_treename_map.count(multisim_file.back())>0){
+                        	         (multisim_file_friend_treename_map[multisim_file.back()]).push_back( pFriend->Attribute("treename") );
+                                 	 (multisim_file_friend_map[multisim_file.back()]).push_back(pFriend->Attribute("filename"));
+				}else{
+					std::vector<std::string> temp_treename = {pFriend->Attribute("treename")};
+					std::vector<std::string> temp_filename = {pFriend->Attribute("filename")};
 
+                        	        multisim_file_friend_treename_map[multisim_file.back()] = temp_treename;
+                                 	multisim_file_friend_map[multisim_file.back()] = temp_filename;
+				}
+                         }
 
 
 			TiXmlElement *pBranch;
@@ -186,7 +192,6 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				std::string btype = pBranch->Attribute("type");
 				std::string bhist = pBranch->Attribute("associated_hist");
 
-
 				if(btype == "int"){
 					TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
 				}else if(btype == "double"){
@@ -197,6 +202,16 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					std::cout<<otag<<"ERROR: currently only int, double, float, allowed for reco variables\n";
 					exit(EXIT_FAILURE);
 				}
+
+		
+				const char * oscillate = pMC->Attribute("oscillate");
+				if(oscillate==NULL || oscillate == "false"){
+					TEMP_branch_variables.back()->setOscillate(false);	
+				}else if(oscillate == "true"){
+					TEMP_branch_variables.back()->setOscillate(true);	
+					TEMP_branch_variables.back()->true_param_name = pMC->Attribute("true_param_name"); 	
+					TEMP_branch_variables.back()->true_L_name = pMC->Attribute("true_L_name"); 	
+				}		
 
 
 				pBranch = pBranch->NextSiblingElement("branch");	

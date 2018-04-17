@@ -34,9 +34,15 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
          for(int i=0; i<multisim_file.size(); i++){
   
                   if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
-  		std::cout<<"SBNmultisim::SBNmultisim\t|| Adding a friend tree  "<< multisim_file.at(i)<<" to file "<<multisim_file.at(i)<<std::endl;
+			for(int k=0; k< multisim_file_friend_treename_map.at(multisim_file.at(i)).size(); k++){
+	
+	  			std::string treefriendname = (multisim_file_friend_treename_map.at(multisim_file.at(i))).at(k); 
+	  			std::string treefriendfile = (multisim_file_friend_map.at(multisim_file.at(i))).at(k); 
 
-                          trees.at(i)->AddFriend( multisim_file_friend_treename_map.at(multisim_file.at(i)).c_str()   ,  multisim_file_friend_map.at(multisim_file.at(i)).c_str()   );
+				std::cout<<"SBNmultisim::SBNmultisim\t|| Adding a friend tree  "<< treefriendfile<<" to file "<<multisim_file.at(i)<<std::endl;
+
+                         	 trees.at(i)->AddFriend( treefriendname.c_str()   ,  treefriendfile.c_str()   );
+			}
                   }
          }
 

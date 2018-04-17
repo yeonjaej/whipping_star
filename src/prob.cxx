@@ -390,9 +390,14 @@ neutrinoModel::neutrinoModel(double  mn, double  ue4, double  um4){
 	Um[0]=um4;
 
 	numsterile = 1;
-
 	difference();
-}
+    
+        std::ostringstream out;
+        out <<std::fixed<< std::setprecision(4) << log10(dm41Sq);
+	mass_tag = out.str();
+
+
+   }
 
 
 

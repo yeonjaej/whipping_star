@@ -7,6 +7,8 @@
 #include <iostream>
 #include <TRandom3.h>
 #include <TMatrixT.h>
+#include <sstream> 
+#include <iomanip> 
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -56,6 +58,8 @@ struct complex_matrix{
 
 	int print();
 };
+
+
 struct neutrinoModel{
 	double mNu[3], Ue[3], Um[3], phi[3];
 	double dm41Sq, dm51Sq, dm61Sq, dm54Sq, dm64Sq, dm65Sq;
@@ -63,6 +67,8 @@ struct neutrinoModel{
 	//std::vector<std::vector<double>> dm;
 
 	int numsterile;
+
+	std::string mass_tag;
 
 	//constructors!! Should overload these immensely for  3+1, 3+2, 3+3 and NULL
 	neutrinoModel();

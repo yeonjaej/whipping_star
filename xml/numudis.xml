@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+
+<mode name="nu" use="1"/>
+<detector name="uBooNE" use="1" />
+
+<channel name="mlike" unit="MeV" use="1" numbins="15">
+		<bins 
+			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
+		/>
+		<subchannel name="intrinsic" use="1" osc = "22"/>
+</channel>
+
+<!-- ############################# MultiSims #####################################################-->	
+<MultisimFile treename="numu_reco_tree" filename="/uboone/data/users/rcarr/DL_frozen_March29/numu_DLselected_reco.root" scale = "0.21" maxevents ="100000" >
+	<parameters names = "ALL"/>
+	<friend filename="/uboone/data/users/rcarr/DL_frozen_March29/numu_DLselected_truth.root" treename ="mc_tree"/>
+	<branch 
+		name="Muon_E" 
+		type="double" 
+		associated_hist="nu_uBooNE_mulike_intrinsic"
+		oscillate = "true"
+		true_param_name = "mc_tree.MCFlux_NuMomE"
+		true_L_name = "ereco"/>
+</MultisimFile>
+
+<data path="/uboone/app/users/markrl/sbnfit/whipping_star/data/" />
+<covariance file="../build/examples/covariance_matrix.root" name="TMatrixT<double>;1" />
+
+

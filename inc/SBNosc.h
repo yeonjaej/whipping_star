@@ -37,11 +37,11 @@ class SBNosc : public SBNspec{
 	std::vector< std::pair <double, int>> mass_splittings;	
 
 	//Oscillate the contained std::vector<TH1D> hists 
-	int OscillateThis();	
+	int OscillateThis(std::string);	
 	// Or just oscillate a copy and return the ompressed vector
-	std::vector<double> Oscillate();
-	std::vector<double> Oscillate(double);
-	std::vector<double> OscillateWithAmp(double amp, double amp_sq);
+	std::vector<double> Oscillate(std::string);
+	std::vector<double> Oscillate(std::string, double);
+	//std::vector<double> OscillateWithAmp(double amp, double amp_sq);
 
 	int load_model(neutrinoModel);	
 	int calcMassSplittings();	

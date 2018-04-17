@@ -63,20 +63,20 @@ int SBNosc::calcMassSplittings(){
 }
 
 
-int SBNosc::OscillateThis(){
-		this->calcFullVector();
-		this->collapseVector();
+int SBNosc::OscillateThis(std::string tag){
+	this->calcFullVector();
+	this->collapseVector();
 
 	calcMassSplittings();
 
 	for(auto ms: mass_splittings){
-			char namei[200];
 			
-			sprintf(namei, "%sprecomp/SBN_SIN_%2.2f", data_path.c_str(), ms.first );
-			SBNspec single_frequency(namei , xmlname , false);
-			
-			sprintf(namei, "%sprecomp/SBN_SINSQ_%2.2f", data_path.c_str(),ms.first );
-			SBNspec single_frequency_square(namei , xmlname ,false);
+			std::string name_sinsq = tag +"_SINSQ_dm_"+workingModel.mass_tag+".SBNspec.root";
+			std::string name_sin = tag +"_SIN_dm_"+workingModel.mass_tag+".SBNspec.root";
+
+
+			SBNspec single_frequency(name_sin , xmlname , false);
+			SBNspec single_frequency_square(name_sinsq , xmlname ,false);
 
 
 			if(has_been_scaled){
@@ -210,9 +210,9 @@ int SBNosc::OscillateThis(){
 	return 0;
 };
 
-std::vector<double> SBNosc::Oscillate(double scale){
+std::vector<double> SBNosc::Oscillate(std::string tag, double scale){
 
-	std::vector<double> tmp = this->Oscillate();
+	std::vector<double> tmp = this->Oscillate(tag);
 	for(auto & v: tmp){
 		v=v*scale;
 	}
@@ -220,6 +220,7 @@ std::vector<double> SBNosc::Oscillate(double scale){
 	return tmp;
 }
 
+/*
 std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
 		this->calcFullVector();
@@ -283,10 +284,10 @@ std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
 	return temp;
 };
+*/
 
 
-
-std::vector<double> SBNosc::Oscillate(){
+std::vector<double> SBNosc::Oscillate(std::string tag){
 
 		this->calcFullVector();
 		this->collapseVector();
@@ -295,19 +296,19 @@ std::vector<double> SBNosc::Oscillate(){
 
 
 	for(auto ms: mass_splittings){
-			char namei[200];
 			
-			sprintf(namei, "%sprecomp/SBN_SIN_%2.2f",data_path.c_str(), ms.first );
-			SBNspec single_frequency(namei , xmlname, false);		
-	
-			sprintf(namei, "%sprecomp/SBN_SINSQ_%2.2f",data_path.c_str(), ms.first );
-			SBNspec single_frequency_square(namei , xmlname, false);
+			std::string name_sinsq = tag +"_SINSQ_dm_"+workingModel.mass_tag;
+			std::string name_sin = tag +"_SIN_dm_"+workingModel.mass_tag;
 
+
+			SBNspec single_frequency(name_sin , xmlname , false);
+			SBNspec single_frequency_square(name_sinsq , xmlname ,false);
+
+	
 			if(has_been_scaled){
 				single_frequency.Scale(scale_hist_name, scale_hist_val);
 				single_frequency_square.Scale(scale_hist_name, scale_hist_val);
 			}
-
 
 			double prob_mumu, prob_ee, prob_mue, prob_mue_sq, prob_muebar, prob_muebar_sq;
 
@@ -437,14 +438,6 @@ std::vector<double> SBNosc::Oscillate(){
 
 	return temp;
 };
-
-
-/*************************************************
- * for a given workingModel. 
- *  precomute the sin and sin^2 for this,
- *
- * **********************************************/
-
 
 
 

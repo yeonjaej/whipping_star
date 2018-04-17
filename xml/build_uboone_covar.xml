@@ -31,7 +31,10 @@
 	<branch 
 		name="events.ereco" 
 		type="double" 
-		associated_hist="nu_uBooNE_elike_intrinsic"/>
+		associated_hist="nu_uBooNE_elike_intrinsic"
+		oscillate = "true"
+		true_param_name = "ereco"
+		true_L_name = "ereco"/>
 </MultisimFile>
 
 <MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root">
