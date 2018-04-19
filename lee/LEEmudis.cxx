@@ -71,20 +71,45 @@ int main(int argc, char* argv[])
 	}
 
 	std::string tag = "LEEgen";
-	
-	neutrinoModel testModel(1.4, 0.1, 0.1 );
 
+	if(true){
+
+	
+	//model mass, ue4 um4 
+	neutrinoModel testModel(1.4, 0.1, 0.1);
+	// on construction it makes 3 SBNspecs, 1 sin amp, 1 sin62 amp, 1 CV oscilatted 
 	SBNgenerate gen(xml,testModel);
+	// Write them
 	gen.writePrecomputedOscSpecs(tag);
+	
+	//can get unoscillate spectra from sbn_CV
 
 	return 0;
-	SBNosc osc("LEEgen.SBNspec.root",xml, testModel);
-	osc.OscillateThis(tag);
-	osc.writeOut("osctest");
-	
+	}	
 
 	SBNosc bkg("LEEgen.SBNspec.root",xml, testModel);
 
-	bkg.compareSBNspecs(&osc,tag);
+	//Load up the calculated covariance matrix	
+	TMatrixD statonly(bkg.num_bins_total, bkg.num_bins_total);
+	statonly.Zero();
+	
+	
+	SBNchi uboone_chi(bkg, statonly);
 
+	if(false){
+
+		for(dm){
+		for(Um4){
+			SBNosc osc("LEEgen.SBNspec.root",xml, testModel);
+			osc.OscillateThis(tag);
+			//osc.writeOut("osctest");
+	
+			double ans = uboone_chi.calcChi(&osc);
+
+			std::cout<<dm<<" "<<um4<<" "<<ans<<std::endl;
+			// for plotting/looking 
+			//	bkg.compareSBNspecs(&osc,tag);
+		}
+		return 0;
+	}
 }

@@ -70,7 +70,8 @@ int SBNosc::OscillateThis(std::string tag){
 	calcMassSplittings();
 
 	for(auto ms: mass_splittings){
-			
+
+			//this is wrong			
 			std::string name_sinsq = tag +"_SINSQ_dm_"+workingModel.mass_tag+".SBNspec.root";
 			std::string name_sin = tag +"_SIN_dm_"+workingModel.mass_tag+".SBNspec.root";
 
