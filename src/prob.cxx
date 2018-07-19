@@ -24,8 +24,8 @@ int complex_matrix::add(complex_matrix *in){
 
 	for(int i =0; i< dimension; i++){
 		for(int j =0; j< dimension; j++){
-			real(i,j) += in->real(i,j); 
-			imag(i,j) += in->imag(i,j); 
+			real(i,j) += in->real(i,j);
+			imag(i,j) += in->imag(i,j);
 		}
 	}
 
@@ -66,8 +66,8 @@ int complex_matrix::mult(double valRe, double valIm){
 
 	for(int i =0; i< dimension; i++){
 		for(int j =0; j< dimension; j++){
-			real(i,j) *= valRe; 
-			imag(i,j) *= valIm; 
+			real(i,j) *= valRe;
+			imag(i,j) *= valIm;
 		}
 	}
 
@@ -101,7 +101,7 @@ std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>*
 
 	for(int i=0; i<dimension;i++){
 		ans.push_back(gsl_vector_get(eigenval,i));
-		gsl_matrix_complex_set( diagonal,i, i,  gsl_complex_rect( cos(L*gsl_vector_get(eigenval,i) ), -sin(  L*gsl_vector_get(eigenval,i ) ) ));   
+		gsl_matrix_complex_set( diagonal,i, i,  gsl_complex_rect( cos(L*gsl_vector_get(eigenval,i) ), -sin(  L*gsl_vector_get(eigenval,i ) ) ));
 
 	}
 
@@ -120,11 +120,11 @@ std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>*
 		out_vec->push_back(gsl_vector_get(eigenval,i));
 
 		for(int j=0; j< dimension; j++){
-			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0]; 
+			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0];
 			imag(i,j) = gsl_matrix_complex_get(answer, i, j).dat[1];
 
-			out_mat->real(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[0]; 
-			out_mat->imag(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[1]; 
+			out_mat->real(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[0];
+			out_mat->imag(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[1];
 
 		}
 	}
@@ -172,7 +172,7 @@ std::vector<double> complex_matrix::matrixExp(){
 	for(int i=0; i<dimension;i++){
 		ans.push_back(gsl_vector_get(eigenval,i));
 
-		gsl_matrix_complex_set( diagonal,i,i,  gsl_complex{{ cos( gsl_vector_get(eigenval,i)  ), -sin(  gsl_vector_get(eigenval,i ) ) }});   
+		gsl_matrix_complex_set( diagonal,i,i,  gsl_complex{{ cos( gsl_vector_get(eigenval,i)  ), -sin(  gsl_vector_get(eigenval,i ) ) }});
 		std::cout<<"EigenVal: "<<gsl_vector_get(eigenval,i)<<" ";
 		//		for(int j=0; j<dimension;j++){
 		//			if(i!=j) gsl_matrix_complex_set(diagonal,i,j,gsl_complex{{0.0,0.0}});
@@ -194,7 +194,7 @@ std::vector<double> complex_matrix::matrixExp(){
 
 	for(int i=0; i<dimension; i++){
 		for(int j=0; j< dimension; j++){
-			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0]; 
+			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0];
 			imag(i,j) = gsl_matrix_complex_get(answer, i, j).dat[1];
 		}
 	}
@@ -215,7 +215,7 @@ std::vector<double> complex_matrix::matrixExp(){
 
 	   for(int i=0; i< dimension; i++){
 	   for(int j=0; j< dimension; j++){
-	   temp.real(i,j) = (i==j ? 1.0 : 0.0);	
+	   temp.real(i,j) = (i==j ? 1.0 : 0.0);
 	   temp.imag(i,j) = 0.0;
 	   }
 	   }
@@ -275,7 +275,7 @@ int complex_matrix::setComplexRotation(int row, int col, double theta, double ph
 	real(row-1,col-1) = sin(theta)*cos(phi);
 	imag(row-1,col-1) = -sin(theta)*sin(phi);
 
-	//-Sin[\[Theta]] Cos[\[Delta]] - I Sin[\[Theta]] Sin[\[Delta]] 
+	//-Sin[\[Theta]] Cos[\[Delta]] - I Sin[\[Theta]] Sin[\[Delta]]
 	real(col-1,row-1) = -sin(theta)*cos(phi);
 	imag(col-1,row-1) = -sin(theta)*sin(phi);
 
@@ -391,13 +391,13 @@ neutrinoModel::neutrinoModel(double  mn, double  ue4, double  um4){
 
 	numsterile = 1;
 	difference();
-    
-        std::ostringstream out;
-        out <<std::fixed<< std::setprecision(4) << log10(dm41Sq);
+
+  std::ostringstream out;
+  out <<std::fixed<< std::setprecision(4) << log10(dm41Sq);
 	mass_tag = out.str();
 
 
-   }
+}
 
 
 
@@ -412,7 +412,7 @@ void neutrinoModel::printall(){
 	std::cout<<"Ue4: "<<Ue[0]<<" Ue5: "<<Ue[1]<<" Ue6: "<<Ue[2]<<std::endl;
 	std::cout<<"Uu4: "<<Um[0]<<" Uu5: "<<Um[1]<<" Uu6: "<<Um[2]<<std::endl;
 	std::cout<<"phi45: "<<phi[0]<<" phi46: "<<phi[1]<<" phi56: "<<phi[2]<<std::endl;
-	std::cout<<"NumSterile: "<<numsterile<<std::endl;		
+	std::cout<<"NumSterile: "<<numsterile<<std::endl;
 
 	std::cout<<"dm41sq: "<<dm41Sq<<" dm51sq: "<<dm51Sq<<" dm61sq: "<<dm61Sq<<std::endl;
 	std::cout<<"log10 dm41sq: "<<log10(dm41Sq)<<" log10 dm51sq: "<<log10(dm51Sq)<<" log10 dm61sq: "<<log10(dm61Sq)<<std::endl;
@@ -455,10 +455,10 @@ void neutrinoModel::difference(){
 double neutrinoModel::oscProbSin(double Ev, double L)
 {
 	if(dm41Sq==0 && dm51Sq==0 && dm61Sq==0)
-	{ 
+	{
 		return 1.0;
-	} 
-	else 
+	}
+	else
 	{
 		return sin(2*1.26711*dm41Sq*L/Ev);
 	}
@@ -468,10 +468,10 @@ double neutrinoModel::oscProbSin(double Ev, double L)
 double neutrinoModel::oscProbSinSq(double Ev, double L)
 {
 	if(dm41Sq==0 && dm51Sq==0 &&dm61Sq==0)
-	{ 
+	{
 		return 1.0;
-	} 
-	else 
+	}
+	else
 	{
 		return pow(sin(1.26711*dm41Sq*L/Ev),2.0);
 	}
@@ -485,7 +485,7 @@ double neutrinoModel::oscProb(int a, int b, double Ev, double L){
 	if(a == b)
 	{
 		return oscProb_dis(a, Ev, L);
-	} 
+	}
 	else
 	{
 		return oscProb_app(a,b, Ev, L);
@@ -522,7 +522,7 @@ double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 		case 3:
 		case -3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 	switch(b)
@@ -542,7 +542,7 @@ double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 		case 3:
 		case -3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 
@@ -600,7 +600,7 @@ double neutrinoModel::oscProb_dis(int a, double Ev, double L){
 			break;
 		case 3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 
@@ -623,7 +623,7 @@ double neutrinoModel::oscAmp(int a, int b, int which_dm, int sqornot){
 	if(a == b)
 	{
 		return oscAmp_dis(a, which_dm);
-	} 
+	}
 	else
 	{
 		return oscAmp_app(a,b, which_dm, sqornot);
@@ -664,7 +664,7 @@ double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 		case 3:
 		case -3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 	switch(b)
@@ -684,7 +684,7 @@ double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 		case 3:
 		case -3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 
@@ -797,7 +797,7 @@ double neutrinoModel::oscAmp_dis(int a, int which_dm){
 		case 3:
 		case -3:
 			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);	
+			exit(EXIT_FAILURE);
 			break;
 	}
 
@@ -853,12 +853,12 @@ double oscProb(int a, int b, double Ev, double L,  std::vector< std::vector < st
 
 	double ans = 0;
 
-	//Allocate a 6x6 vector	
+	//Allocate a 6x6 vector
 	//	std::vector< std::vector < std::complex<double> > >  U(6,std::vector<std::complex<double>>(6) );
 	//	std::vector<std::vector < double > >  dm;
 
 
-	//	U[1][2] = std::complex<double>(10.0,1.0); 
+	//	U[1][2] = std::complex<double>(10.0,1.0);
 	//	std::cout<<real(U[1][2])<<" "<<arg(U[1][2])<<std::endl;
 
 
@@ -868,7 +868,7 @@ double oscProb(int a, int b, double Ev, double L,  std::vector< std::vector < st
 		{
 			std::complex<double > temp = U[b][i]*conj(U[a][i])*conj(U[b][j])*U[a][j];
 			ans += 4.0*real(temp)*pow(sin(1.27*dm[i][j]*L/Ev),2.0);
-			ans += -2.0*imag(temp)*sin(2.53*dm[i][j]*L/Ev);		
+			ans += -2.0*imag(temp)*sin(2.53*dm[i][j]*L/Ev);
 
 		}
 	}
@@ -895,5 +895,3 @@ double Pmm(double L, double Ev, double Dm, double sinSq2thmm){
 	}
 	return ans;
 }
-
-

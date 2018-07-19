@@ -49,14 +49,14 @@ int main(int argc, char* argv[])
 std::string xml = "build_uboone_covar.xml";
 int iarg = 0;
 opterr=1;
-int index; 
+int index;
 
 /*************************************************************
  *************************************************************
  *		Command Line Argument Reading
  ************************************************************
  ************************************************************/
-const struct option longopts[] = 
+const struct option longopts[] =
 {
 	{"xml", 		required_argument, 	0, 'x'},
 	{"test",		required_argument,	0, 't'},
@@ -81,6 +81,16 @@ while(iarg != -1)
 			return 0;
 	}
 }
+
+	std::string dict_location = "../../../lee/AutoDict_map_string__vector_double____cxx.so";
+  gROOT->ProcessLine("#include <map>");
+  gROOT->ProcessLine("#include <vector>");
+  gROOT->ProcessLine("#include <string>");
+  //
+  std::cout<<"Trying to load dictionary: "<<dict_location<<std::endl;
+  gSystem->Load(  (dict_location).c_str());
+  //
+
 /*************************************************************
  *************************************************************
  *			Main Program Flow
@@ -89,8 +99,8 @@ while(iarg != -1)
 time_t start_time = time(0);
 std::cout<<"Begining Covariance Calculation: "<<std::endl;
 
-//a tag to identify outputs 
-std::string tag = "LEEtest";
+//a tag to identify outputs
+std::string tag = "DL";
 
 //Create a SBNmultisim object initilizing with the inputted xml
 SBNmultisim lee_multisim(xml);
@@ -100,9 +110,6 @@ lee_multisim.formCovarianceMatrix(tag);
 
 //and make some plots of the resulting things
 lee_multisim.printMatricies(tag);
-
-
-
 
 std::cout << "Total wall time: " << difftime(time(0), start_time)/60.0 << " Minutes.\n";
 return 0;

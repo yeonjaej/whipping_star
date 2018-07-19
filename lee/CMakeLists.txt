@@ -1,15 +1,9 @@
-
-add_executable (LEEfit LEEfit.cxx)
-add_executable (LEEmudis LEEmudis.cxx)
-add_executable (LEEcovariance LEEcovariance.cxx)
-
+add_executable (DLSens DLSens.cc)
+add_executable (DLCovar DLCovariance.cc)
 include_directories ( ${CMAKE_SOURCE_DIR}/inc)
-target_link_libraries (LEEfit SBNfitlib)
-target_link_libraries (LEEfit tinyxmllib)
 
-target_link_libraries (LEEcovariance SBNfitlib)
-target_link_libraries (LEEcovariance tinyxmllib)
+target_link_libraries (DLSens SBNfitlib)
+target_link_libraries (DLSens tinyxmllib)
 
-target_link_libraries (LEEmudis SBNfitlib)
-target_link_libraries (LEEmudis tinyxmllib)
-
+target_link_libraries (DLCovar SBNfitlib)
+target_link_libraries (DLCovar tinyxmllib)

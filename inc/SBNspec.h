@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <numeric>
 
 #include <ctime>
 #include <TFile.h>

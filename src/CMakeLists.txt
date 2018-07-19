@@ -9,5 +9,6 @@ include_directories ( ${CMAKE_SOURCE_DIR}/tinyxml/)
 
 #ROOT_GENERATE_DICTIONARY(LINKDEF mdict.h )
 target_link_libraries(SBNfitlib ${ROOT_LIBRARIES})
-target_link_libraries(SBNfitlib ${GSL_LIBRARIES})
+target_link_libraries(SBNfitlib gsl gslcblas)
+#target_link_libraries(SBNfitlib ${GSL_LIBRARIES})
 target_link_libraries(SBNfitlib tinyxmllib)

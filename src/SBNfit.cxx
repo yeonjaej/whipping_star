@@ -40,7 +40,7 @@ SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, int npar) : SBNchi(inBk), sigOsc(inSg
 }
 
 int SBNfit::load_signal(SBNspec inSg){
-	sigOsc = inSg;			
+	sigOsc = inSg;
 	return 0;
 }
 
@@ -52,23 +52,23 @@ int SBNfit::initialize_norm(std::vector< std::pair< std::string, int > > vecIn  
 
 double SBNfit::MinimizerCalcChi(const double * X){
 	num_func_calls++;
-	fOsc = sigOsc; 
+	fOsc = sigOsc;
 
 	for(auto& v: vec_scales){
 		fOsc.Scale(v.first, X[v.second] );
-	}	
+	}
 
-	fOsc.collapseVector();	
+	fOsc.collapseVector();
 
 	lastChi =this->calcChi(&fOsc);
 
 	return lastChi;
 
 }
-	
-double SBNfit::Minimize(){	
+
+double SBNfit::Minimize(){
 	num_func_calls=0;
-   
+
 	ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer(f_minimizer_mode, f_minimizer_algo);
 
  	min->SetMaxIterations(20000);  // for GSL
@@ -77,7 +77,7 @@ double SBNfit::Minimize(){
 	min->SetPrecision(0.001);//times 4 for normal
 
 
-        ROOT::Math::Functor f( this, &SBNfit::MinimizerCalcChi, num_params); 
+        ROOT::Math::Functor f( this, &SBNfit::MinimizerCalcChi, num_params);
 
    	min->SetFunction(f);
 
@@ -90,8 +90,8 @@ double SBNfit::Minimize(){
 
    	}
 
-  	min->Minimize(); 
-   
+  	min->Minimize();
+
   	const double *xs = min->X();
 
 	  bf_chi= MinimizerCalcChi(xs);;
@@ -191,4 +191,3 @@ int SBNfit::setNames(std::vector<std::string> inv){
 	}
 	return 0;
 }
-

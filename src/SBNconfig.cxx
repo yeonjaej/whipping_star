@@ -1,9 +1,7 @@
 #include "SBNconfig.h"
 using namespace sbn;
 
-
-
-//standard constructor given an .xml 
+//standard constructor given an .xml
 SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	otag = "SBNconfig::SBNconfig\t|| ";
 
@@ -42,11 +40,11 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 	if(!pMode){
 		std::cout<<otag<<"ERROR: Need at least 1 mode defined in xml./n";
-	}else{	
+	}else{
 		while(pMode){
 			// What modes are we running in (e.g nu, nu bar, horn current=XXvolts....) Can have as many as we want
-			mode_names.push_back(pMode->Attribute("name"));	
-			mode_bool.push_back(strtod(pMode->Attribute("use"),&end));	
+			mode_names.push_back(pMode->Attribute("name"));
+			mode_bool.push_back(strtod(pMode->Attribute("use"),&end));
 
 			pMode = pMode->NextSiblingElement("mode");
 			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading mode: "<<mode_names.back()<<" with use_bool "<<mode_bool.back()<<std::endl;
@@ -54,16 +52,16 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		}
 	}
 
-	// How many detectors do we want! 
+	// How many detectors do we want!
 	if(!pDet){
 		std::cout<<otag<<"ERROR: Need at least 1 detector defined in xml./n";
-	}else{	
+	}else{
 
 		while(pDet){
 			//std::cout<<"Detector: "<<pDet->Attribute("name")<<" "<<pDet->Attribute("use")<<std::endl;
 			detector_names.push_back(pDet->Attribute("name"));
 			detector_bool.push_back(strtod(pDet->Attribute("use"),&end));
-			pDet = pDet->NextSiblingElement("detector");	
+			pDet = pDet->NextSiblingElement("detector");
 			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading detector: "<<detector_names.back()<<" with use_bool "<<detector_bool.back()<<std::endl;
 		}
 	}
@@ -72,7 +70,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	int nchan = 0;
 	if(!pChan){
 		std::cout<<otag<<"ERROR: Need at least 1 channel defined in xml./n";
-	}else{	
+	}else{
 
 
 		while(pChan){
@@ -80,7 +78,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			channel_names.push_back(pChan->Attribute("name"));
 			channel_units.push_back(pChan->Attribute("unit"));
 			channel_bool.push_back(strtod(pChan->Attribute("use"),&end));
-			num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));	
+			num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));
 
 			if(isVerbose)	std::cout<<otag<<"Loading Channel : "<<channel_names.back()<<" with use_bool: "<<channel_bool.back()<<std::endl;
 
@@ -95,7 +93,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 			for(int b = 0; b<binedge.size()-1; b++){
 				binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
-			}			
+			}
 			if(binedge.size() != num_bins.back()+1){
 				std::cout<<otag<<"ERROR: num_bins: "<<num_bins.back()<<" but we have "<<binedge.size()<<" binedges! should be num+1"<<std::endl;
 				exit(EXIT_FAILURE);
@@ -124,19 +122,19 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				if(isVerbose)	std::cout<<otag<<"--> Subchannel: "<<subchannel_names.at(nchan).back()<<" with use_bool "<<subchannel_bool.at(nchan).back()<<" and osc_pattern "<<subchannel_osc_patterns.at(nchan).back()<<std::endl;
 
 				nsubchan++;
-				pSubChan = pSubChan->NextSiblingElement("subchannel");	
+				pSubChan = pSubChan->NextSiblingElement("subchannel");
 			}
 			num_subchannels.push_back(nsubchan);
 
 			nchan++;
-			pChan = pChan->NextSiblingElement("channel");	
+			pChan = pChan->NextSiblingElement("channel");
 		}
 	}
 
 	// if wea re creating a covariance matrix using a ntuple and weights, here is the info
 	if(pMC){
 		while(pMC)
-		{	
+		{
 			//pot.push_back(strtof(pMC->Attribute("pot"),&end));
 			//pot_scaling.push_back(strtof(pMC->Attribute("potscale"),&end));
 			multisim_name.push_back(pMC->Attribute("treename"));
@@ -167,7 +165,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
                          TiXmlElement *pFriend;
 			 pFriend = pMC->FirstChildElement("friend");
                          if(pFriend){
-				 
+
 				if( multisim_file_friend_treename_map.count(multisim_file.back())>0){
                         	         (multisim_file_friend_treename_map[multisim_file.back()]).push_back( pFriend->Attribute("treename") );
                                  	 (multisim_file_friend_map[multisim_file.back()]).push_back(pFriend->Attribute("filename"));
@@ -193,30 +191,39 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				std::string bhist = pBranch->Attribute("associated_hist");
 
 				if(btype == "int"){
-					TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
+					std::cout<<"NO INT ALLOWED "<<bnam<<std::endl;
+					exit(EXIT_FAILURE);
+					//TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
 				}else if(btype == "double"){
+					std::cout<<"Setting double variable "<<bnam<<std::endl;
 					TEMP_branch_variables.push_back( new branch_var_d(bnam, btype, bhist ) );
 				}else if(btype == "float"){
+					std::cout<<"Setting float variable "<<bnam<<std::endl;
 					TEMP_branch_variables.push_back( new branch_var_f(bnam, btype, bhist ) );
 				}else{
 					std::cout<<otag<<"ERROR: currently only int, double, float, allowed for reco variables\n";
 					exit(EXIT_FAILURE);
 				}
 
-		
-				const char * oscillate = pMC->Attribute("oscillate");
-				if(oscillate==NULL || oscillate == "false"){
-					TEMP_branch_variables.back()->setOscillate(false);	
+				std::string oscillate = pBranch->Attribute("oscillate");
+				if(oscillate == "false"){
+					std::cout<<"Do Not Oscillate "<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->setOscillate(false);
 				}else if(oscillate == "true"){
-					TEMP_branch_variables.back()->setOscillate(true);	
-					TEMP_branch_variables.back()->true_param_name = pMC->Attribute("true_param_name"); 	
-					TEMP_branch_variables.back()->true_L_name = pMC->Attribute("true_L_name"); 	
-				}		
+					std::cout<<"Setting Oscillate! "<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->setOscillate(true);
+					TEMP_branch_variables.back()->true_param_name = pBranch->Attribute("true_param_name");
+					TEMP_branch_variables.back()->true_L_name = pBranch->Attribute("true_L_name");
+					std::cout<<"Set Oscillate! "<<pBranch->Attribute("true_param_name")<<" "<<pBranch->Attribute("true_L_name")<<std::endl;
+				}else{
+					std::cout<<"Do Not Oscillate "<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->setOscillate(false);
+				}
 
 
-				pBranch = pBranch->NextSiblingElement("branch");	
+				pBranch = pBranch->NextSiblingElement("branch");
 			}
-			branch_variables.push_back(TEMP_branch_variables);	
+			branch_variables.push_back(TEMP_branch_variables);
 			//next file
 			pMC=pMC->NextSiblingElement("MultisimFile");
 		}
@@ -271,8 +278,8 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					tempn = mode_names[im] +"_" +detector_names[id]+"_"+channel_names[ic]+"_"+subchannel_names[ic][sc];
 					if(isVerbose)std::cout<<otag<<""<<tempn<<" "<<im<<" "<<id<<" "<<ic<<" "<<sc<<std::endl;
 
-					// This is where you choose NOT to use some fields	
-					if(mode_bool[im] && detector_bool[id] && channel_bool[ic] && subchannel_bool[ic][sc]){					
+					// This is where you choose NOT to use some fields
+					if(mode_bool[im] && detector_bool[id] && channel_bool[ic] && subchannel_bool[ic][sc]){
 
 						fullnames.push_back(tempn);
 						for(int k = indexcount; k < indexcount+num_bins.at(ic); k++){
@@ -281,13 +288,13 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 						}
 					}
-					std::vector<int> tvec = {indexcount, indexcount+num_bins.at(ic)-1}; 
+					std::vector<int> tvec = {indexcount, indexcount+num_bins.at(ic)-1};
 
-					mapIndex[tempn] = 	tvec;				
+					mapIndex[tempn] = 	tvec;
 					indexcount = indexcount + num_bins.at(ic);
 
 
-				}	
+				}
 			}
 		}
 	}
@@ -316,7 +323,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		if( channel_bool.at(i)){
 			num_channels++;
 			channel_used.push_back(i);
-		}	
+		}
 	}
 
 
@@ -332,7 +339,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		std::cout<<otag<<"--> num_channels: "<<num_channels<<" out of "<<num_channels<<std::endl;
 		for(auto i: channel_used){
 			std::cout<<otag<<"----> num_subchannels: "<<num_subchannels.at(i)<<" out of "<<num_subchannels_xml.at(i)<<std::endl;
-			std::cout<<otag<<"----> num_bins: "<<num_bins.at(i)<<std::endl;	
+			std::cout<<otag<<"----> num_bins: "<<num_bins.at(i)<<std::endl;
 		}
 
 		std::cout<<otag<<"--> num_bins_detector_block: "<<num_bins_detector_block<<std::endl;
@@ -345,7 +352,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		std::cout<<otag<<"--> num_bins_total_compressed: "<<num_bins_total_compressed<<std::endl;
 
 
-	}	
+	}
 
 	//Now delete all info corresponding to NON-USED channels & subchannels.
 
@@ -383,7 +390,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 	for(int c: channel_used){
-		//if(isVerbose){std::cout<<otag<<"Adding channel: "<<c<<std::endl;}	
+		//if(isVerbose){std::cout<<otag<<"Adding channel: "<<c<<std::endl;}
 		num_subchannels.push_back( temp_num_subchannels.at(c));
 		num_bins.push_back( temp_num_bins.at(c));
 		subchannel_names.push_back( temp_subchannel_names.at(c));
@@ -394,7 +401,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 		channel_bool.push_back(temp_channel_bool.at(c));
 		subchannel_bool.push_back(temp_subchannel_bool.at(c));
 		subchannel_osc_patterns.push_back(temp_subchannel_osc_patterns.at(c));
-	}	
+	}
 	for(int d: detector_used){
 		detector_names.push_back(temp_detector_names.at(d));
 		detector_bool.push_back(temp_detector_bool.at(d));
@@ -423,7 +430,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-	if(isVerbose){std::cout<<otag<<"Done!"<<std::endl;}	
+	if(isVerbose){std::cout<<otag<<"Done!"<<std::endl;}
 
 
 
@@ -457,14 +464,14 @@ SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> d
 
 	this->calcTotalBins();
 
-	xmlname = "NULL";	
+	xmlname = "NULL";
 
 
 	//the xml names are the way we track which channels and subchannels we want to use later
-	mode_names = modein; 			
-	detector_names = detin; 		
-	channel_names = chanin; 		
-	subchannel_names = subchanin; 
+	mode_names = modein;
+	detector_names = detin;
+	channel_names = chanin;
+	subchannel_names = subchanin;
 
 	for(auto c: chanin){
 		channel_bool.push_back(true);
@@ -491,7 +498,7 @@ SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> d
 		for(int b = 0; b<binedge.size()-1; b++){
 			binwidth.push_back(fabs(binedge.at(b)-binedge.at(b+1)));
 		}
-		bin_widths.push_back(binwidth);	
+		bin_widths.push_back(binwidth);
 	}
 
 	// The order is IMPORTANT its the same as defined in xml
@@ -528,8 +535,8 @@ int SBNconfig::calcTotalBins(){
 
 	for(auto i: channel_used){
 		num_bins_detector_block += num_subchannels[i]*num_bins[i];
-		num_bins_detector_block_compressed += num_bins[i];	
-	}		
+		num_bins_detector_block_compressed += num_bins[i];
+	}
 
 	num_bins_mode_block = num_bins_detector_block*num_detectors;
 	num_bins_mode_block_compressed = num_bins_detector_block_compressed*num_detectors;
@@ -539,5 +546,3 @@ int SBNconfig::calcTotalBins(){
 
 	return 0;
 }
-
-

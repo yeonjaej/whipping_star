@@ -7,8 +7,8 @@
 #include <iostream>
 #include <TRandom3.h>
 #include <TMatrixT.h>
-#include <sstream> 
-#include <iomanip> 
+#include <sstream>
+#include <iomanip>
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -32,7 +32,7 @@ double smearEnergy(double E, double percen, TRandom3 * rangen);
 
 struct complex_matrix{
 	complex_matrix(int dim);
-	
+
 	int dimension;
 	TMatrixT<double> real;
 	TMatrixT<double> imag;
@@ -63,7 +63,7 @@ struct complex_matrix{
 struct neutrinoModel{
 	double mNu[3], Ue[3], Um[3], phi[3];
 	double dm41Sq, dm51Sq, dm61Sq, dm54Sq, dm64Sq, dm65Sq;
-	std::vector< std::vector < std::complex<double> > >  U; 
+	std::vector< std::vector < std::complex<double> > >  U;
 	//std::vector<std::vector<double>> dm;
 
 	int numsterile;

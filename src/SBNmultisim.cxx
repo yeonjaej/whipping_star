@@ -25,27 +25,23 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		files.push_back(new TFile(fn.c_str()));
 	}
 
-
-
 	for(int i=0; i<multisim_name.size(); i++){
 		trees.push_back((TTree*)files.at(i)->Get(multisim_name.at(i).c_str()) );
 	}
 
-         for(int i=0; i<multisim_file.size(); i++){
-  
-                  if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
+	for(int i=0; i<multisim_file.size(); i++){
+  	if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
 			for(int k=0; k< multisim_file_friend_treename_map.at(multisim_file.at(i)).size(); k++){
-	
-	  			std::string treefriendname = (multisim_file_friend_treename_map.at(multisim_file.at(i))).at(k); 
-	  			std::string treefriendfile = (multisim_file_friend_map.at(multisim_file.at(i))).at(k); 
+
+	  		std::string treefriendname = (multisim_file_friend_treename_map.at(multisim_file.at(i))).at(k);
+	  		std::string treefriendfile = (multisim_file_friend_map.at(multisim_file.at(i))).at(k);
 
 				std::cout<<"SBNmultisim::SBNmultisim\t|| Adding a friend tree  "<< treefriendfile<<" to file "<<multisim_file.at(i)<<std::endl;
 
-                         	 trees.at(i)->AddFriend( treefriendname.c_str()   ,  treefriendfile.c_str()   );
+      	trees.at(i)->AddFriend( treefriendname.c_str()   ,  treefriendfile.c_str()   );
 			}
-                  }
-         }
-
+    }
+  }
 
 	std::vector<int> nentries;
 	for(auto &t: trees){
@@ -64,42 +60,11 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		}
 	}
 
-
 	variations.clear();
 
-
-	//This bit will calculate how many "multisims" the file has. if ALL default is the inputted xml value 
-	int good_event = 1;
-	if(parameter_names.at(0)[0]!="ALL"){
-		/*
-		   if(parameter_names.at(0).at(0) == "bnbcorrection_FluxHist"){
-		   std::cout<<"ERROR!\tSBNmultisim::SBNmultisim ||  bnbcorrection_FluxHist is not a valid varying parameter!\n";
-		   exit(EXIT_FAILURE);	
-		   }
-
-		   std::vector<int> used_multisims;
-		   for(int j=0; j< Nfiles; j++){
-		   delete fWeights->at(j);
-		   fWeights->at(j)=0;
-		   trees.at(j)->GetEntry(good_event);
-		   std::vector<double> num_sim_here = fWeights->at(j)->at(parameter_names.at(j)[0]);
-		   std::cout<<"SBNmultisim::SBNmultisim || File: "<<j<<" has: "<<num_sim_here.size()<<" universes for parameter: "<<parameter_names.at(j)[0]<<std::endl; 
-		   used_multisims.push_back(num_sim_here.size());
-		   delete fWeights->at(j);
-		   fWeights->at(j)=0;
-		   }
-
-		   for(int i=1; i<Nfiles; i++){
-		   std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
-		   std::cout<<"File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
-
-		   if( used_multisims.at(i)!= used_multisims.at(i-1)){
-		   std::cout<<"ERROR: ERROR! SBNmultisim::SBNmultisim || number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files in "<<"  "<<parameter_names.at(i)[0]<<std::endl;
-		   exit(EXIT_FAILURE);
-		   }
-		   universes_used = used_multisims.at(0);
-		   }*/	
-	}else {
+	//This bit will calculate how many "multisims" the file has. if ALL default is the inputted xml value
+	int good_event = 0;
+	if(parameter_names.at(0)[0]=="ALL"){
 		//ALL catagory
 		std::vector<int> used_multisims(Nfiles,0);
 		for(int j = 0;j<Nfiles;j++){
@@ -107,30 +72,25 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			fWeights->at(j)=0;
 
 			trees.at(j)->GetEntry(good_event);
-			for(std::map<std::string, std::vector<double> >::iterator  it = fWeights->at(j)->begin(); it != fWeights->at(j)->end(); ++it) 
-			{	
+			for(std::map<std::string, std::vector<double> >::iterator  it = fWeights->at(j)->begin(); it != fWeights->at(j)->end(); ++it)
+			{
 				if(it->first == "bnbcorrection_FluxHist") continue;
 				used_multisims.at(j) += it->second.size();
 				std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
 				variations.push_back(it->first);
-
 			}
 			delete fWeights->at(j);
 			fWeights->at(j)=0;
 		}
-
 		//Now remove all, duplicates!
 		sort( variations.begin(), variations.end() );
 		variations.erase( unique( variations.begin(), variations.end() ), variations.end() );
 
 		//make a map and start filling, before filling find if already in map, if it is check size.
-
 		std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
 		for(auto &v: variations){
 			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
 		}
-
-
 		for(int i=1; i<Nfiles; i++){
 			//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
 			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
@@ -139,11 +99,12 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 				//exit(EXIT_FAILURE);
 			}
 			universes_used = used_multisims.at(0);
-		}	
-
+		}
+		if(Nfiles ==1){
+			universes_used = used_multisims.front();
+    }
 
 	}
-
 
 	std::cout<<"SBNmultisim::SBNmultisim\t|| -------------------------------------------------------------\n";
 	std::cout<<"SBNmultisim::SBNmultisim\t|| Initilizing "<<universes_used<<" universes for "<<parameter_names[0][0]<<std::endl;
@@ -174,7 +135,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 			std::vector<double> weights;
 			double global_weight = 1;
-	
+
 			global_weight = global_weight*multisim_scale.at(j);
 
 
@@ -199,13 +160,13 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 				{
 					//Loop over all variations!
 					for(std::string &var : variations){
-						
+
 						//check if variation is in this file, if it isn't: then just push back 1's of appropiate number to keep universes consistent
 						if(thisfWeight->count(var) <=0 ){
 							for(int g=0; g<fWeights->at(0)->at(var).size(); g++){
 								weights.push_back(global_weight);
 							}
-							continue;					
+							continue;
 						}
 
 						for(double &wei: thisfWeight->at(var)){
@@ -239,7 +200,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 
 				}//end of "ALL" option
-				//Begininning of single parameter options
+				//Begininning of single parameter optifons
 				/*		else {
 
 						std::vector<double> this_param_weights = thisfWeight->at(parameter_names.at(j)[0]);
@@ -282,7 +243,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 					for(int m=0; m< weights.size(); m++){
 						if(reco_bin>=0)  multi_vecspec.at(m).at(reco_bin)   +=  weights.at(m);
 
-						//important check. failure mode	
+						//important check. failure mode
 						if(weights.at(m)!=weights.at(m) || std::isinf(weights.at(m)) ){
 							std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR weight has a value of: "<<weights.at(m)<<". So I am killing all. on Dim: "<<m<<" global_eright is "<<global_weight<<std::endl;
 							exit(EXIT_FAILURE);
@@ -290,12 +251,9 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 					}
 				}
-
-
-
-			}	
+			}
 		} //end of entry loop
-	}//end of file loop 
+	}//end of file loop
 
 	delete fWeights;
 
@@ -339,7 +297,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	}
 
 
-	spec_CV.calcFullVector();	
+	spec_CV.calcFullVector();
 	std::vector<double> CV = spec_CV.fullVec;
 
 
@@ -377,10 +335,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		}
 	}
 
-
 	this->qualityTesting();
-
-
 
 	/************************************************************
 	 *			Saving to file				    *
@@ -391,7 +346,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
 		full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
 	fout->Close();
-	//and also writeout 	
+	//and also writeout
 	spec_CV.writeOut(tag);
 
 
@@ -437,7 +392,7 @@ int SBNmultisim::qualityTesting(){
 	}
 
 
-	if(is_small_negative_eigenvalue){	
+	if(is_small_negative_eigenvalue){
 		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
 	}else{
 		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is positive semi-definite."<<std::endl;
@@ -476,7 +431,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_corr =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				for(int isc = 0; isc < num_subchannels.at(ic)-1; isc++){
 					TLine *lscv = new TLine(0, num_bins.at(ic)+use_corr, num_bins_total, num_bins.at(ic)+use_corr);
 					TLine *lsch = new TLine(num_bins.at(ic)+use_corr,0, num_bins.at(ic)+use_corr, num_bins_total);
@@ -488,7 +443,7 @@ int SBNmultisim::printMatricies(std::string tag){
 					lscv->Draw();
 					lsch->Draw();
 
-				}	
+				}
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_corr, num_bins_total, num_bins.at(ic)+use_corr);
 				TLine *lh = new TLine(num_bins.at(ic)+use_corr,0, num_bins.at(ic)+use_corr, num_bins_total);
 				lv->SetLineWidth(2);
@@ -504,7 +459,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_corr->Write();	
+	c_corr->Write();
 
 	//full covariance
 	TH2D h2_full(full_covariance);
@@ -522,7 +477,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_full =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				for(int isc = 0; isc < num_subchannels.at(ic)-1; isc++){
 					TLine *lscv = new TLine(0, num_bins.at(ic)+use_full, num_bins_total, num_bins.at(ic)+use_full);
 					TLine *lsch = new TLine(num_bins.at(ic)+use_full,0, num_bins.at(ic)+use_full, num_bins_total);
@@ -534,7 +489,7 @@ int SBNmultisim::printMatricies(std::string tag){
 					lscv->Draw();
 					lsch->Draw();
 
-				}	
+				}
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_full, num_bins_total, num_bins.at(ic)+use_full);
 				TLine *lh = new TLine(num_bins.at(ic)+use_full,0, num_bins.at(ic)+use_full, num_bins_total);
 				lv->SetLineWidth(2);
@@ -550,7 +505,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_full->Write();	
+	c_full->Write();
 
 	//fracelation
 	TH2D h2_frac(frac_covariance);
@@ -568,7 +523,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_frac =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				for(int isc = 0; isc < num_subchannels.at(ic)-1; isc++){
 					TLine *lscv = new TLine(0, num_bins.at(ic)+use_frac, num_bins_total, num_bins.at(ic)+use_frac);
 					TLine *lsch = new TLine(num_bins.at(ic)+use_frac,0, num_bins.at(ic)+use_frac, num_bins_total);
@@ -580,7 +535,7 @@ int SBNmultisim::printMatricies(std::string tag){
 					lscv->Draw();
 					lsch->Draw();
 
-				}	
+				}
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_frac, num_bins_total, num_bins.at(ic)+use_frac);
 				TLine *lh = new TLine(num_bins.at(ic)+use_frac,0, num_bins.at(ic)+use_frac, num_bins_total);
 				lv->SetLineWidth(2);
@@ -596,7 +551,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_frac->Write();	
+	c_frac->Write();
 
 
 
@@ -635,7 +590,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_coll_corr =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_corr, num_bins_total_compressed, num_bins.at(ic)+use_coll_corr);
 				TLine *lh = new TLine(num_bins.at(ic)+use_coll_corr,0, num_bins.at(ic)+use_coll_corr, num_bins_total_compressed);
 				lv->SetLineWidth(1.5);
@@ -646,7 +601,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_coll_corr->Write();	
+	c_coll_corr->Write();
 
 
 	TH2D h2_coll_frac(coll_frac_covariance);
@@ -664,7 +619,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_coll_frac =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_frac, num_bins_total_compressed, num_bins.at(ic)+use_coll_frac);
 				TLine *lh = new TLine(num_bins.at(ic)+use_coll_frac,0, num_bins.at(ic)+use_coll_frac, num_bins_total_compressed);
 				lv->SetLineWidth(1.5);
@@ -675,7 +630,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_coll_frac->Write();	
+	c_coll_frac->Write();
 
 
 	TH2D h2_coll_full(coll_covariance);
@@ -693,7 +648,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	int use_coll_full =0;
 	for(int im =0; im<num_modes; im++){
 		for(int id =0; id<num_detectors; id++){
-			for(int ic = 0; ic < num_channels; ic++){ 	 
+			for(int ic = 0; ic < num_channels; ic++){
 				TLine *lv = new TLine(0, num_bins.at(ic)+use_coll_full, num_bins_total_compressed, num_bins.at(ic)+use_coll_full);
 				TLine *lh = new TLine(num_bins.at(ic)+use_coll_full,0, num_bins.at(ic)+use_coll_full, num_bins_total_compressed);
 				lv->SetLineWidth(1.5);
@@ -704,7 +659,7 @@ int SBNmultisim::printMatricies(std::string tag){
 			}
 		}
 	}
-	c_coll_full->Write();	
+	c_coll_full->Write();
 
 
 
@@ -716,6 +671,3 @@ int SBNmultisim::printMatricies(std::string tag){
 	fout->Close();
 	return 0;
 }
-
-
-

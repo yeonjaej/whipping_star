@@ -27,7 +27,7 @@ namespace sbn{
 
 
 class SBNchi : public SBNconfig{
-	
+
 	public:
 	//This is the background spectra that you are comparing too. Obviously can be any existing injected spectra either.
 	SBNspec bkgSpec;
@@ -36,19 +36,19 @@ class SBNchi : public SBNconfig{
 	//always contains the last chi^2 value calculated
 	double lastChi;
 	std::vector<std::vector<double>> lastChi_vec;
-	
+
 
 	//Either initilize from a SBNspec (and use its .xml file)
-	SBNchi(SBNspec); 
+	SBNchi(SBNspec);
 	//Either initilize from a SBNspec and another xml file
-	SBNchi(SBNspec,std::string); 
+	SBNchi(SBNspec,std::string);
 	//Either initilize from a SBNspec  a TMatrix you have calculated elsewhere
 	SBNchi(SBNspec,TMatrixT<double>);
 	//Initialise a stat_only one;
 	SBNchi(SBNspec, bool is_stat_only);
-	
+
 	SBNchi(std::string);
-	
+
 
 	int reload_core_spec(SBNspec *bkgin);
 
@@ -87,7 +87,7 @@ class SBNchi : public SBNconfig{
 	double calcChi(SBNspec *sigSpec, SBNspec *obsSpec);
 	//or a log ratio (miniboone esque)
 	double calcChiLog(SBNspec *sigSpec);
-	
+
 	int printMatricies(std::string);
 
 
@@ -95,7 +95,7 @@ class SBNchi : public SBNconfig{
 	TH1D toyMC_varyInput(SBNspec *specin, int num_MC);
 	std::vector<double> toyMC_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double>chin);
 
-	//Some reason eventually store the reuslt in vectors, I think there was memory issues. 
+	//Some reason eventually store the reuslt in vectors, I think there was memory issues.
 	std::vector<std::vector<double >> to_vector(TMatrixT <double> McI);
 	std::vector<std::vector<double >> vMcI;
 	std::vector<std::vector<double >> vMc;
