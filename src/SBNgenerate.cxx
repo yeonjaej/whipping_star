@@ -124,7 +124,7 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 						double true_var = *(static_cast<double*>(branch_variables.at(j).at(t)->getTrueValue()));
 						double true_L = *(static_cast<double*>(branch_variables.at(j).at(t)->getTrueL()));
 
-						double osc_probability_sin = nu_model.oscProbSin(true_var, true_L;
+						double osc_probability_sin = nu_model.oscProbSin(true_var, true_L);
 						double osc_probability_sinsq = nu_model.oscProbSinSq(true_var, true_L);
 
 						spec_OSC_sinsq.hist.at(ih).Fill(reco_var, global_weight*osc_probability_sinsq);
