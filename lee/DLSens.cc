@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
 	bool gen = false;
 	bool numudis = false;
 	bool combined = false;
+	int mass_start = -1;
 
 	std::string dict_location = "../../../lee/AutoDict_map_string__vector_double____cxx.so";
 	gROOT->ProcessLine("#include <map>");
@@ -64,12 +65,13 @@ int main(int argc, char* argv[])
 		{"gen",	no_argument, 0, 'g'},
 		{"dis",	no_argument,0,'d'},
 		{"comb", no_argument,0,'c'},
+		{"part", required_argument,0,'p'},
 		{0,			no_argument, 		0,  0},
 	};
 
 	while(iarg != -1)
 	{
-		iarg = getopt_long(argc,argv, "x:b:s:c:g:", longopts, &index);
+		iarg = getopt_long(argc,argv, "x:bscp:g", longopts, &index);
 
 		switch(iarg)
 		{
@@ -84,6 +86,9 @@ int main(int argc, char* argv[])
 				break;
 			case 'c':
 				combined = true;
+				break;
+			case 'p':
+				mass_start = atoi(optarg);
 				break;
 			case '?':
 			case 'h':
@@ -167,13 +172,21 @@ int main(int argc, char* argv[])
 		else if(combined){
 			std::cout << "COMBINED FIT" <<  std::endl;
 			float mnu, um, ue;
-			for(int mi = 0; mi < 100; mi++){
-				for(int umi = 0; umi < 50; umi++){
-					for(int uei = 0; uei < 50; uei++){
+			int mass_end;
+			if(mass_start < 0){
+				mass_end = mass_start + 1;
+			}
+			else{
+				mass_start = 0;
+				mass_end = 50;
+			}
+			for(int mi = mass_start; mi < mass_end; mi++){
+				for(int umi = 0; umi < 25; umi++){
+					for(int uei = 0; uei < 25; uei++){
 
-						um = pow(10.,(umi/float(100)*TMath::Log10(1./1e-3) + TMath::Log10(1e-3)));
-						ue = pow(10.,(uei/float(100)*TMath::Log10(1./1e-3) + TMath::Log10(1e-3)));
-						mnu = pow(10.,(mi/float(100)*TMath::Log10(10./.1) + TMath::Log10(.1)));
+						um = pow(10.,(umi/float(25)*TMath::Log10(1./1e-3) + TMath::Log10(1e-3)));
+						ue = pow(10.,(uei/float(25)*TMath::Log10(1./1e-3) + TMath::Log10(1e-3)));
+						mnu = pow(10.,(mi/float(50)*TMath::Log10(10./.1) + TMath::Log10(.1)));
 						neutrinoModel testModel(mnu,ue,um);
 						std::cout << "NU MODEL: " << mnu << " " << ue << " " << um << std::endl;
 
@@ -187,7 +200,7 @@ int main(int argc, char* argv[])
 
 						double chi2 = uboone_chi.calcChi(&osc);
 						double chi2_statsonly = uboone_chi_statsonly.calcChi(&osc);
-						std::cout << "COUNT: " << (mi*100*100 + umi*100 + uei)/float(100*100) << "%" << std::endl;
+						std::cout << "COUNT: " << (mi*25*25 + umi*25 + uei)/float(50*25*25/100) << "%" << std::endl;
 						std::cout << "ANS: " << pow(mnu,2) << " " << um << " " << ue << " " << chi2 << std::endl;
 						std::cout << "ANS_STATSONLY: " << pow(mnu,2) << " " << um << " " << ue << " " << chi2_statsonly << std::endl;
 					}

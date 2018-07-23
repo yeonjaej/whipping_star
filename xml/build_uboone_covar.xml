@@ -3,67 +3,24 @@
 <mode name="nu" use="1"/>
 <detector name="uBooNE" use="1" />
 
-<channel name="elike" unit="MeV" use="1" numbins="15">
-		<bins 
-			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
+<channel name="elike" unit="GeV" use="1" numbins="5">
+		<bins
+			edges=".1 .3 .5 .8 1.1 1.8"
 		/>
-		<subchannel name="intrinsic" use="1" osc = "0"/>
-		<subchannel name="signal" use="1" osc = "0"/>
+		<subchannel name="intrinsic" use="1" osc = "21"/>
 </channel>
 
-<channel name="mlike" unit="MeV" use="1" numbins="15">
-		<bins 
-			edges="100 200 300 400 500 600 700 800 900 1000 1250 1500 1750 2000 2500 3000"
-		/>
-		<subchannel name="intrinsic" use="1" osc = "0"/>
-</channel>
-
-<channel name="ccpi0" unit="MeV" use="1" numbins="10">
-		<bins 
-			edges="100 200 300 400 500 600 700 800 900 1000 2000"
-		/>
-		<subchannel name="intrinsic" use="1" osc = "0"/>
-</channel>
-<!-- ############################# MultiSims #####################################################-->	
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" scale = "0.2" maxevents ="10000" >
+<!-- ############################# MultiSims #####################################################-->
+<MultisimFile treename="nue_intrinsic_tree" filename="/home/dcianci/Physics/DLLEE/Sensitivity/whipping_star/input_to_sbnfit.root" scale = ".145" maxevents ="10000" >
 	<parameters names = "ALL"/>
-	<friend filename="/uboone/data/users/mastbaum/ts/mark/1e1p.root" treename ="events"/>
-	<branch 
-		name="events.ereco" 
-		type="double" 
+	<branch
+		name="reco_energy"
+		type="double"
 		associated_hist="nu_uBooNE_elike_intrinsic"
 		oscillate = "true"
-		true_param_name = "ereco"
-		true_L_name = "ereco"/>
+		true_param_name = "true_nu_energy"
+		true_L_name = "true_nu_L"/>
 </MultisimFile>
-
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/signal.root">
-	<parameters names = "ALL" />
-	<branch 
-		name="ereco" 
-		type="double" 
-		associated_hist ="nu_uBooNE_elike_signal" />
-</MultisimFile>
-
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/1m1p.root" maxevents="20000" >
-	<parameters names = "ALL" />
-	<branch 
-		name="ereco" 
-		type ="double" 
-		associated_hist ="nu_uBooNE_mlike_intrinsic"/>
-</MultisimFile>
-
-<MultisimFile treename="events" filename="/uboone/data/users/mastbaum/ts/mark/ccpi0.root" >
-	<parameters names = "ALL" />
-	<branch
-		name="ereco" 
-		type="double"
-		associated_hist = "nu_uBooNE_ccpi0_intrinsic"
-	/>
-</MultisimFile>
-
 
 <data path="/uboone/app/users/markrl/sbnfit/whipping_star/data/" />
 <covariance file="../build/examples/covariance_matrix.root" name="TMatrixT<double>;1" />
-
-

@@ -452,10 +452,6 @@ int SBNmultisim::printMatricies(std::string tag){
 				lv->Draw();
 				lh->Draw();
 
-
-
-
-
 			}
 		}
 	}
@@ -497,10 +493,6 @@ int SBNmultisim::printMatricies(std::string tag){
 				use_full+=num_bins.at(ic);
 				lv->Draw();
 				lh->Draw();
-
-
-
-
 
 			}
 		}
@@ -544,10 +536,6 @@ int SBNmultisim::printMatricies(std::string tag){
 				lv->Draw();
 				lh->Draw();
 
-
-
-
-
 			}
 		}
 	}
@@ -570,10 +558,6 @@ int SBNmultisim::printMatricies(std::string tag){
 			coll_correlation(i,j)= coll_covariance(i,j)/(sqrt(coll_covariance(i,i))*sqrt(coll_covariance(j,j)));
 		}
 	}
-
-
-
-
 
 	TH2D h2_coll_corr(coll_correlation);
 	h2_coll_corr.SetName("coll_corr");
@@ -660,13 +644,6 @@ int SBNmultisim::printMatricies(std::string tag){
 		}
 	}
 	c_coll_full->Write();
-
-
-
-
-
-
-
 
 	fout->Close();
 	return 0;

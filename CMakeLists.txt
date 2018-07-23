@@ -15,7 +15,7 @@ endif ()
 
 FIND_PACKAGE(ROOT)# COMPONENTS Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
 
-if(ROOT_FOUND) 
+if(ROOT_FOUND)
 	message("Found ROOT using CMAKE FIND_PACKAGE")
 	include(${ROOT_USE_FILE})
 ELSE()
@@ -49,4 +49,3 @@ add_subdirectory(lee)
 
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xml/build_uboone_covar.xml DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build/lee/)
-
