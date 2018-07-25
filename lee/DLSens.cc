@@ -129,16 +129,23 @@ int main(int argc, char* argv[])
 
     // Create our unoscillated background
     SBNspec bkg(tag+"_Central.SBNspec.root",xml);
+		bkg.Scale("fullosc",0.0);
 
 		//Bring in our covariance matrix!
+		// Stats only.
 		TMatrixD *cov;
 		SBNchi uboone_chi_statsonly(bkg,true);
 
+		// Stats + sys
 		TFile * fsys = new TFile("DL.SBNcovar.root","read");
 		cov = (TMatrixD*)fsys->Get("frac_covariance_DL");
 		std::cout << "Frac Covariance Matrix" << std::endl;
 	  cov->Print();
 		SBNchi uboone_chi(bkg,*cov);
+
+		// Load up oscillation model
+		neutrinoModel nullModel(0,0,0);
+		SBNosc osctrue(tag+"_Central.SBNspec.root",xml, nullModel);
 
 		if(numudis){
 			// If we're doing numu disappearance:
@@ -153,13 +160,9 @@ int main(int argc, char* argv[])
 					neutrinoModel testModel(mnu,0,um);
 					std::cout << "NU MODEL: " << mnu << " " << ue << " " << um << std::endl;
 
-					SBNosc osc(tag+"_Central.SBNspec.root",xml, testModel);
+					SBNosc osc = osctrue;
+					osc.load_model(testModel);
 					osc.OscillateThis(tag);
-
-					if(umi == 7 && mi == 7 ){
-						osc.writeOut("osctest");
-						bkg.writeOut("bkgtest");
-					}
 
 					double chi2 = uboone_chi.calcChi(&osc);
 					double chi2_statsonly = uboone_chi_statsonly.calcChi(&osc);
@@ -180,6 +183,7 @@ int main(int argc, char* argv[])
 				mass_start = 0;
 				mass_end = 50;
 			}
+
 			for(int mi = mass_start; mi < mass_end; mi++){
 				for(int umi = 0; umi < 25; umi++){
 					for(int uei = 0; uei < 25; uei++){
@@ -190,7 +194,8 @@ int main(int argc, char* argv[])
 						neutrinoModel testModel(mnu,ue,um);
 						std::cout << "NU MODEL: " << mnu << " " << ue << " " << um << std::endl;
 
-						SBNosc osc(tag+"_Central.SBNspec.root",xml, testModel);
+						SBNosc osc = osctrue;
+						osc.load_model(testModel);
 						osc.OscillateThis(tag);
 
 						if(umi == 7 && mi == 7 ){
@@ -221,7 +226,8 @@ int main(int argc, char* argv[])
 					neutrinoModel testModel(mnu,ue,um);
 					std::cout << "NU MODEL: " << mnu << " " << ue << " " << um << std::endl;
 
-					SBNosc osc(tag+"_Central.SBNspec.root",xml, testModel);
+					SBNosc osc = osctrue;
+					osc.load_model(testModel);
 					osc.OscillateThis(tag);
 
 					double chi2 = uboone_chi.calcChi(&osc);
