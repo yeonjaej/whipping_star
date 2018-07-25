@@ -50,7 +50,10 @@ int main(int argc, char* argv[])
 	bool combined = false;
 	int mass_start = -1;
 
-	std::string dict_location = "../../../lee/AutoDict_map_string__vector_double____cxx.so";
+	std::cout << "Building dictionary" << std::endl;
+	gROOT->ProcessLine(".L AutoDict_map_string__vector_double___.cxx+");
+	std::cout << "Shit, that worked!" << std::endl;
+	std::string dict_location = "AutoDict_map_string__vector_double____cxx.so";
 	gROOT->ProcessLine("#include <map>");
 	gROOT->ProcessLine("#include <vector>");
 	gROOT->ProcessLine("#include <string>");
@@ -109,8 +112,8 @@ int main(int argc, char* argv[])
 	if(gen){
 
 		float mnu;
-		for(int mi = 0; mi < 100; mi++){
-			mnu = pow(10.,(mi/float(100)*TMath::Log10(10./.1) + TMath::Log10(.1)));
+		for(int mi = 0; mi < 50; mi++){
+			mnu = pow(10.,(mi/float(50)*TMath::Log10(10./.1) + TMath::Log10(.1)));
 
 			//Model: mnu, ue4, um4
 			//we're precomputing, so we don't really care about the u's
@@ -176,7 +179,7 @@ int main(int argc, char* argv[])
 			std::cout << "COMBINED FIT" <<  std::endl;
 			float mnu, um, ue;
 			int mass_end;
-			if(mass_start < 0){
+			if(mass_start > 0){
 				mass_end = mass_start + 1;
 			}
 			else{
@@ -216,13 +219,13 @@ int main(int argc, char* argv[])
 			// If we're doing nue appearance
 			std::cout << "NUE APPEARANCE" << std::endl;
 			float mnu, um, ue, sin22th;
-			for(int mi = 0; mi < 100; mi++){
-				for(int sin22thi = 0; sin22thi < 100; sin22thi++){
+			for(int mi = 0; mi < 50; mi++){
+				for(int sin22thi = 0; sin22thi < 50; sin22thi++){
 
-					sin22th = pow(10.,(sin22thi/float(100)*TMath::Log10(1./1e-5) + TMath::Log10(1e-5)));
-					mnu = pow(10.,(mi/float(100)*TMath::Log10(10./.1) + TMath::Log10(.1)));
-					um = pow(sin22th/float(4),.25);
-					ue = um;
+					sin22th = pow(10.,(sin22thi/float(50)*TMath::Log10(1./1e-5) + TMath::Log10(1e-5)));
+					mnu = pow(10.,(mi/float(50)*TMath::Log10(10./.1) + TMath::Log10(.1)));
+					ue = pow(sin22th/float(4),.5);
+					um = 1.f;	// set sin22th(mu mu) = 0
 					neutrinoModel testModel(mnu,ue,um);
 					std::cout << "NU MODEL: " << mnu << " " << ue << " " << um << std::endl;
 
@@ -232,7 +235,7 @@ int main(int argc, char* argv[])
 
 					double chi2 = uboone_chi.calcChi(&osc);
 					double chi2_statsonly = uboone_chi_statsonly.calcChi(&osc);
-					std::cout << "COUNT: " << (mi*100 + sin22thi)/float(100) << "%" << std::endl;
+					std::cout << "COUNT: " << (mi*50 + sin22thi)/float(50*.50) << "%" << std::endl;
 					std::cout << "ANS: " << pow(mnu,2) <<  " " << ue << " " << um << " " << 4*um*um*ue*ue << " " << chi2 << std::endl;
 					std::cout << "ANS_STATSONLY: " << pow(mnu,2) <<  " " << ue << " " << um << " " << 4*um*um*ue*ue << " " << chi2_statsonly << std::endl;
 				}
