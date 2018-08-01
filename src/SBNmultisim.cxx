@@ -76,6 +76,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			{
 				if(it->first == "bnbcorrection_FluxHist") continue;
 				used_multisims.at(j) += it->second.size();
+				
 				std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
 				variations.push_back(it->first);
 			}
@@ -88,21 +89,35 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 		//make a map and start filling, before filling find if already in map, if it is check size.
 		std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
+
+		num_universes_per_variation.clear();
 		for(auto &v: variations){
 			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
+			trees.at(0)->GetEntry(good_event);
+			int thissize = fWeights->at(0)->at(v).size();
+			for(int p=0;p<thissize; p++){
+				num_universes_per_variation.push_back(thissize);
+			}
 		}
+
 		for(int i=1; i<Nfiles; i++){
 			//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
 			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
 			if( used_multisims.at(i)!= used_multisims.at(i-1)){
 				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
-				//exit(EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 			universes_used = used_multisims.at(0);
 		}
 		if(Nfiles ==1){
 			universes_used = used_multisims.front();
-    }
+    	}
+
+
+
+
+
+
 
 	}
 
@@ -134,6 +149,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			if(i%2500==0) std::cout<<"SBNmultisim::SBNmultisim\t|| On event: "<<i<<" of "<<nentries[j]<<" from File: "<<multisim_file[j]<<std::endl;
 
 			std::vector<double> weights;
+			std::vector<int> vec_universes;
 			double global_weight = 1;
 
 			global_weight = global_weight*multisim_scale.at(j);
@@ -169,6 +185,8 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 							continue;
 						}
 
+
+
 						for(double &wei: thisfWeight->at(var)){
 							bool is_inf = std::isinf(wei);
 							bool is_nan = wei!=wei;
@@ -182,18 +200,18 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 								std::cout<<"ATTENTION! SBNmultisim::SBNmultisim\t|| HUGE weight: "<<wei<<" at "<<var<<" event "<<i<<" file "<<j<<std::endl;
 							}
 							weights.push_back(wei*global_weight);
-
 						}
 
 
 					}//end of variations
 
 					//So the size of weights must equal global universes ya?
-					if(weights.size() != universes_used || universes_used != multi_vecspec.size()){
+					if(weights.size() != universes_used || universes_used != multi_vecspec.size() || universes_used != num_universes_per_variation.size()){
 						std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR "<<std::endl;
 						std::cout<<"weights.size() "<<weights.size()<<std::endl;
 						std::cout<<"universes_used "<<universes_used<<std::endl;
 						std::cout<<"multi_vecspec.size() "<<multi_vecspec.size()<<std::endl;
+						std::cout<<"num_universes_per_variation.size() "<<num_universes_per_variation.size()<<std::endl;
 						exit(EXIT_FAILURE);
 					}
 
@@ -310,7 +328,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 			for(int m=0; m < universes_used; m++){
 
 				//full_covariance(i,j) += (CV[i]-multi_sbnspec.at(m).fullVec.at(i))*(CV[j]-multi_sbnspec.at(m).fullVec.at(j));
-				full_covariance(i,j) += (CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
+				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m)-1.0)*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
 
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
@@ -319,7 +337,6 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 				}
 
 			}
-			full_covariance(i,j) = full_covariance(i,j)/( (double)universes_used-1.0);
 
 		}
 	}

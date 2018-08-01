@@ -81,6 +81,9 @@ class SBNmultisim : public SBNconfig{
 	//Multisim input variables
 	std::vector<std::string> variations;
 	std::vector<std::vector<double> > vars;
+	std::vector<int> num_universes_per_variation;
+	std::vector<double> denominator_scaled;
+
 
 	int Nfiles;
 	std::vector<TFile *> files;
