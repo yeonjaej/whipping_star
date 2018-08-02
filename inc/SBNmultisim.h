@@ -67,6 +67,10 @@ class SBNmultisim : public SBNconfig{
 	TMatrixD frac_covariance;
 	TMatrixD full_correlation;
 
+	std::vector<TMatrixD> vec_full_covariance;
+	std::vector<TMatrixD> vec_frac_covariance;
+	std::vector<TMatrixD> vec_full_correlation;
+
 	//for plotting, hsa been superseeded by printMatricies a bit
 	TH2D * hist_frac_cov;
 	TH2D * hist_full_cor;
@@ -81,8 +85,10 @@ class SBNmultisim : public SBNconfig{
 	//Multisim input variables
 	std::vector<std::string> variations;
 	std::vector<std::vector<double> > vars;
+
 	std::vector<int> num_universes_per_variation;
-	std::vector<double> denominator_scaled;
+	std::map<int, std::string> map_universe_to_var;
+
 
 
 	int Nfiles;

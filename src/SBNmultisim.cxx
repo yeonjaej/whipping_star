@@ -91,11 +91,15 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
 
 		num_universes_per_variation.clear();
+
 		for(auto &v: variations){
 			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
 			trees.at(0)->GetEntry(good_event);
 			int thissize = fWeights->at(0)->at(v).size();
+			
+
 			for(int p=0;p<thissize; p++){
+				map_universe_to_var[num_universes_per_variation.size()] = v;
 				num_universes_per_variation.push_back(thissize);
 			}
 		}
@@ -310,6 +314,19 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	frac_covariance.ResizeTo(num_bins_total, num_bins_total);
 	full_correlation.ResizeTo(num_bins_total, num_bins_total);
 
+	std::map<std::string, int> map_var_to_matrix;
+
+	for(auto &v: variations){
+
+		map_var_to_matrix[v] = vec_full_covariance.size();
+
+		vec_full_covariance.push_back(full_covariance);
+		vec_frac_covariance.push_back(frac_covariance);
+		vec_full_correlation.push_back(full_correlation);
+
+	}
+
+
 	for(auto &h: multi_sbnspec){
 		h.calcFullVector();
 	}
@@ -327,9 +344,12 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 
 			for(int m=0; m < universes_used; m++){
 
+				std::string var = map_universe_to_var.at(m);
+				int which_matrix = map_var_to_matrix.at(var);
+
 				//full_covariance(i,j) += (CV[i]-multi_sbnspec.at(m).fullVec.at(i))*(CV[j]-multi_sbnspec.at(m).fullVec.at(j));
 				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m)-1.0)*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
-
+				vec_full_covariance.at(which_matrix) += full_covariance(i,j);	
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
 					std::cout<<"SBNmultisim::formCovariancematrix\t|| ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
@@ -349,6 +369,13 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		for(int j=0; j<num_bins_total; j++){
 			frac_covariance(i,j) = full_covariance(i,j)/(spec_CV.fullVec[i]*spec_CV.fullVec[j]) ;
 			full_correlation(i,j)= full_covariance(i,j)/(sqrt(full_covariance(i,i))*sqrt(full_covariance(j,j)));
+
+			for(int m=0; m< vec_full_covariance.size(); m++){
+				vec_frac_covariance.at(m)(i,j) = vec_full_covariance.at(m)(i,j)/(spec_CV.fullVec[i]*spec_CV.fullVec[j]) ;
+				vec_full_correlation.at(m)(i,j)= vec_full_covariance.at(m)(i,j)/(sqrt(vec_full_covariance.at(m)(i,i))*sqrt(vec_full_covariance.at(m)(j,j)));
+
+			}
+
 		}
 	}
 
@@ -362,6 +389,14 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		full_covariance.Write(("full_covariance_"+tag).c_str(),TObject::kWriteDelete);
 		frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
 		full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
+
+		for(int m=0; m< variations.size();m++){
+			vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+			vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+			vec_full_correlation.at(m).Write((variations.at(m)+"_full_correlation_"+tag).c_str() ,TObject::kWriteDelete);
+		}
+		
+
 	fout->Close();
 	//and also writeout
 	spec_CV.writeOut(tag);
