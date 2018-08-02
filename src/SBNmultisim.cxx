@@ -351,7 +351,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m)-1.0)*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
 				vec_full_covariance.at(which_matrix) += full_covariance(i,j);	
 
-				if(true) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation<<" which_matrix "<<which_matrix<<std::endl;
+				if(true) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
 					std::cout<<"SBNmultisim::formCovariancematrix\t|| ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
