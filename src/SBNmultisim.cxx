@@ -30,18 +30,18 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 	}
 
 	for(int i=0; i<multisim_file.size(); i++){
-  	if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
+		if( multisim_file_friend_treename_map.count(multisim_file.at(i))>0){
 			for(int k=0; k< multisim_file_friend_treename_map.at(multisim_file.at(i)).size(); k++){
 
-	  		std::string treefriendname = (multisim_file_friend_treename_map.at(multisim_file.at(i))).at(k);
-	  		std::string treefriendfile = (multisim_file_friend_map.at(multisim_file.at(i))).at(k);
+				std::string treefriendname = (multisim_file_friend_treename_map.at(multisim_file.at(i))).at(k);
+				std::string treefriendfile = (multisim_file_friend_map.at(multisim_file.at(i))).at(k);
 
 				std::cout<<"SBNmultisim::SBNmultisim\t|| Adding a friend tree  "<< treefriendfile<<" to file "<<multisim_file.at(i)<<std::endl;
 
-      	trees.at(i)->AddFriend( treefriendname.c_str()   ,  treefriendfile.c_str()   );
+				trees.at(i)->AddFriend( treefriendname.c_str()   ,  treefriendfile.c_str()   );
 			}
-    }
-  }
+		}
+	}
 
 	std::vector<int> nentries;
 	for(auto &t: trees){
@@ -76,7 +76,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			{
 				if(it->first == "bnbcorrection_FluxHist") continue;
 				used_multisims.at(j) += it->second.size();
-				
+
 				std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
 				variations.push_back(it->first);
 			}
@@ -96,7 +96,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
 			trees.at(0)->GetEntry(good_event);
 			int thissize = fWeights->at(0)->at(v).size();
-			
+
 
 			for(int p=0;p<thissize; p++){
 				map_universe_to_var[num_universes_per_variation.size()] = v;
@@ -115,7 +115,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 		}
 		if(Nfiles ==1){
 			universes_used = used_multisims.front();
-    	}
+		}
 
 
 
@@ -324,6 +324,11 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		vec_frac_covariance.push_back(frac_covariance);
 		vec_full_correlation.push_back(full_correlation);
 
+		vec_full_covariance.back().Zero();
+		vec_frac_covariance.back().Zero();
+		vec_full_correlation.back().Zero();
+
+
 	}
 
 
@@ -341,17 +346,20 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		for(int j=0; j<num_bins_total; j++){
 
 			full_covariance(i,j)=0;
+			for(int v=0; v< variations.size();v++){
+				vec_full_covariance.at(v)(i,j)=0.0;
+			}	
+
 
 			for(int m=0; m < universes_used; m++){
 
 				std::string var = map_universe_to_var.at(m);
 				int which_matrix = map_var_to_matrix.at(var);
 
-				//full_covariance(i,j) += (CV[i]-multi_sbnspec.at(m).fullVec.at(i))*(CV[j]-multi_sbnspec.at(m).fullVec.at(j));
-				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m)-1.0)*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
-				vec_full_covariance.at(which_matrix) += full_covariance(i,j);	
+				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
+				vec_full_covariance.at(which_matrix)(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
 
-				if(true) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
+				if(false) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
 					std::cout<<"SBNmultisim::formCovariancematrix\t|| ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
@@ -375,35 +383,52 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 			for(int m=0; m< vec_full_covariance.size(); m++){
 				vec_frac_covariance.at(m)(i,j) = vec_full_covariance.at(m)(i,j)/(spec_CV.fullVec[i]*spec_CV.fullVec[j]) ;
 				vec_full_correlation.at(m)(i,j)= vec_full_covariance.at(m)(i,j)/(sqrt(vec_full_covariance.at(m)(i,i))*sqrt(vec_full_covariance.at(m)(j,j)));
-
 			}
 
 		}
 	}
 
-	this->qualityTesting();
 
 	/************************************************************
 	 *			Saving to file				    *
 	 * *********************************************************/
 	TFile *fout=new TFile((tag+".SBNcovar.root").c_str(),"RECREATE");
 	fout->cd();
-		full_covariance.Write(("full_covariance_"+tag).c_str(),TObject::kWriteDelete);
-		frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
-		full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
+	full_covariance.Write(("full_covariance_"+tag).c_str(),TObject::kWriteDelete);
+	frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
+	full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
 
-		for(int m=0; m< variations.size();m++){
-			vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
-			vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
-			vec_full_correlation.at(m).Write((variations.at(m)+"_full_correlation_"+tag).c_str() ,TObject::kWriteDelete);
-		}
-		
+
+	std::vector<TH2D> h2_corr;
+	std::vector<TH2D> h2_cov;
+	std::vector<TH2D> h2_fcov;
+
+	for(int m=0; m< variations.size();m++){
+		//		vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+		//		vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+		//		vec_full_correlation.at(m).Write((variations.at(m)+"_full_correlation_"+tag).c_str() ,TObject::kWriteDelete);
+
+		h2_corr.push_back(TH2D(vec_full_correlation.at(m)));
+		h2_cov.push_back(TH2D(vec_full_covariance.at(m)));
+		h2_fcov.push_back(TH2D(vec_frac_covariance.at(m)));
+
+		h2_fcov.back().SetName((variations.at(m)+"_frac_covariance_"+tag).c_str());
+		h2_corr.back().SetName((variations.at(m)+"_full_correlation_"+tag).c_str());
+		h2_cov.back().SetName((variations.at(m)+"_full_covariance_"+tag).c_str());
+
+		h2_fcov.back().Write();
+		h2_cov.back().Write();
+		h2_corr.back().Write();
+
+	}
+
 
 	fout->Close();
 	//and also writeout
 	spec_CV.writeOut(tag);
 
 
+	this->qualityTesting();
 	return 0;
 }
 
@@ -422,9 +447,27 @@ int SBNmultisim::qualityTesting(){
 
 	std::cout<<"SBNmultisim::qualityTesting\t|| Checking if generated matrix is indeed a valid covariance matrix.\n";
 	std::cout<<"SBNmultisim::qualityTesting\t|| First checking if matrix is symmetric.\n";
-	if(full_covariance.IsSymmetric()){
+
+	double max_sym_violation = 0;
+	for(int i=0; i<num_bins_total; i++){
+		for(int j=0; j<num_bins_total; j++){
+			double tnp = fabs((full_covariance(j,i)-full_covariance(i,j))/(full_covariance(j,i)+full_covariance(i,j)));
+			if(tnp > max_sym_violation) max_sym_violation = tnp;
+		}
+	}
+
+
+
+	if(max_sym_violation < 1e-15){
 		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is symmetric"<<std::endl;
 	}else{
+		std::cout<<"SBNmultisim::qualityTesting\t||  ERROR result is not symmetric! "<<max_sym_violation<<std::endl;
+		for(int i=0; i<num_bins_total; i++){
+			for(int j=0; j<num_bins_total; j++){
+				double tnp = fabs((full_covariance(j,i)-full_covariance(i,j))/(full_covariance(j,i)+full_covariance(i,j)));
+				if(full_covariance(i,j) != full_covariance(j,i)) std::cout<<i<<" "<<j<<" "<<full_covariance(i,j)<<" "<<full_covariance(j,i)<<" "<<tnp<<std::endl;
+			}
+		}
 		std::cout<<"SBNmultisim::qualityTesting\t||  ERROR result is not symmetric!"<<std::endl;
 		exit(EXIT_FAILURE);
 	}

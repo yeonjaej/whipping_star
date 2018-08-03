@@ -82,7 +82,7 @@ while(iarg != -1)
 	}
 }
 
-	std::string dict_location = "../../../lee/AutoDict_map_string__vector_double____cxx.so";
+  std::string dict_location = "../../../lee/AutoDict_map_string_vector_double___cxx.so";
   gROOT->ProcessLine("#include <map>");
   gROOT->ProcessLine("#include <vector>");
   gROOT->ProcessLine("#include <string>");
