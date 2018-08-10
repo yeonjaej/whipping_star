@@ -87,7 +87,6 @@ attribute.
 The two main classes that inherit from this are SBNspec and SBNchi.
 
 ##### SBNspec.h/.cxx #####
-
 SBNspec is initilzed from a xml file. It can either be passed the location of
 a root file (whose contents match the xml file naming conventions!) or just an
 xml file in which case it is initilised empty (but having all the xml named
