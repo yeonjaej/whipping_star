@@ -61,7 +61,6 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 	Msys.ResizeTo(num_bins_total, num_bins_total);
 	MfracCov.ResizeTo(num_bins_total, num_bins_total);
 
-  std::cout << "YIKES" << std::endl;
 
 	if(is_stat_only){
 		MfracCov.Zero();
@@ -119,7 +118,6 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 			}
 		}
 	}
-	std::cout << "Part2" << std::endl;
 
 	if(isVerbose)std::cout<<otag<<"Filling stats into cov matrix"<<std::endl;
 	// Fill stats from the back ground vector
@@ -211,7 +209,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	}
 
 	std::cout<<otag<<"SUCCESS! Inverted."<<std::endl;
-	McI.Print();
+	//McI.Print();
 	vMcI = to_vector(McI);
 
 
