@@ -19,25 +19,27 @@
  *The authors make no guarrentee of the behaviour, stability or bug-free-ness of this code.
 ###################################################i#############################
 
+This is a trimmed down version of SBNfit for usage in uBooNE. It does not have full functionality yet, things are being migrated in/checked and documentated. 
 
-Installation.
-The CMakeLists should be a standard and generic enough to work on most machines, although I have not tested it everywhere. It should also be simple enough to fix if it doesn't work out-of-the-box. Any issues I suggest you check cmake is up to date, setup cmake on GPVMs
+##########################################   Building and compiling  ########################################
+The CMakeLists should be a standard and generic enough to work on most machines, although I have not tested it everywhere. It should also be simple enough to fix if it doesn't work out-of-the-box. 
+For an introduction see: https://microboone-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=17092
 
 #Instructions for GPVM based building and running
 
-source /grid/fermiapp/products/uboone/setup_uboone.sh;
-setup git;
-setup gitflow;
-setup mrb;
-setup root v6_08_06g -q e14:nu:prof;
-setup cmake;
+source /grid/fermiapp/products/uboone/setup_uboone.sh
+setup git
+setup gitflow
+setup mrb
+setup root v6_08_06g -q e14:nu:prof
+setup cmake
 
 #To Build, should work out of the box on GPVM with above setup
 cd build
 cmake ..
 make
 
-This will build the SBNfit source and libraries, as well as executable example programs in build/lee and build/example (NOTE build/examples not currently working for this version)
+This will build the SBNfit source and libraries, as well as executable example programs in build/example
 The included simple examples are not physically accurate, just toy MC.
 
 cd examples
@@ -68,7 +70,8 @@ For a somewhat out of date tutorial: https://docs.google.com/presentation/d/1vLY
 (2) Being able to see all individual histograms and how they change for all the universes
 (3) Being able to make covariance matrix from detetcor systematic MC files
 (4) Pull terms
-
+(5) Examples for oscillations
+(6) Example for Frequentist Studies
 
 ############################################################################
 ##############		Whats What! This is a bit old #######################
