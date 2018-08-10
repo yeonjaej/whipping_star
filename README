@@ -10,20 +10,20 @@
  *
  *		SBNfit, fitter, oscillator, covariance matrix maker, collapser
  *			originally for sterile decays at SBL facilities
- *			but actually pretty generic. Now More!
+ *			but actually pretty generic
  *
  *		If you have any questions, queries or comments please contact the authors;
  *			 markrl@nevis.columbia.edu 
+ *			 dac2201@columbia.edu
  *
  *The authors make no guarrentee of the behaviour, stability or bug-free-ness of this code.
- *Use is at own risk.
-################################################################################
-For a somewhat uo to date: https://docs.google.com/presentation/d/1vLYPDaID0a4nbx5rnKTda_RzhdTavLdyrkpkGMVZLgE/edit#slide=id.g35c91f84c5_0_194
+###################################################i#############################
+
 
 Installation.
 The CMakeLists should be a standard and generic enough to work on most machines, although I have not tested it everywhere. It should also be simple enough to fix if it doesn't work out-of-the-box. Any issues I suggest you check cmake is up to date, setup cmake on GPVMs
 
-Instructions for GPVM:
+#Instructions for GPVM based building and running
 
 source /grid/fermiapp/products/uboone/setup_uboone.sh;
 setup git;
@@ -32,50 +32,46 @@ setup mrb;
 setup root v6_08_06g -q e14:nu:prof;
 setup cmake;
 
+#To Build, should work out of the box on GPVM with above setup
 cd build
 cmake ..
 make
 
-This will build the SBNfit source and libraries, as well as executable programs in build/lee and build/example (NOTE build/examples not currently working for this version)
+This will build the SBNfit source and libraries, as well as executable example programs in build/lee and build/example (NOTE build/examples not currently working for this version)
+The included simple examples are not physically accurate, just toy MC.
 
-$ cd lee
+cd examples
 
-$ ./LEEcovariance --xml build_uboone_covar.xml
+#The first example builds a covariance matrix from eventweight std::map<std::string,std::vector<double>> objects
+./example1 --xml example.xml
 
 should have 4 output files, first two data, second two human readable plots
-LEEtest.SBNspec.root	LEEtest.SBNcovar.root	
-SBNfit_spectrum_plots_LEEtest.root SBNfit_covariance_plots_LEEtest.root
-these can be loaded into LEEfit for a chi^2
+	EXAMPLE1.SBNspec.root	: The central value spectra
+	EXAMPLE1.SBNcovar.root	: The full and fractional covariance matricies
+	SBNfit_spectrum_plots_EXAMPLE1.root    : The central value plots, but subchannels stacked to represent a channel
+	SBNfit_covariance_plots_EXAMPLE1.root  : The covariance matricies plotted as TH2D nicely. Inside directory individualDir is all the individual variation matricies
 
-$ ./LEEfit --xml build_uboone_covar.xml
+#The second example loads up the computed covariance matrix and makes a plot of the chi^2 as you scale the signal for stats and stats+sys
+./example2 --xml example.xml
 
-SBNfit_collapsed_matrix_plots_LEEtest.root
+should have 1 output. EXAMPLE2_plots.root containing a simple TCanvas showing the chi^2 behaviour
 
+#COMING SOON, example 3. NuMu disapearance oscillations
 
+For a somewhat out of date tutorial: https://docs.google.com/presentation/d/1vLYPDaID0a4nbx5rnKTda_RzhdTavLdyrkpkGMVZLgE/edit#slide=id.g35c91f84c5_0_194
 
 ############################################################################
 ##############		TODO 	     ########################################
 ############################################################################
 
-(1) being able to fill SBNfit histograms from functions of inputted variables. e.g fill "ereco" to nu_uBooNE_elike_intrinsic if "nupdg==1" or nu_uBooNE_mlike_otherwise
+(1) Being able to fill SBNfit histograms (subchannels) from functions of inputted variables. e.g fill "ereco" to nu_uBooNE_elike_intrinsic if "nupdg==1" or nu_uBooNE_mlike_otherwise
+(2) Being able to see all individual histograms and how they change for all the universes
+(3) Being able to make covariance matrix from detetcor systematic MC files
+(4) Pull terms
 
 
 ############################################################################
-##############		Whats What! ########################################
-############################################################################
-
-To run example N (there are 5 examples)
-I think they currently are hardcoded to work in build/examples only.
-
-./exampledemo --xml ../../xml/uboone.xml --test 2
-./exampledemo --xml ../../xml/sbn.xml --test 1
-
-sbn.xml and uboone.xml are included in xml folder, but easily modified
-
-
-
-############################################################################
-##############		Whats What! ########################################
+##############		Whats What! This is a bit old #######################
 ############################################################################
 
 ##### SBNconfig.h/.cxx ####

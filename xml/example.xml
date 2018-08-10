@@ -26,7 +26,7 @@
 </channel>
 
 <!-- ############################# MultiSims #####################################################-->
-<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/1e1p.root" scale = "1.0" maxevents ="8000" >
+<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/1e1p.root" scale = "1.0" maxevents ="2000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -35,7 +35,7 @@
 	/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/signal.root" scale = "1.0" maxevents ="10000" >
+<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/signal.root" scale = "3.0" maxevents ="10000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -45,7 +45,7 @@
 </MultisimFile>
 
 
-<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/1m1p.root" scale = "1.0" maxevents ="20000" >
+<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/1m1p.root" scale = "1.0" maxevents ="50000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -54,7 +54,7 @@
 	/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/ccpi0.root" scale = "1.0" maxevents ="10000" >
+<MultisimFile treename="events" filename="/uboone/data/users/markross/SBNfit_example_data/ccpi0.root" scale = "2.0" maxevents ="10000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
