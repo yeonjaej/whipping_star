@@ -39,12 +39,13 @@ include_directories(${PROJECT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tinyxml/)
 #ROOT_GENERATE_DICTIONARY(G__Event MCEventWeight.h LINKDEF MCEventWeightLinkDef.h)
+include(${ROOT_USE_FILE})
+
 
 #add_subdirectory(inc)
 add_subdirectory(tinyxml)
 add_subdirectory(src)
-#add_subdirectory(examples)
+add_subdirectory(examples)
 add_subdirectory(lee)
 
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xml/build_uboone_covar.xml DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build/lee/)

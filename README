@@ -53,18 +53,9 @@ SBNfit_collapsed_matrix_plots_LEEtest.root
 (1) being able to fill SBNfit histograms from functions of inputted variables. e.g fill "ereco" to nu_uBooNE_elike_intrinsic if "nupdg==1" or nu_uBooNE_mlike_otherwise
 
 
-
 ############################################################################
 ##############		Whats What! ########################################
 ############################################################################
-
-
-
-
-
-
-
-
 
 To run example N (there are 5 examples)
 I think they currently are hardcoded to work in build/examples only.

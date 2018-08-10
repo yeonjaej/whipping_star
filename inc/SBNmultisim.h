@@ -13,6 +13,7 @@
 #include "TMatrixDSymEigen.h"
 #include "TMatrixD.h"
 #include "TMatrixT.h"
+#include "TDirectory.h"
 #include "TVectorD.h"
 #include "TRandom3.h"
 #include "TFile.h"
@@ -55,6 +56,7 @@ class SBNmultisim : public SBNconfig{
 	int writeOut();
 	int printMatricies(std::string tag);
 
+	int plot_one(TMatrixD matrix, std::string tag, TFile *fin);
 	int qualityTesting();
 	virtual bool eventSelection(int file);
 	virtual int fillHistograms(int file, int uni, double wei);

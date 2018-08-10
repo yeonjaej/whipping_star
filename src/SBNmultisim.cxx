@@ -109,7 +109,11 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
 			if( used_multisims.at(i)!= used_multisims.at(i-1)){
 				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
-				exit(EXIT_FAILURE);
+				for(int j=0; j< Nfiles; j++){
+					if(universes_used < used_multisims.at(j)) universes_used = used_multisims.at(j);
+					std::cout<<"File "<<j<<" multisims: "<<used_multisims.at(j)<<std::endl;
+				}
+				//exit(EXIT_FAILURE);
 			}
 			universes_used = used_multisims.at(0);
 		}
@@ -310,6 +314,7 @@ int SBNmultisim::fillHistograms(int file, int uni, double wei){
 
 int SBNmultisim::formCovarianceMatrix(std::string tag){
 
+	std::cout<<"SBNmultisim::formCovariancematrix\t|| Starting.\n";
 	full_covariance.ResizeTo(num_bins_total, num_bins_total);
 	frac_covariance.ResizeTo(num_bins_total, num_bins_total);
 	full_correlation.ResizeTo(num_bins_total, num_bins_total);
@@ -340,8 +345,8 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	spec_CV.calcFullVector();
 	std::vector<double> CV = spec_CV.fullVec;
 
-
 	std::cout<<"SBNmultisim::formCovariancematrix\t|| Begining to form the "<<num_bins_total<<"X"<<num_bins_total<<" covariance matrix.\n";
+
 	for(int i=0; i<num_bins_total; i++){
 		for(int j=0; j<num_bins_total; j++){
 
@@ -403,6 +408,8 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	std::vector<TH2D> h2_cov;
 	std::vector<TH2D> h2_fcov;
 
+
+	/*
 	for(int m=0; m< variations.size();m++){
 		//		vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
 		//		vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
@@ -421,7 +428,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 		h2_corr.back().Write();
 
 	}
-
+	*/
 
 	fout->Close();
 	//and also writeout
@@ -639,7 +646,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	c_frac->Write();
 
 
-
+	
 	//Print the collapsed matricies too: Need to fudge this a bit
 	SBNchi collapse_chi(xmlname);
 
@@ -742,6 +749,73 @@ int SBNmultisim::printMatricies(std::string tag){
 	}
 	c_coll_full->Write();
 
+	for(int m=0; m< variations.size();m++){
+		this->plot_one(vec_full_correlation.at(m), variations.at(m)+" Correlation", fout);
+		this->plot_one(vec_frac_covariance.at(m), variations.at(m)+" Fractional Covariance", fout);
+		this->plot_one(vec_full_covariance.at(m), variations.at(m)+" Full Covariance", fout);
+
+	}
+
+
+
+	fout->cd();
+
+
 	fout->Close();
+	return 0;
+}
+
+
+int SBNmultisim::plot_one(TMatrixD matrix, std::string tag, TFile *fin){
+	fin->cd();
+	TDirectory *individualDir = fin->GetDirectory("individualDir"); 
+           if (!individualDir) { 
+                          individualDir = fin->mkdir("individualDir");       
+           }
+	fin->cd(); 
+   	individualDir->cd();
+
+
+
+	TH2D h2_full(matrix);
+	h2_full.SetName((tag+"_th2d").c_str());
+	TCanvas *c_full = new TCanvas((tag+"_canvas").c_str());
+	c_full->cd();
+	c_full->SetFixedAspectRatio();
+	h2_full.Draw("colz");
+	h2_full.SetTitle(tag.c_str());
+	h2_full.GetXaxis()->SetTitle("Reco Bin i");
+	h2_full.GetYaxis()->SetTitle("Reco Bin j");
+
+	c_full->SetRightMargin(0.150);
+	int use_full =0;
+	for(int im =0; im<num_modes; im++){
+		for(int id =0; id<num_detectors; id++){
+			for(int ic = 0; ic < num_channels; ic++){
+				for(int isc = 0; isc < num_subchannels.at(ic)-1; isc++){
+					TLine *lscv = new TLine(0, num_bins.at(ic)+use_full, num_bins_total, num_bins.at(ic)+use_full);
+					TLine *lsch = new TLine(num_bins.at(ic)+use_full,0, num_bins.at(ic)+use_full, num_bins_total);
+					lscv->SetLineWidth(2);
+					lsch->SetLineWidth(2);
+					lscv->SetLineColor(kRed);
+					lsch->SetLineColor(kRed);
+					use_full+=num_bins.at(ic);
+					lscv->Draw();
+					lsch->Draw();
+
+				}
+				TLine *lv = new TLine(0, num_bins.at(ic)+use_full, num_bins_total, num_bins.at(ic)+use_full);
+				TLine *lh = new TLine(num_bins.at(ic)+use_full,0, num_bins.at(ic)+use_full, num_bins_total);
+				lv->SetLineWidth(2);
+				lh->SetLineWidth(2);
+				use_full+=num_bins.at(ic);
+				lv->Draw();
+				lh->Draw();
+
+			}
+		}
+	}
+	c_full->Write();
+
 	return 0;
 }

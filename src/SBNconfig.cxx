@@ -195,17 +195,21 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					exit(EXIT_FAILURE);
 					//TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
 				}else if(btype == "double"){
-					std::cout<<"Setting double variable "<<bnam<<std::endl;
+					std::cout<<"Setting double variable "<<bnam<<" @ "<<bhist<<std::endl;
 					TEMP_branch_variables.push_back( new branch_var_d(bnam, btype, bhist ) );
 				}else if(btype == "float"){
-					std::cout<<"Setting float variable "<<bnam<<std::endl;
+					std::cout<<"Setting float variable "<<bnam<<" @ "<<bhist<<std::endl;
 					TEMP_branch_variables.push_back( new branch_var_f(bnam, btype, bhist ) );
 				}else{
 					std::cout<<otag<<"ERROR: currently only int, double, float, allowed for reco variables\n";
 					exit(EXIT_FAILURE);
 				}
-
-				std::string oscillate = pBranch->Attribute("oscillate");
+	
+				std::string oscillate = "false";
+				if(pBranch->Attribute("oscillate")!=NULL){
+					oscillate =pBranch->Attribute("oscillate");
+				}	
+								
 				if(oscillate == "false"){
 					std::cout<<"Do Not Oscillate "<<oscillate<<std::endl;
 					TEMP_branch_variables.back()->setOscillate(false);

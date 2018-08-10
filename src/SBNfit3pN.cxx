@@ -15,8 +15,6 @@ double SBNfit3pN::MinimizerCalcChi(const double * X){
 	num_func_calls++;
 	SBNosc tempOsc = sigOsc; 
 
-		
-		
 		double imn[3] = {X[0],X[1],X[2]};
 		double iue[3] = {X[3],X[4],X[5]};
 		double ium[3] = {X[6],X[7],X[8]};
