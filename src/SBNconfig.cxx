@@ -188,7 +188,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 				std::string bnam = pBranch->Attribute("name");
 				std::string btype = pBranch->Attribute("type");
-				std::string bhist = pBranch->Attribute("associated_hist");
+				std::string bhist = pBranch->Attribute("associated_subchannel");
 
 				if(btype == "int"){
 					std::cout<<"NO INT ALLOWED "<<bnam<<std::endl;

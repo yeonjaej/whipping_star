@@ -85,10 +85,11 @@ int main(int argc, char* argv[])
 	 ************************************************************
 	 ************************************************************/
 	time_t start_time = time(0);
-	std::cout<<"Begining Covariance Calculation: "<<std::endl;
-
+	
 	//a tag to identify outputs
 	std::string tag = "EXAMPLE1";
+
+	std::cout<<"Begining Covariance Calculation for tag: "<<tag<<std::endl;
 
 	//Create a SBNmultisim object initilizing with the inputted xml
 	//This will load all the files and weights as laid out

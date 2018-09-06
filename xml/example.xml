@@ -31,7 +31,7 @@
 	<branch
 		name="ereco"
 		type="double"
-		associated_hist="nu_uBooNE_nue_intrinsic"
+		associated_subchannel="nu_uBooNE_nue_intrinsic"
 	/>
 </MultisimFile>
 
@@ -40,7 +40,7 @@
 	<branch
 		name="ereco"
 		type="double"
-		associated_hist="nu_uBooNE_nue_leesignal"
+		associated_subchannel="nu_uBooNE_nue_leesignal"
 	/>
 </MultisimFile>
 
@@ -50,7 +50,7 @@
 	<branch
 		name="ereco"
 		type="double"
-		associated_hist="nu_uBooNE_numu_intrinsic"
+		associated_subchannel="nu_uBooNE_numu_intrinsic"
 	/>
 </MultisimFile>
 
@@ -59,7 +59,7 @@
 	<branch
 		name="ereco"
 		type="double"
-		associated_hist="nu_uBooNE_ccpi0_intrinsic"
+		associated_subchannel="nu_uBooNE_ccpi0_intrinsic"
 	/>
 </MultisimFile>
 
