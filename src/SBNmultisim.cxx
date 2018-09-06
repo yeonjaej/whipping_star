@@ -108,10 +108,11 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 			//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
 			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
 			if( used_multisims.at(i)!= used_multisims.at(i-1)){
-				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of Multisims for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
+				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of universes for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
+				std::cerr<<"SBNmultisim::SBNmultisim\t|| The missing universes are set to weights of 1. Make sure this is what you want!"<<std::endl;
 				for(int j=0; j< Nfiles; j++){
 					if(universes_used < used_multisims.at(j)) universes_used = used_multisims.at(j);
-					std::cout<<"File "<<j<<" multisims: "<<used_multisims.at(j)<<std::endl;
+					std::cerr<<"SBNmultisim::SBNmultisom\t|| File "<<j<<" multisims: "<<used_multisims.at(j)<<std::endl;
 				}
 				//exit(EXIT_FAILURE);
 			}
@@ -402,6 +403,22 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	full_covariance.Write(("full_covariance_"+tag).c_str(),TObject::kWriteDelete);
 	frac_covariance.Write(("frac_covariance_"+tag).c_str(),TObject::kWriteDelete);
 	full_correlation.Write(("full_correlation_"+tag).c_str(),TObject::kWriteDelete);
+
+
+	TDirectory *individualDir = fout->GetDirectory("individualDir"); 
+           if (!individualDir) { 
+                          individualDir = fout->mkdir("individualDir");       
+           }
+	fout->cd(); 
+   	individualDir->cd();
+
+
+	for(int m=0; m< variations.size();m++){
+		vec_full_correlation.at(m).Write( (variations.at(m)+"_full_correlation_"+tag).c_str(), TObject::kWriteDelete);
+		vec_frac_covariance.at(m).Write( (variations.at(m)+"_frac_covariance_"+tag).c_str(), TObject::kWriteDelete);
+		vec_full_covariance.at(m).Write( (variations.at(m)+"_full_covariance_"+tag).c_str(), TObject::kWriteDelete);
+	}
+
 
 
 	std::vector<TH2D> h2_corr;
