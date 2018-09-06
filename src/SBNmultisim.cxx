@@ -408,7 +408,6 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	std::vector<TH2D> h2_cov;
 	std::vector<TH2D> h2_fcov;
 
-
 	/*
 	for(int m=0; m< variations.size();m++){
 		//		vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
@@ -433,6 +432,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	fout->Close();
 	//and also writeout
 	spec_CV.writeOut(tag);
+
 
 
 	this->qualityTesting();

@@ -618,9 +618,7 @@ TMatrixT<double > SBNchi::sys_fill_direct(std::string rootname, std::string matn
 		//exit(EXIT_FAILURE);
 	}
 
-
 	return temp2;
-
 
 }
 
@@ -776,7 +774,6 @@ int SBNchi::printMatricies(std::string tag){
 }
 
 
-
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
 TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 	double center = this->calcChi(specin);
@@ -784,7 +781,7 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 
 	TRandom3 *rangen = new TRandom3(0);
 
-	TH1D ans("","",100,0,50);
+	TH1D ans("","",100,0,100);
 	//So save the core one that we will sample for
 	ans.GetXaxis()->SetCanExtend(kTRUE);
 	isVerbose = false;
@@ -797,24 +794,13 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 
 		double thischi = this->calcChi(&tmp);
 		ans.Fill(thischi);
-		if(thischi<=center)nlower++;
+		if(thischi<=center) nlower++;
 
 		if(i%100==0) std::cout<<"SBNchi::toyMC_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;
 
 	isVerbose = true;
-
-
-
-
-
-
-
-
-
-
-
 
 	return ans;
 
@@ -826,10 +812,9 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
 	std::vector<int> nlower(chival.size(),0);
 
-
 	TRandom3 *rangen = new TRandom3(0);
 
-	TH1D ans("","",100,0,50);
+	TH1D ans("","",100,0,100);
 	//So save the core one that we will sample for
 	ans.GetXaxis()->SetCanExtend(kTRUE);
 	isVerbose = false;
