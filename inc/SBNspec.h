@@ -67,6 +67,10 @@ namespace sbn{
 			SBNspec(std::string, std::string, bool);
 
 
+			SBNspec(std::vector<double> input_full_vec, std::string whichxml);
+			SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool isverbose);
+
+
 			SBNspec() {};
 
 			int randomScale(); //mainly a debugging function, just randomly scales each hist by 0-2
@@ -100,7 +104,9 @@ namespace sbn{
 
 			int getGlobalBinNumber(double invar, int which_hist);
 			int getLocalBinNumber(double invar, int which_hist);
-
+	
+			int getHistNumber(int f);
+	
 
 			//Just some debugging/checking
 			int printFullVec();

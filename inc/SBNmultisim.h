@@ -91,7 +91,10 @@ class SBNmultisim : public SBNconfig{
 	std::vector<int> num_universes_per_variation;
 	std::map<int, std::string> map_universe_to_var;
 
+	std::map<std::string, int> map_var_to_matrix;
 
+	int printVariations(std::string tag);
+	
 
 	int Nfiles;
 	std::vector<TFile *> files;

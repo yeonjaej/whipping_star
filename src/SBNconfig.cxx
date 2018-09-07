@@ -196,7 +196,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					//TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
 				//}else
 				 if(btype == "double"){
-					std::cout<<otag<<"Setting double variable "<<bnam<<" @ "<<bhist<<std::endl;
+					if(isVerbose)std::cout<<otag<<"Setting double variable "<<bnam<<" @ "<<bhist<<std::endl;
 					TEMP_branch_variables.push_back( new branch_var_d(bnam, btype, bhist ) );
 				//}else if(btype == "float"){
 				//	std::cout<<otag<<"Setting float variable "<<bnam<<" @ "<<bhist<<std::endl;
@@ -212,16 +212,16 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				}	
 								
 				if(oscillate == "false"){
-					std::cout<<otag<<"Oscillations are Off. oscillate="<<oscillate<<std::endl;
+					if(isVerbose)std::cout<<otag<<"Oscillations are Off. oscillate="<<oscillate<<std::endl;
 					TEMP_branch_variables.back()->setOscillate(false);
 				}else if(oscillate == "true"){
-					std::cout<<otag<<"Setting Oscillate! "<<oscillate<<std::endl;
+					if(isVerbose)std::cout<<otag<<"Setting Oscillate! "<<oscillate<<std::endl;
 					TEMP_branch_variables.back()->setOscillate(true);
 					TEMP_branch_variables.back()->true_param_name = pBranch->Attribute("true_param_name");
 					TEMP_branch_variables.back()->true_L_name = pBranch->Attribute("true_L_name");
 					std::cout<<otag<<"Set Oscillate! "<<pBranch->Attribute("true_param_name")<<" "<<pBranch->Attribute("true_L_name")<<std::endl;
 				}else{
-					std::cout<<otag<<"Do Not Oscillate "<<oscillate<<std::endl;
+					if(isVerbose)std::cout<<otag<<"Do Not Oscillate "<<oscillate<<std::endl;
 					TEMP_branch_variables.back()->setOscillate(false);
 				}
 

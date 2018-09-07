@@ -1,8 +1,6 @@
 #include "SBNmultisim.h"
-//#include "MCEventWeight.h"
 
 using namespace sbn;
-
 
 SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
@@ -10,7 +8,6 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 	tolerence_positivesemi = 1e-5;
 	is_small_negative_eigenvalue = false;
 	abnormally_large_weight = 1e3;
-
 
 
 	std::map<std::string, int> parameter_sims;
@@ -320,7 +317,6 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	frac_covariance.ResizeTo(num_bins_total, num_bins_total);
 	full_correlation.ResizeTo(num_bins_total, num_bins_total);
 
-	std::map<std::string, int> map_var_to_matrix;
 
 	for(auto &v: variations){
 
@@ -365,7 +361,7 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 				full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
 				vec_full_covariance.at(which_matrix)(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
 
-				if(false) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
+				//if(false) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
 
 				if(full_covariance(i,j)!=full_covariance(i,j)){
 					std::cout<<"SBNmultisim::formCovariancematrix\t|| ERROR: nan : at (i,j):  "<<i<<" "<<j<<" fullcov: "<<full_covariance(i,j)<<" multi hist sise "<<multi_vecspec.size()<<" CV: "<<CV[i]<<" "<<CV[j]<<" multihisg "<<multi_vecspec[m][i]<<" "<<multi_vecspec[m][j]<<" on dim : "<<m<<std::endl;
@@ -482,7 +478,7 @@ int SBNmultisim::qualityTesting(){
 
 
 
-	if(max_sym_violation < 1e-15){
+	if(max_sym_violation < 1e-13){
 		std::cout<<"SBNmultisim::qualityTesting\t|| PASS: Generated covariance matrix is symmetric"<<std::endl;
 	}else{
 		std::cout<<"SBNmultisim::qualityTesting\t||  ERROR result is not symmetric! "<<max_sym_violation<<std::endl;
@@ -523,6 +519,89 @@ int SBNmultisim::qualityTesting(){
 	return 0;
 }
 
+int SBNmultisim::printVariations(std::string tag){
+	TFile *fout = new TFile(("SBNfit_variation_plots_"+tag+".root").c_str(),"recreate");
+	fout->cd();
+
+	std::cout<<"SBNmultisim::printVariations\t|| Starting to print all variations, this can take a little. "<<std::endl;
+	
+	std::vector<TDirectory*> vec_dir;
+
+	std::vector<std::vector<TCanvas*>> vec_canvas;
+
+	for(auto &v: variations){
+
+		//std::cout<<"SBNmultisim::printVariations\t|| Preparing directory and canvases for variation: "<<v<<std::endl;
+		fout->cd();
+		vec_dir.push_back( fout->GetDirectory(v.c_str()));
+       		if (!vec_dir.back()) { 
+       	            vec_dir.back() = fout->mkdir(v.c_str());       
+          	 }
+		vec_dir.back()->cd();
+
+		std::vector<TCanvas *> tmpc;
+		for(int i=0; i< spec_CV.hist.size(); i++){
+			tmpc.push_back(new TCanvas((fullnames.at(i)).c_str()));
+			tmpc.back()->cd();
+			TH1D * temp_cv_spec = (TH1D*)spec_CV.hist.at(i).Clone((std::to_string(i)+v).c_str());
+			temp_cv_spec->Scale(1,"width");
+			temp_cv_spec->SetMaximum(temp_cv_spec->GetMaximum()*1.45);
+			temp_cv_spec->SetStats(false);
+			temp_cv_spec->SetLineColor(kBlack);
+			temp_cv_spec->SetLineWidth(3);
+			temp_cv_spec->GetXaxis()->SetTitle(fullnames.at(i).c_str());
+			temp_cv_spec->GetYaxis()->SetTitle("Events/unit");
+			temp_cv_spec->SetTitle(fullnames.at(i).c_str());
+			temp_cv_spec->DrawCopy("hist");
+	
+				
+		}
+		vec_canvas.push_back(tmpc);	
+	}
+
+	std::cout<<"SBNmultisim::printVariations\t|| Starting universe loop. "<<std::endl;
+	TRandom3 *rangen = new TRandom3(0);
+	for(int m=0; m < universes_used; m++){
+			std::string var = map_universe_to_var.at(m);
+			int which_matrix = map_var_to_matrix.at(var);
+	
+			vec_dir.at(which_matrix)->cd();
+
+			SBNspec tmp(multi_vecspec.at(m), xmlname,false);
+				
+				
+			for(int i=0; i< tmp.hist.size(); i++){
+				vec_canvas.at(which_matrix).at(i)->cd();
+				tmp.hist.at(i).Scale(1,"width");
+				tmp.hist.at(i).SetLineColor((int)rangen->Uniform(300,1000));	
+				tmp.hist.at(i).DrawCopy("same hist");
+
+			}	
+			
+					
+
+	}//end universe loop
+
+
+	for(int v =0; v< variations.size(); v++){
+		fout->cd();
+		vec_dir.at(v)->cd();
+		
+		for(int i=0; i< spec_CV.hist.size(); i++){
+			TH1D * temp_cv_spec = (TH1D*)spec_CV.hist.at(i).Clone((std::to_string(i)+variations.at(v)+"tmp2").c_str());
+			temp_cv_spec->Scale(1,"width");
+			temp_cv_spec->SetLineColor(kBlack);
+			temp_cv_spec->SetLineWidth(3);
+			temp_cv_spec->DrawCopy("same hist");
+
+			vec_canvas.at(v).at(i)->Write();
+		}
+	}
+
+	
+	fout->Close();
+	return 0;
+}
 
 
 int SBNmultisim::printMatricies(std::string tag){

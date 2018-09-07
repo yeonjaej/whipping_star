@@ -37,6 +37,7 @@ SBNspec::SBNspec(std::string whichxml, int which_universe, bool isverbose) : SBN
 SBNspec::SBNspec(std::string whichxml): SBNspec(whichxml,-1,true){}
 SBNspec::SBNspec(std::string whichxml, int which_universe): SBNspec(whichxml,which_universe, true){}
 
+SBNspec::SBNspec(std::string rootfile, std::string whichxml) : SBNspec(rootfile, whichxml, true){}
 SBNspec::SBNspec(std::string rootfile, std::string whichxml, bool isverbose) : SBNconfig(whichxml, isverbose) {
 	//Contruct from a prexisting histograms that exist in a rootfile
 	TFile *f = new TFile(rootfile.c_str(),"read");
@@ -57,7 +58,30 @@ SBNspec::SBNspec(std::string rootfile, std::string whichxml, bool isverbose) : S
 
 }
 
-SBNspec::SBNspec(std::string rootfile, std::string whichxml) : SBNspec(rootfile, whichxml, true){ };
+SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml) : SBNspec(input_full_vec, whichxml, false){ };
+SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool isverbose) : SBNspec(whichxml,0,isverbose){
+
+	for(int i=0; i< input_full_vec.size(); i++){
+
+		int which_hist = getHistNumber(i);
+		
+		int exact_bin = i;
+		for(int b=0; b<which_hist; b++){
+			exact_bin -= hist.at(b).GetNbinsX();
+		}
+		hist.at(which_hist).SetBinContent(exact_bin+1, input_full_vec.at(i));
+	
+	}
+	
+
+	this->calcFullVector();
+}
+
+
+
+
+
+
 
 int SBNspec::Add(std::string which_hist, TH1 * histin){
 	//Addes all hists together
@@ -86,6 +110,9 @@ int SBNspec::Add(std::string which_hist, TH1 * histin){
 	this->collapseVector();
 	return 0;
 }
+
+
+
 
 
 
@@ -686,7 +713,16 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 	return 0;
 }
 
+int SBNspec::getHistNumber(int f){
+	//Get which histogram (in hist) that a full_vector entry comes from	
+	int counter = 0;	
+	for(int i=0; i<hist.size(); i++){
+		if(f >= counter && f < counter + hist.at(i).GetNbinsX() ) return i;
+		counter+=hist.at(i).GetNbinsX();
+	}
 
+	return -99;
+}
 
 
 int SBNspec::getLocalBinNumber(double invar, int which_hist)
