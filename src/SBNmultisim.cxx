@@ -586,11 +586,13 @@ int SBNmultisim::printVariations(std::string tag){
 		vec_dir.at(v)->cd();
 
 		for(int i=0; i< spec_CV.hist.size(); i++){
+			vec_canvas.at(v).at(i)->cd();
 			TH1D * temp_cv_spec = (TH1D*)spec_CV.hist.at(i).Clone((std::to_string(i)+variations.at(v)+"tmp2").c_str());
 			temp_cv_spec->Scale(1,"width");
 			temp_cv_spec->SetLineColor(kBlack);
-			temp_cv_spec->SetLineWidth(4);
-			temp_cv_spec->DrawCopy("same hist");
+			temp_cv_spec->SetMarkerStyle(34);
+			temp_cv_spec->SetLineWidth(2);
+			temp_cv_spec->DrawCopy("same hist p");
 		
 			vec_canvas.at(v).at(i)->Write();
 			delete temp_cv_spec;
