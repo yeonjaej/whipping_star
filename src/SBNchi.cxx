@@ -19,6 +19,7 @@ SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkg
 	MfracCov = Msysin;
 	Msys.Zero();
 
+
 	this->reload_core_spec(&bkgSpec);
 }
 
@@ -48,6 +49,7 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 	Msys.Zero();
 	Msys=MfracCov;
 
+
 	this->reload_core_spec(&in);
 }
 
@@ -71,7 +73,6 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 		Msys.Zero();
 	}
 
-
 	this->reload_core_spec(&bkgSpec);
 
 }
@@ -85,6 +86,7 @@ int SBNchi::reload_core_spec(SBNspec *bkgin){
 	otag = "SBNchi::reload_core_spec\t|| ";
 
 	bool is_fractional = true;
+	cholosky_performed = false;
 
 	if(isVerbose)std::cout<<otag<<"Begininning to reload core spec! First set new core spec"<<std::endl;
 	bkgSpec = *bkgin;
@@ -774,14 +776,199 @@ int SBNchi::printMatricies(std::string tag){
 }
 
 
+int SBNchi::performCholoskyDecomposition(SBNspec *specin){
+	TRandom3 * rangen = new TRandom3(0);
+	specin->calcFullVector();
+
+	double tol = 1e-7;
+
+	TMatrixD U  = MfracCov;
+
+	for(int i =0; i<U.GetNcols(); i++)
+	{
+		for(int j =0; j<U.GetNrows(); j++)
+		{
+			if(isnan(U(i,j)))
+				U(i,j) = 0;
+			else
+				U(i,j)=U(i,j)*specin->fullVec.at(i)*specin->fullVec.at(j);
+		}
+	}
+
+	for(int i =0; i<U.GetNcols(); i++)
+	{
+		U(i,i) += specin->fullVec.at(i);
+	}
+
+	//First up, we have some problems with positive semi-definite and not positive definite
+	TMatrixDEigen eigen (U);
+	TVectorD eigen_values = eigen.GetEigenValuesRe();
+
+	int n_t = U.GetNcols();
+
+	for(int i=0; i< eigen_values.GetNoElements(); i++){
+		if(eigen_values(i)<=0){
+			if(fabs(eigen_values(i))< tol){
+				std::cout<<"SBNchi::sampleCovariance\t|| cov has a very small, < "<<tol<<" , negative eigenvalue. Adding it back to diagonal of : "<<eigen_values(i)<<std::endl;
+
+				for(int a =0; a<U.GetNcols(); a++){
+					U(a,a) += eigen_values(i);
+				}
+
+			}else{
+				std::cout<<"SBNchi::sampleCovariance\t|| 0 or negative eigenvalues! error."<<std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		if(fabs(eigen_values(i))< tol){
+			//SP_WARNING()<<"U has a very small, < "<<tol<<", eigenvalue which for some reason fails to decompose. Adding 1e9 to diagonal of U"<<std::endl;
+
+			for(int a =0; a<U.GetNcols(); a++){
+				U(a,a) += tol;
+			}
+
+		}	
+	}
+
+
+	//Seconndly attempt a Cholosky Decomposition
+	TDecompChol * chol = new TDecompChol(U,0.1);
+	bool worked = chol->Decompose();
+
+	if(!worked){
+		std::cout<<"SBNchi::sampleCovariance\t|| Cholosky Decomposition Failed."<<std::endl;
+		exit(EXIT_FAILURE);
+
+	}
+
+	TMatrixT<double> upper_trian(n_t,n_t);
+	lower_trian.ResizeTo(n_t,n_t);
+	upper_trian = chol->GetU();
+	lower_trian = upper_trian;
+	lower_trian.T();
+
+	cholosky_performed = true;	
+	return 0;
+}
+
+
+TH1D SBNchi::sampleCovariance_varyInput(SBNspec *specin, int num_MC){ 
+	std::vector<double>  tmp = {10};
+	return sampleCovariance_varyInput(specin,num_MC,&tmp);
+}
+
+TH1D SBNchi::sampleCovariance_varyInput(SBNspec *specin, int num_MC, std::vector<double> * chival){
+	if(!cholosky_performed) this->performCholoskyDecomposition(specin); 
+
+	int n_t = specin->fullVec.size();
+	std::vector<int> nlower(chival->size(),0);
+
+
+	TVectorT<double> u(n_t);
+	for(int i=0; i<n_t; i++){
+		u(i) = specin->fullVec.at(i);
+	}
+
+	TRandom3 * rangen = new TRandom3(0);
+
+
+	TH1D ans("","",150,0,150);
+	ans.GetXaxis()->SetCanExtend(kTRUE);
+	isVerbose = false;
+	for(int i=0; i < num_MC;i++){
+
+		TVectorT<double> gaus_sample(n_t);
+		TVectorT<double> multi_sample(n_t);
+		for(int a=0; a<n_t; a++){
+			gaus_sample(a) = rangen->Gaus(0,1);	
+		}
+
+		multi_sample = u + lower_trian*gaus_sample;
+
+		std::vector<double> sampled_fullvector(n_t,0.0);
+		for(int j=0; j<n_t; j++){
+			sampled_fullvector.at(j) = multi_sample(j);
+		}
+		SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
+
+		sampled_spectra.collapseVector(); //this line important isnt it!
+
+		double thischi = this->calcChi(&sampled_spectra);
+		ans.Fill(thischi);
+
+		for(int j=0; j< chival->size(); j++){
+			if(thischi>=chival->at(j)) nlower.at(j)++;
+		}
+
+
+
+		if(i%1000==0) std::cout<<"SBNchi::sampleCovariance_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+	}
+	isVerbose = true;
+
+	for(int n =0; n< nlower.size(); n++){
+		chival->at(n) = nlower.at(n)/(double)num_MC;
+	}
+
+
+	return ans;
+}
+
+
+SBNspec SBNchi::sampleCovariance(SBNspec *specin){
+	if(!cholosky_performed) this->performCholoskyDecomposition(specin); 
+
+	int n_t = specin->fullVec.size();
+
+
+	TVectorT<double> u(n_t);
+	for(int i=0; i<n_t; i++){
+		u(i) = specin->fullVec.at(i);
+	}
+
+	TRandom3 * rangen = new TRandom3(0);
+
+	isVerbose = false;
+
+		TVectorT<double> gaus_sample(n_t);
+		TVectorT<double> multi_sample(n_t);
+		for(int a=0; a<n_t; a++){
+			gaus_sample(a) = rangen->Gaus(0,1);	
+		}
+
+		multi_sample = u + lower_trian*gaus_sample;
+
+		std::vector<double> sampled_fullvector(n_t,0.0);
+		for(int j=0; j<n_t; j++){
+			sampled_fullvector.at(j) = multi_sample(j);
+		}
+		SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
+
+		sampled_spectra.collapseVector(); //this line important isnt it!
+
+
+	isVerbose = true;
+
+
+
+	return sampled_spectra;
+}
+
+
+
+
+TH1D SBNchi::samplePoisson_varyInput(SBNspec *specin, int num_MC){ 
+	std::vector<double>  tmp = {10};
+	return samplePoisson_varyInput(specin,num_MC,&tmp);
+}
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
-TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
-	double center = this->calcChi(specin);
-	int nlower=0;
+TH1D SBNchi::samplePoisson_varyInput(SBNspec *specin, int num_MC, std::vector<double> *chival){
+	std::vector<int> nlower(chival->size(),0);
 
 	TRandom3 *rangen = new TRandom3(0);
 
-	TH1D ans("","",100,0,100);
+	TH1D ans("","",150,0,150);
 	//So save the core one that we will sample for
 	ans.GetXaxis()->SetCanExtend(kTRUE);
 	isVerbose = false;
@@ -790,26 +977,87 @@ TH1D SBNchi::toyMC_varyInput(SBNspec *specin, int num_MC){
 		SBNspec tmp = *specin;
 		tmp.poissonScale(rangen);
 		tmp.collapseVector(); //this line important isnt it!
-		//tmp.printfull_vectorFullVec();
+		//tmp.printFullVec();
 
 		double thischi = this->calcChi(&tmp);
 		ans.Fill(thischi);
-		if(thischi<=center) nlower++;
 
-		if(i%100==0) std::cout<<"SBNchi::toyMC_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+		for(int j=0; j< chival->size(); j++){
+			if(thischi>=chival->at(j)) nlower.at(j)++;
+		}
+
+		if(i%1000==0) std::cout<<"SBNchi::samplePoisson_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
-	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;
+	for(int n =0; n< nlower.size(); n++){
+		chival->at(n) = nlower.at(n)/(double)num_MC;
+	}
 
 	isVerbose = true;
-
 	return ans;
 
+
+}
+/*
+std::vector<double> SBNchi::sampleCovariance_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
+	if(!cholosky_performed) this->performCholoskyDecomposition(specin); 
+
+	int n_t = specin->fullVec.size();
+	std::vector<int> nlower(chival.size(),0);
+
+	TVectorT<double> u(n_t);
+	for(int i=0; i<n_t; i++){
+		u(i) = specin->fullVec.at(i);
+	}
+
+	TRandom3 * rangen = new TRandom3(0);
+
+
+	TH1D ans("","",100,0,100);
+	ans.GetXaxis()->SetCanExtend(kTRUE);
+	isVerbose = false;
+	for(int i=0; i < num_MC;i++){
+
+		TVectorT<double> gaus_sample(n_t);
+		TVectorT<double> multi_sample(n_t);
+		for(int a=0; a<n_t; a++){
+			gaus_sample(a) = rangen->Gaus(0,1);	
+		}
+
+		multi_sample = u + lower_trian*gaus_sample;
+
+		std::vector<double> sampled_fullvector(n_t,0.0);
+		for(int i=0; i<n_t; i++){
+			sampled_fullvector.at(i) = multi_sample(i);
+		}
+		SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
+
+		sampled_spectra.collapseVector(); //this line important isnt it!
+
+		double thischi = this->calcChi(&sampled_spectra);
+		ans.Fill(thischi);
+
+		for(int j=0; j< chival.size(); j++){
+			if(thischi>=chival.at(j)) nlower.at(j)++;
+		}
+
+
+		if(i%1000==0) std::cout<<"SBNchi::sampleCovariance_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+	}
+	isVerbose = true;
+
+	std::vector<double> pval;
+	for(auto n: nlower){
+		pval.push_back(n/(double)num_MC);
+
+	}
+
+	return pval;
 
 }
 
 
 //This one varies the input comparative spectrum, and as sucn has  only to calculate the Msys once
-std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
+std::vector<double> SBNchi::samplePoisson_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
 	std::vector<int> nlower(chival.size(),0);
 
 	TRandom3 *rangen = new TRandom3(0);
@@ -832,7 +1080,7 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 			if(thischi>=chival.at(j)) nlower.at(j)++;
 		}
 
-		if(i%1000==0) std::cout<<"SBNchi::toyMC_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+		if(i%1000==0) std::cout<<"SBNchi::samplePoisson_varyInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::vector<double> pval;
 	for(auto n: nlower){
@@ -845,10 +1093,10 @@ std::vector<double> SBNchi::toyMC_varyInput_getpval(SBNspec *specin, int num_MC,
 
 
 }
-
+*/
 
 //This one varies the core spectrum, and as sucn has to recalculate the Msys each stem
-TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
+TH1D SBNchi::samplePoisson_varyCore(SBNspec *specin, int num_MC){
 	double center = this->calcChi(specin);
 	int nlower=0;
 
@@ -868,7 +1116,7 @@ TH1D SBNchi::toyMC_varyCore(SBNspec *specin, int num_MC){
 		ans.Fill(thischi);
 		if(thischi<=center)nlower++;
 
-		if(i%1000==0) std::cout<<"SBNchi::toyMC_varyCore(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+		if(i%1000==0) std::cout<<"SBNchi::samplePoisson_varyCore(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	std::cout<<"pval: "<<nlower/(double)num_MC<<std::endl;
 

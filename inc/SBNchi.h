@@ -10,6 +10,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TMatrixT.h"
+#include "TVectorT.h"
 #include "TRandom3.h"
 #include "TFile.h"
 #include "TStyle.h"
@@ -90,10 +91,22 @@ class SBNchi : public SBNconfig{
 
 	int printMatricies(std::string);
 
+	//Cholosky related
+	bool cholosky_performed;
+	int performCholoskyDecomposition(SBNspec *specin);
+	TMatrixT<double> lower_trian;
 
-	TH1D toyMC_varyCore(SBNspec *specin, int num_MC);
-	TH1D toyMC_varyInput(SBNspec *specin, int num_MC);
-	std::vector<double> toyMC_varyInput_getpval(SBNspec *specin, int num_MC, std::vector<double>chin);
+
+	TH1D samplePoisson_varyCore(SBNspec *specin, int num_MC);
+
+	SBNspec sampleCovariance(SBNspec *specin); 
+
+	TH1D samplePoisson_varyInput(SBNspec *specin, int num_MC);
+	TH1D samplePoisson_varyInput(SBNspec *specin, int num_MC, std::vector<double>*);
+	TH1D sampleCovariance_varyInput(SBNspec *specin, int num_MC);
+	TH1D sampleCovariance_varyInput(SBNspec *specin, int num_MC, std::vector<double>*);
+
+
 
 	//Some reason eventually store the reuslt in vectors, I think there was memory issues.
 	std::vector<std::vector<double >> to_vector(TMatrixT <double> McI);

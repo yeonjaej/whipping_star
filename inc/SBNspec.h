@@ -39,6 +39,7 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v) {
 
 	return idx; 
 }
+
 namespace sbn{
 	//This is the basic class that holds all spectral information in whatever reco or true variable you have decided you want in the xml files.
 	// Inherits from SBNconfig as thats how its all configured/kept equal! :
@@ -76,6 +77,8 @@ namespace sbn{
 			int randomScale(); //mainly a debugging function, just randomly scales each hist by 0-2
 			int poissonScale(); //Scales every histogram by a poissonian random number
 			int poissonScale(TRandom3*); //Scales every histogram by a poissonian random number
+
+
 			int setAsGaussian(double mean, double sigma, int n);
 			int setAsFlat(double val);
 
@@ -104,9 +107,9 @@ namespace sbn{
 
 			int getGlobalBinNumber(double invar, int which_hist);
 			int getLocalBinNumber(double invar, int which_hist);
-	
+
 			int getHistNumber(int f);
-	
+
 
 			//Just some debugging/checking
 			int printFullVec();

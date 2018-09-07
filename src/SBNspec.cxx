@@ -64,15 +64,15 @@ SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool 
 	for(int i=0; i< input_full_vec.size(); i++){
 
 		int which_hist = getHistNumber(i);
-		
+
 		int exact_bin = i;
 		for(int b=0; b<which_hist; b++){
 			exact_bin -= hist.at(b).GetNbinsX();
 		}
 		hist.at(which_hist).SetBinContent(exact_bin+1, input_full_vec.at(i));
-	
+
 	}
-	
+
 
 	this->calcFullVector();
 }
@@ -251,7 +251,12 @@ int SBNspec::Norm(std::string name, double val){
 
 	}
 	return 0;
+
 }
+
+
+
+
 
 int SBNspec::calcFullVector(){
 	fullVec.clear();
@@ -578,7 +583,7 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 					std::string test = h.GetName();
 					if(test.find(canvas_name)!=std::string::npos ){
 
-    						double total_events = h.GetSumOfWeights();
+						double total_events = h.GetSumOfWeights();
 						h.Sumw2(false);
 						h.Scale(1,"width,nosw2");
 						h.GetYaxis()->SetTitle("Events/GeV");

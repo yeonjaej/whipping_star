@@ -8,12 +8,25 @@
 #include <sstream>
 #include <map>
 #include <time.h>
-
+#include <numeric>
+#include <algorithm>
+#include <iomanip>
 #include "TH1D.h"
 #include "TFile.h"
 
 #include "tinyxml.h"
 #include "branch_variable.h"
+
+template <typename T>
+std::string to_string_prec(const T a_value, const int n = 6)
+{
+	std::ostringstream out;
+	out <<std::fixed<< std::setprecision(n) << a_value;
+	return out.str();
+}
+
+
+
 namespace sbn{
 // All declarations are within the namespace scope.
 

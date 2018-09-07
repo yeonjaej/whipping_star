@@ -46,46 +46,32 @@ int main(int argc, char* argv[])
 	int iarg = 0;
 	opterr=1;
 	int index;
-	bool gen = false;
-	bool numudis = false;
-	bool combined = false;
-	int mass_start = -1;
+	bool sample_from_covariance = false;
 
 	const struct option longopts[] =
 	{
 		{"xml", 		required_argument, 	0, 'x'},
-		{"gen",	no_argument, 0, 'g'},
-		{"dis",	no_argument,0,'d'},
-		{"comb", no_argument,0,'c'},
-		{"part", required_argument,0,'p'},
+		{"covariance", 		no_argument,0,'c'},
 		{0,			no_argument, 		0,  0},
 	};
 
 	while(iarg != -1)
 	{
-		iarg = getopt_long(argc,argv, "x:bscp:g", longopts, &index);
+		iarg = getopt_long(argc,argv, "x:c", longopts, &index);
 
 		switch(iarg)
 		{
 			case 'x':
 				xml = optarg;
 				break;
-			case 'g':
-				gen = true;
-				break;
-			case 'd':
-				numudis = true;
-				break;
 			case 'c':
-				combined = true;
-				break;
-			case 'p':
-				mass_start = atoi(optarg);
+				sample_from_covariance = true;
 				break;
 			case '?':
 			case 'h':
 				std::cout<<"Allowed arguments:"<<std::endl;
 				std::cout<<"\t-x\t--xml\t\tInput .xml file for SBNconfig"<<std::endl;
+				std::cout<<"\t-c\t--covariance\t\tSample from covariance matrix instead of Poisson"<<std::endl;
 				return 0;
 		}
 	}
@@ -93,7 +79,7 @@ int main(int argc, char* argv[])
 	std::string tag = "EXAMPLE3";
 
     	SBNspec sig("EXAMPLE1.SBNspec.root",xml);
-	sig.Scale("leesignal",0.65);    
+	sig.Scale("leesignal",1.5);
 	
 	SBNspec bkg("EXAMPLE1.SBNspec.root",xml);
 	bkg.Scale("leesignal",0.0);
@@ -103,11 +89,17 @@ int main(int argc, char* argv[])
 	TMatrixD * cov = (TMatrixD*)fsys->Get("frac_covariance_EXAMPLE1");
 
 	SBNchi *chi = new SBNchi(bkg,*cov);
-	SBNchi *chi_statonly = new SBNchi(bkg,true);
+	SBNchi *chi_statonly = new SBNchi(bkg);
 
-	SBNcls cls_factory(&sig,&bkg,*cov);
+	SBNcls cls_factory(&sig, &bkg,*cov);
+	if(sample_from_covariance) cls_factory.setSampleCovariance();
 
-	cls_factory.calcCLS(10000);
+	//SBNspec test = chi->sampleCovariance(&sig);
+	//test.writeOut("test.root");
+	//return 0;
+
+	int num_MC_events = 100000;
+	cls_factory.calcCLS(num_MC_events, tag);
 
 	return 0;
 }
