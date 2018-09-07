@@ -13,10 +13,17 @@ SBNchi::SBNchi(SBNspec in, TMatrixT<double> Msysin) : SBNconfig(in.xmlname), bkg
 	stat_only= false;
 
 	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
-	Msys.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
-	MfracCov.ResizeTo(Msysin.GetNrows(), Msysin.GetNcols());
+	Msys.ResizeTo(num_bins_total, num_bins_total);
+	MfracCov.ResizeTo(num_bins_total, num_bins_total);
 
-	MfracCov = Msysin;
+	TMatrixD m = Msysin;
+	for (int i = 0; i < used_bins.size(); i++){
+  		TMatrixDColumn(m,i) = TMatrixDColumn(m,used_bins.at(i));
+		m.ResizeTo(used_bins.size(),Msysin.GetNcols());
+	}
+		
+
+	MfracCov = m;
 	Msys.Zero();
 
 
@@ -62,6 +69,8 @@ SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in
 	matrix_collapsed.ResizeTo(num_bins_total_compressed, num_bins_total_compressed);
 	Msys.ResizeTo(num_bins_total, num_bins_total);
 	MfracCov.ResizeTo(num_bins_total, num_bins_total);
+
+
 
 
 	if(is_stat_only){
