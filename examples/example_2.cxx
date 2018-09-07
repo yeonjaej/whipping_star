@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
     	
 	//Repeat but this time scale the LEE signal subchannel to 0, to act as our background spectra
 	SBNspec bkg_spectra("EXAMPLE1.SBNspec.root",xml);
-	bkg_spectra.Scale("nu_uboone_nue_leesignal", 0.0);
+	bkg_spectra.Scale("nu_uBooNE_nue_leesignal", 0.0); // Scale() will scale all that match so bkg_spectra.Scale("leesignal",0.0); would work too 
 
 	//Load up our covariance matricies we calculated in example1 (we could also load up single variation ones)
 	TFile * fsys = new TFile("EXAMPLE1.SBNcovar.root","read");
@@ -106,7 +106,6 @@ int main(int argc, char* argv[])
 	SBNchi *chi_statonly = new SBNchi(bkg_spectra);
 	SBNchi *chi = new SBNchi(bkg_spectra,*cov);
 
-
 	std::vector<double> ans_chi;
 	std::vector<double> ans_chi_statonly;
 	std::vector<double> scaling;
@@ -114,7 +113,7 @@ int main(int argc, char* argv[])
 	for(double k=-2; k<=1; k+=0.025){	
 		//Create a tempoary copy of our signal, scaled up or down by some amount
 		SBNspec tmp = sig_spectra;
-		tmp.Scale("nu_uboone_nue_leesignal",pow(10,k));	
+		tmp.Scale("nu_uBooNE_nue_leesignal",pow(10,k));	
 
 		//calculate the chi^2 between this temp signal and the bkg_spectra with and without spectra
 		double chi2 = chi->calcChi(&tmp);
@@ -154,7 +153,7 @@ int main(int argc, char* argv[])
 	l->SetFillStyle(0);
 	l->Draw();
 
-	c->SaveAs((tag+"simple_scaling.pdf").c_str(),"pdf");
+	c->SaveAs((tag+"_simple_scaling.pdf").c_str(),"pdf");
 
 	return 0;
 }
