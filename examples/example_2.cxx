@@ -91,17 +91,20 @@ int main(int argc, char* argv[])
 
 	std::string tag = "EXAMPLE2";
 
-    	SBNspec sig("EXAMPLE1.SBNspec.root",xml);
+	//Load up the central value spectra we computed in example 1, to act as a signal spectra
+    	SBNspec sig_spectra("EXAMPLE1.SBNspec.root",xml);
     	
-	SBNspec bkg("EXAMPLE1.SBNspec.root",xml);
-	bkg.Scale("leesignal",0.0);
+	//Repeat but this time scale the LEE signal subchannel to 0, to act as our background spectra
+	SBNspec bkg_spectra("EXAMPLE1.SBNspec.root",xml);
+	bkg_spectra.Scale("nu_uboone_nue_leesignal", 0.0);
 
-	// Stats + sys
+	//Load up our covariance matricies we calculated in example1 (we could also load up single variation ones)
 	TFile * fsys = new TFile("EXAMPLE1.SBNcovar.root","read");
 	TMatrixD * cov = (TMatrixD*)fsys->Get("frac_covariance_EXAMPLE1");
 	
-	SBNchi *chi = new SBNchi(bkg,*cov);
-	SBNchi *chi_statonly = new SBNchi(bkg,true);
+	//Create two SBNchi objects, if you pass a TMatrixD it will set that as systematics, otherwise it will be a statonly.
+	SBNchi *chi_statonly = new SBNchi(bkg_spectra);
+	SBNchi *chi = new SBNchi(bkg_spectra,*cov);
 
 
 	std::vector<double> ans_chi;
@@ -109,20 +112,25 @@ int main(int argc, char* argv[])
 	std::vector<double> scaling;
 
 	for(double k=-2; k<=1; k+=0.025){	
-		SBNspec tmp = sig;
-		tmp.Scale("leesignal",pow(10,k));	
+		//Create a tempoary copy of our signal, scaled up or down by some amount
+		SBNspec tmp = sig_spectra;
+		tmp.Scale("nu_uboone_nue_leesignal",pow(10,k));	
+
+		//calculate the chi^2 between this temp signal and the bkg_spectra with and without spectra
 		double chi2 = chi->calcChi(&tmp);
 		double chi2_statonly = chi_statonly->calcChi(&tmp);
-		std::cout<<"SignalScale: "<<pow(10,k)<<" chi^2: "<<chi2<<" chi^2(statonly): "<<chi2_statonly<<std::endl;
-	
+
+		std::cout<<"Signal Scaling: "<<pow(10,k)<<" chi^2: "<<chi2<<" chi^2(statonly): "<<chi2_statonly<<std::endl;
+
+		//And just fill a few things for plotting below	
 		ans_chi.push_back(chi2);			
 		ans_chi_statonly.push_back(chi2_statonly);			
 		scaling.push_back(pow(10,k));			
 	}
 
 
-	TFile * fout = new TFile((tag+"_plots.root").c_str(),"recreate");
-	fout->cd();
+
+	//and just plot it quickly
 	TCanvas *c = new TCanvas();
 	c->cd();
 
@@ -146,9 +154,7 @@ int main(int argc, char* argv[])
 	l->SetFillStyle(0);
 	l->Draw();
 
-	c->Write();
+	c->SaveAs((tag+"simple_scaling.pdf").c_str(),"pdf");
 
-
-	fout->Close();
 	return 0;
 }

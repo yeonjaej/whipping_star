@@ -61,74 +61,72 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 	//This bit will calculate how many "multisims" the file has. if ALL default is the inputted xml value
 	int good_event = 0;
-	if(parameter_names.at(0)[0]=="ALL"){
-		//ALL catagory
-		std::vector<int> used_multisims(Nfiles,0);
-		for(int j = 0;j<Nfiles;j++){
-			delete fWeights->at(j);
-			fWeights->at(j)=0;
 
-			trees.at(j)->GetEntry(good_event);
-			for(std::map<std::string, std::vector<double> >::iterator  it = fWeights->at(j)->begin(); it != fWeights->at(j)->end(); ++it)
-			{
-				if(it->first == "bnbcorrection_FluxHist") continue;
-				used_multisims.at(j) += it->second.size();
+	std::vector<int> used_multisims(Nfiles,0);
+	for(int j = 0;j<Nfiles;j++){
+		delete fWeights->at(j);
+		fWeights->at(j)=0;
 
-				std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
-				variations.push_back(it->first);
-			}
-			delete fWeights->at(j);
-			fWeights->at(j)=0;
+		trees.at(j)->GetEntry(good_event);
+		for(std::map<std::string, std::vector<double> >::iterator  it = fWeights->at(j)->begin(); it != fWeights->at(j)->end(); ++it)
+		{
+			if(it->first == "bnbcorrection_FluxHist") continue;
+			used_multisims.at(j) += it->second.size();
+
+			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
+			variations.push_back(it->first);
 		}
-		//Now remove all, duplicates!
-		sort( variations.begin(), variations.end() );
-		variations.erase( unique( variations.begin(), variations.end() ), variations.end() );
+		delete fWeights->at(j);
+		fWeights->at(j)=0;
+	}
+	//Now remove all, duplicates!
+	sort( variations.begin(), variations.end() );
+	variations.erase( unique( variations.begin(), variations.end() ), variations.end() );
 
-		//make a map and start filling, before filling find if already in map, if it is check size.
-		std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
+	//make a map and start filling, before filling find if already in map, if it is check size.
+	std::cout<<"SBNmultisim::SBNmultisim\t|| We have "<<variations.size()<<" unique variations: "<<std::endl;
 
-		num_universes_per_variation.clear();
+	num_universes_per_variation.clear();
 
-		for(auto &v: variations){
-			std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
-			trees.at(0)->GetEntry(good_event);
-			int thissize = fWeights->at(0)->at(v).size();
+	for(auto &v: variations){
+		std::cout<<"SBNmultisim::SBNmultisim\t|| "<<v<<std::endl;
+		trees.at(0)->GetEntry(good_event);
+		int thissize = fWeights->at(0)->at(v).size();
 
 
-			for(int p=0;p<thissize; p++){
-				map_universe_to_var[num_universes_per_variation.size()] = v;
-				num_universes_per_variation.push_back(thissize);
-			}
+		for(int p=0;p<thissize; p++){
+			map_universe_to_var[num_universes_per_variation.size()] = v;
+			num_universes_per_variation.push_back(thissize);
 		}
-
-		for(int i=1; i<Nfiles; i++){
-			//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
-			std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
-			if( used_multisims.at(i)!= used_multisims.at(i-1)){
-				std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of universes for "<<parameter_names.at(0)[0]<<" are different between files"<<std::endl;
-				std::cerr<<"SBNmultisim::SBNmultisim\t|| The missing universes are set to weights of 1. Make sure this is what you want!"<<std::endl;
-				for(int j=0; j< Nfiles; j++){
-					if(universes_used < used_multisims.at(j)) universes_used = used_multisims.at(j);
-					std::cerr<<"SBNmultisim::SBNmultisom\t|| File "<<j<<" multisims: "<<used_multisims.at(j)<<std::endl;
-				}
-				//exit(EXIT_FAILURE);
-			}
-			universes_used = used_multisims.at(0);
-		}
-		if(Nfiles ==1){
-			universes_used = used_multisims.front();
-		}
-
-
-
-
-
-
-
 	}
 
+	for(int i=1; i<Nfiles; i++){
+		//std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
+		std::cout<<"SBNmultisim::SBNmultisim\t|| File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
+		if( used_multisims.at(i)!= used_multisims.at(i-1)){
+			std::cerr<<"SBNmultisim::SBNmultisim\t|| Warning, number of universes for are different between files"<<std::endl;
+			std::cerr<<"SBNmultisim::SBNmultisim\t|| The missing universes are set to weights of 1. Make sure this is what you want!"<<std::endl;
+			for(int j=0; j< Nfiles; j++){
+				if(universes_used < used_multisims.at(j)) universes_used = used_multisims.at(j);
+				std::cerr<<"SBNmultisim::SBNmultisom\t|| File "<<j<<" multisims: "<<used_multisims.at(j)<<std::endl;
+			}
+			//exit(EXIT_FAILURE);
+		}
+		universes_used = used_multisims.at(0);
+	}
+	if(Nfiles ==1){
+		universes_used = used_multisims.front();
+	}
+
+
+
+
+
+
+
+
 	std::cout<<"SBNmultisim::SBNmultisim\t|| -------------------------------------------------------------\n";
-	std::cout<<"SBNmultisim::SBNmultisim\t|| Initilizing "<<universes_used<<" universes for "<<parameter_names[0][0]<<std::endl;
+	std::cout<<"SBNmultisim::SBNmultisim\t|| Initilizing "<<universes_used<<" universes."<<std::endl;
 	std::cout<<"SBNmultisim::SBNmultisim\t|| -------------------------------------------------------------\n";
 
 	std::vector<double> base_vec (spec_CV.num_bins_total,0.0);
@@ -173,12 +171,7 @@ SBNmultisim::SBNmultisim(std::string xmlname) : SBNconfig(xmlname) {
 
 			if( this->eventSelection(j) ){
 
-				if(parameter_names.at(j).size()!=1){
-					std::cout<<"SBNmultisim::SBNmultisim\t|| ERROR: Currently can only do either 1 multi_sim parameter or 'ALL'"<<std::endl;
-					exit(EXIT_FAILURE);
-
-				}
-				else if(parameter_names.at(j)[0]=="ALL")
+				//else if(parameter_names.at(j)[0]=="ALL") //Currently just do all variations
 				{
 					//Loop over all variations!
 					for(std::string &var : variations){
@@ -402,11 +395,11 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 
 
 	TDirectory *individualDir = fout->GetDirectory("individualDir"); 
-           if (!individualDir) { 
-                          individualDir = fout->mkdir("individualDir");       
-           }
+	if (!individualDir) { 
+		individualDir = fout->mkdir("individualDir");       
+	}
 	fout->cd(); 
-   	individualDir->cd();
+	individualDir->cd();
 
 
 	for(int m=0; m< variations.size();m++){
@@ -422,22 +415,22 @@ int SBNmultisim::formCovarianceMatrix(std::string tag){
 	std::vector<TH2D> h2_fcov;
 
 	/*
-	for(int m=0; m< variations.size();m++){
-		//		vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
-		//		vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
-		//		vec_full_correlation.at(m).Write((variations.at(m)+"_full_correlation_"+tag).c_str() ,TObject::kWriteDelete);
+	   for(int m=0; m< variations.size();m++){
+	//		vec_frac_covariance.at(m).Write((variations.at(m)+"_frac_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+	//		vec_full_covariance.at(m).Write((variations.at(m)+"_full_covariance_"+tag).c_str() ,TObject::kWriteDelete);
+	//		vec_full_correlation.at(m).Write((variations.at(m)+"_full_correlation_"+tag).c_str() ,TObject::kWriteDelete);
 
-		h2_corr.push_back(TH2D(vec_full_correlation.at(m)));
-		h2_cov.push_back(TH2D(vec_full_covariance.at(m)));
-		h2_fcov.push_back(TH2D(vec_frac_covariance.at(m)));
+	h2_corr.push_back(TH2D(vec_full_correlation.at(m)));
+	h2_cov.push_back(TH2D(vec_full_covariance.at(m)));
+	h2_fcov.push_back(TH2D(vec_frac_covariance.at(m)));
 
-		h2_fcov.back().SetName((variations.at(m)+"_frac_covariance_"+tag).c_str());
-		h2_corr.back().SetName((variations.at(m)+"_full_correlation_"+tag).c_str());
-		h2_cov.back().SetName((variations.at(m)+"_full_covariance_"+tag).c_str());
+	h2_fcov.back().SetName((variations.at(m)+"_frac_covariance_"+tag).c_str());
+	h2_corr.back().SetName((variations.at(m)+"_full_correlation_"+tag).c_str());
+	h2_cov.back().SetName((variations.at(m)+"_full_covariance_"+tag).c_str());
 
-		h2_fcov.back().Write();
-		h2_cov.back().Write();
-		h2_corr.back().Write();
+	h2_fcov.back().Write();
+	h2_cov.back().Write();
+	h2_corr.back().Write();
 
 	}
 	*/
@@ -524,7 +517,7 @@ int SBNmultisim::printVariations(std::string tag){
 	fout->cd();
 
 	std::cout<<"SBNmultisim::printVariations\t|| Starting to print all variations, this can take a little. "<<std::endl;
-	
+
 	std::vector<TDirectory*> vec_dir;
 
 	std::vector<std::vector<TCanvas*>> vec_canvas;
@@ -534,27 +527,31 @@ int SBNmultisim::printVariations(std::string tag){
 		//std::cout<<"SBNmultisim::printVariations\t|| Preparing directory and canvases for variation: "<<v<<std::endl;
 		fout->cd();
 		vec_dir.push_back( fout->GetDirectory(v.c_str()));
-       		if (!vec_dir.back()) { 
-       	            vec_dir.back() = fout->mkdir(v.c_str());       
-          	 }
+		if (!vec_dir.back()) { 
+			vec_dir.back() = fout->mkdir(v.c_str());       
+		}
 		vec_dir.back()->cd();
 
 		std::vector<TCanvas *> tmpc;
+
 		for(int i=0; i< spec_CV.hist.size(); i++){
-			tmpc.push_back(new TCanvas((fullnames.at(i)).c_str()));
+			tmpc.push_back(new TCanvas((fullnames.at(i)+"||"+v).c_str()));
 			tmpc.back()->cd();
 			TH1D * temp_cv_spec = (TH1D*)spec_CV.hist.at(i).Clone((std::to_string(i)+v).c_str());
 			temp_cv_spec->Scale(1,"width");
-			temp_cv_spec->SetMaximum(temp_cv_spec->GetMaximum()*1.45);
+
+			tmpc.back()->cd();
+			double maxval = temp_cv_spec->GetMaximum();
+			if(maxval > 0) 	temp_cv_spec->SetMaximum(maxval*1.45);
 			temp_cv_spec->SetStats(false);
 			temp_cv_spec->SetLineColor(kBlack);
-			temp_cv_spec->SetLineWidth(3);
+			temp_cv_spec->SetLineWidth(2);
 			temp_cv_spec->GetXaxis()->SetTitle(fullnames.at(i).c_str());
 			temp_cv_spec->GetYaxis()->SetTitle("Events/unit");
-			temp_cv_spec->SetTitle(fullnames.at(i).c_str());
+			temp_cv_spec->SetTitle((v + " || " +fullnames.at(i)).c_str());
 			temp_cv_spec->DrawCopy("hist");
-	
-				
+
+			delete temp_cv_spec;
 		}
 		vec_canvas.push_back(tmpc);	
 	}
@@ -562,43 +559,45 @@ int SBNmultisim::printVariations(std::string tag){
 	std::cout<<"SBNmultisim::printVariations\t|| Starting universe loop. "<<std::endl;
 	TRandom3 *rangen = new TRandom3(0);
 	for(int m=0; m < universes_used; m++){
-			std::string var = map_universe_to_var.at(m);
-			int which_matrix = map_var_to_matrix.at(var);
-	
-			vec_dir.at(which_matrix)->cd();
+		std::string var = map_universe_to_var.at(m);
+		int which_matrix = map_var_to_matrix.at(var);
 
-			SBNspec tmp(multi_vecspec.at(m), xmlname,false);
-				
-				
-			for(int i=0; i< tmp.hist.size(); i++){
-				vec_canvas.at(which_matrix).at(i)->cd();
-				tmp.hist.at(i).Scale(1,"width");
-				tmp.hist.at(i).SetLineColor((int)rangen->Uniform(300,1000));	
-				tmp.hist.at(i).DrawCopy("same hist");
+		vec_dir.at(which_matrix)->cd();
 
-			}	
-			
-					
+		SBNspec temp_spec(multi_vecspec.at(m), xmlname,false);
+
+
+		for(int i=0; i< temp_spec.hist.size(); i++){
+			vec_canvas.at(which_matrix).at(i)->cd();
+			temp_spec.hist.at(i).Scale(1,"width");
+			temp_spec.hist.at(i).SetLineColor((int)rangen->Uniform(300,1000));	
+			temp_spec.hist.at(i).DrawCopy("same hist");
+		}	
+
+
 
 	}//end universe loop
+
+	std::cout<<"SBNmultisim::printVariations\t|| Finished. Just tidying up and writing TCanvas. "<<std::endl;
 
 
 	for(int v =0; v< variations.size(); v++){
 		fout->cd();
 		vec_dir.at(v)->cd();
-		
+
 		for(int i=0; i< spec_CV.hist.size(); i++){
 			TH1D * temp_cv_spec = (TH1D*)spec_CV.hist.at(i).Clone((std::to_string(i)+variations.at(v)+"tmp2").c_str());
 			temp_cv_spec->Scale(1,"width");
 			temp_cv_spec->SetLineColor(kBlack);
-			temp_cv_spec->SetLineWidth(3);
+			temp_cv_spec->SetLineWidth(4);
 			temp_cv_spec->DrawCopy("same hist");
-
+		
 			vec_canvas.at(v).at(i)->Write();
+			delete temp_cv_spec;
 		}
 	}
 
-	
+
 	fout->Close();
 	return 0;
 }
@@ -742,7 +741,7 @@ int SBNmultisim::printMatricies(std::string tag){
 	c_frac->Write();
 
 
-	
+
 	//Print the collapsed matricies too: Need to fudge this a bit
 	SBNchi collapse_chi(xmlname);
 
@@ -865,11 +864,11 @@ int SBNmultisim::printMatricies(std::string tag){
 int SBNmultisim::plot_one(TMatrixD matrix, std::string tag, TFile *fin){
 	fin->cd();
 	TDirectory *individualDir = fin->GetDirectory("individualDir"); 
-           if (!individualDir) { 
-                          individualDir = fin->mkdir("individualDir");       
-           }
+	if (!individualDir) { 
+		individualDir = fin->mkdir("individualDir");       
+	}
 	fin->cd(); 
-   	individualDir->cd();
+	individualDir->cd();
 
 
 

@@ -152,6 +152,8 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				multisim_scale.push_back(strtod(scale,&end) );
 			}
 
+			/*
+ 			//Currently take all parameter variations in at once. Depreciated code. 
 			TiXmlElement *pParams = pMC->FirstChildElement("parameters");
 			std::stringstream sss(pParams->Attribute("names"));
 
@@ -160,7 +162,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			while ( sss >> nam) vstring.push_back( nam );
 
 			parameter_names.push_back(vstring);
-
+			*/
 
                          TiXmlElement *pFriend;
 			 pFriend = pMC->FirstChildElement("friend");

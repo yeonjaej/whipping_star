@@ -135,7 +135,7 @@ class SBNconfig {
 	std::vector<double> pot_scaling;
 	std::vector<double> pot;
 	
-	std::vector<std::vector<std::string>> parameter_names;	
+	std::vector<std::vector<std::string>> parameter_names;	//obsolete code
 	std::vector<std::vector<branch_var*>> branch_variables;
 	
 

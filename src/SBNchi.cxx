@@ -51,7 +51,7 @@ SBNchi::SBNchi(SBNspec in, std::string newxmlname) : SBNconfig(newxmlname), bkgS
 	this->reload_core_spec(&in);
 }
 
-SBNchi::SBNchi(SBNspec in) : SBNchi(in,false){}
+SBNchi::SBNchi(SBNspec in) : SBNchi(in,true){}
 
 
 SBNchi::SBNchi(SBNspec in, bool is_stat_only): SBNconfig(in.xmlname), bkgSpec(in), stat_only(is_stat_only){
