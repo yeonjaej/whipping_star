@@ -6,10 +6,10 @@ int factorial(int n)
 	return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
 /*********************************************
- *  Constructors for complex_matrix
+ *  Constructors for ComplexMatrix
  * *******************************************/
 
-complex_matrix::complex_matrix(int dim){
+ComplexMatrix::ComplexMatrix(int dim){
 
 	dimension=dim;
 
@@ -20,12 +20,24 @@ complex_matrix::complex_matrix(int dim){
 
 }
 
-int complex_matrix::add(complex_matrix *in){
+int ComplexMatrix::conj(){
 
 	for(int i =0; i< dimension; i++){
 		for(int j =0; j< dimension; j++){
-			real(i,j) += in->real(i,j);
-			imag(i,j) += in->imag(i,j);
+			//real(i,j) = real(i,j); 
+			imag(i,j) = -imag(i,j); 
+		}
+	}
+
+	return 0;
+}
+
+int ComplexMatrix::add(ComplexMatrix *in){
+
+	for(int i =0; i< dimension; i++){
+		for(int j =0; j< dimension; j++){
+			real(i,j) += in->real(i,j); 
+			imag(i,j) += in->imag(i,j); 
 		}
 	}
 
@@ -33,7 +45,7 @@ int complex_matrix::add(complex_matrix *in){
 	return 0;
 }
 
-int complex_matrix::mult(complex_matrix *in){
+int ComplexMatrix::mult(ComplexMatrix *in){
 	TMatrixT<double> tempR = real;
 	TMatrixT<double> tempI = imag;
 
@@ -44,7 +56,7 @@ int complex_matrix::mult(complex_matrix *in){
 	return 0;
 }
 
-int complex_matrix::multI(){
+int ComplexMatrix::multI(){
 	TMatrixT<double> tempR = real;
 	TMatrixT<double> tempI = imag;
 
@@ -56,25 +68,74 @@ int complex_matrix::multI(){
 	return 0;
 }
 
-int complex_matrix::mult(double val){
+int ComplexMatrix::mult(double val){
 
 	this->mult(val,1.0);
 	return 0;
 }
 
-int complex_matrix::mult(double valRe, double valIm){
+int ComplexMatrix::mult(double valRe, double valIm){
 
 	for(int i =0; i< dimension; i++){
 		for(int j =0; j< dimension; j++){
-			real(i,j) *= valRe;
-			imag(i,j) *= valIm;
+			real(i,j) *= valRe; 
+			imag(i,j) *= valIm; 
 		}
 	}
 
 	return 0;
 }
 
-std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>* out_vec, complex_matrix * out_mat){
+std::vector<double> ComplexMatrix::GetEigenStuff(std::vector<double>* out_vec, ComplexMatrix * out_mat){
+	std::vector<double> ans;
+
+	gsl_eigen_hermv_workspace * w = gsl_eigen_hermv_alloc(dimension);
+	gsl_vector *eigenval = gsl_vector_alloc(dimension);
+
+	gsl_matrix_complex * M = gsl_matrix_complex_calloc(dimension,dimension);
+	gsl_matrix_complex * temp = gsl_matrix_complex_calloc(dimension,dimension);
+	gsl_matrix_complex * eigenvec = gsl_matrix_complex_calloc(dimension,dimension);
+	gsl_matrix_complex *diagonal = gsl_matrix_complex_calloc(dimension,dimension);
+	gsl_matrix_complex *answer = gsl_matrix_complex_calloc(dimension,dimension);
+
+
+	//Just Setting the matrix in a gsl form
+	for(int i=0; i<dimension;i++){
+		for(int j=0; j< dimension; j++){
+			gsl_matrix_complex_set(M,i,j,gsl_complex_rect( real(i,j),imag(i,j) ));
+		}
+	}
+
+	
+	gsl_eigen_hermv(M, eigenval, eigenvec, w);
+	gsl_eigen_genhermv_sort(eigenval,eigenvec,GSL_EIGEN_SORT_ABS_DESC);
+	//Ok eigenval and eigenvec are filled and sorted now
+
+	for(int i=0; i<dimension; i++){
+		//why i send them out the from and back i dont know
+		ans.push_back(gsl_vector_get(eigenval,i));
+		out_vec->push_back(gsl_vector_get(eigenval,i));
+
+		for(int j=0; j< dimension; j++){
+			out_mat->real(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[0]; 
+			out_mat->imag(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[1]; 
+
+		}
+	}
+
+	gsl_matrix_complex_free(answer);
+	gsl_matrix_complex_free(diagonal);
+	gsl_matrix_complex_free(M);
+	gsl_matrix_complex_free(temp);
+	gsl_matrix_complex_free(eigenvec);
+	gsl_vector_free(eigenval);
+	gsl_eigen_hermv_free(w);
+
+	return ans;
+}
+
+
+std::vector<double> ComplexMatrix::MatrixExponentTest(double L, std::vector<double>* out_vec, ComplexMatrix * out_mat){
 	std::vector<double> ans;
 
 	gsl_eigen_hermv_workspace * w = gsl_eigen_hermv_alloc(dimension);
@@ -101,7 +162,7 @@ std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>*
 
 	for(int i=0; i<dimension;i++){
 		ans.push_back(gsl_vector_get(eigenval,i));
-		gsl_matrix_complex_set( diagonal,i, i,  gsl_complex_rect( cos(L*gsl_vector_get(eigenval,i) ), -sin(  L*gsl_vector_get(eigenval,i ) ) ));
+		gsl_matrix_complex_set( diagonal,i, i,  gsl_complex_rect( cos(L*gsl_vector_get(eigenval,i) ), -sin(  L*gsl_vector_get(eigenval,i ) ) ));   
 
 	}
 
@@ -120,11 +181,11 @@ std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>*
 		out_vec->push_back(gsl_vector_get(eigenval,i));
 
 		for(int j=0; j< dimension; j++){
-			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0];
+			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0]; 
 			imag(i,j) = gsl_matrix_complex_get(answer, i, j).dat[1];
 
-			out_mat->real(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[0];
-			out_mat->imag(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[1];
+			out_mat->real(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[0]; 
+			out_mat->imag(i,j) = gsl_matrix_complex_get(eigenvec, i, j).dat[1]; 
 
 		}
 	}
@@ -144,7 +205,7 @@ std::vector<double> complex_matrix::matrixExpTest(double L, std::vector<double>*
 }
 
 
-std::vector<double> complex_matrix::matrixExp(){
+std::vector<double> ComplexMatrix::MatrixExponent(){
 	std::vector<double> ans;
 
 	gsl_eigen_hermv_workspace * w = gsl_eigen_hermv_alloc(dimension);
@@ -172,7 +233,7 @@ std::vector<double> complex_matrix::matrixExp(){
 	for(int i=0; i<dimension;i++){
 		ans.push_back(gsl_vector_get(eigenval,i));
 
-		gsl_matrix_complex_set( diagonal,i,i,  gsl_complex{{ cos( gsl_vector_get(eigenval,i)  ), -sin(  gsl_vector_get(eigenval,i ) ) }});
+		gsl_matrix_complex_set( diagonal,i,i,  gsl_complex{{ cos( gsl_vector_get(eigenval,i)  ), -sin(  gsl_vector_get(eigenval,i ) ) }});   
 		std::cout<<"EigenVal: "<<gsl_vector_get(eigenval,i)<<" ";
 		//		for(int j=0; j<dimension;j++){
 		//			if(i!=j) gsl_matrix_complex_set(diagonal,i,j,gsl_complex{{0.0,0.0}});
@@ -194,7 +255,7 @@ std::vector<double> complex_matrix::matrixExp(){
 
 	for(int i=0; i<dimension; i++){
 		for(int j=0; j< dimension; j++){
-			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0];
+			real(i,j) = gsl_matrix_complex_get(answer, i, j).dat[0]; 
 			imag(i,j) = gsl_matrix_complex_get(answer, i, j).dat[1];
 		}
 	}
@@ -211,20 +272,20 @@ std::vector<double> complex_matrix::matrixExp(){
 
 
 	/*
-	   complex_matrix temp(dimension);
+	   ComplexMatrix temp(dimension);
 
 	   for(int i=0; i< dimension; i++){
 	   for(int j=0; j< dimension; j++){
-	   temp.real(i,j) = (i==j ? 1.0 : 0.0);
+	   temp.real(i,j) = (i==j ? 1.0 : 0.0);	
 	   temp.imag(i,j) = 0.0;
 	   }
 	   }
 
 	   for(int i=1; i<= series_cutoff;i++){
-	   complex_matrix tt = *this;
+	   ComplexMatrix tt = *this;
 
 	   for(int j=1; j<i; j++){
-	//complex_matrix r=*this;
+	//ComplexMatrix r=*this;
 	tt.mult(this);
 	}
 
@@ -243,7 +304,7 @@ std::vector<double> complex_matrix::matrixExp(){
 }
 
 
-int complex_matrix::print(){
+int ComplexMatrix::Print(){
 
 	for(int i =0; i< dimension; i++){
 		for(int j =0; j< dimension; j++){
@@ -257,7 +318,7 @@ int complex_matrix::print(){
 }
 
 
-int complex_matrix::setComplexRotation(int row, int col, double theta, double phi){
+int ComplexMatrix::SetComplexRotation(int row, int col, double theta, double phi){
 	real.Zero();
 	imag.Zero();
 
@@ -266,7 +327,7 @@ int complex_matrix::setComplexRotation(int row, int col, double theta, double ph
 		exit(EXIT_FAILURE);
 	}
 
-	this->setIdentity();
+	this->SetIdentity();
 
 	real(row-1,row-1) = cos(theta);
 	real(col-1,col-1) = cos(theta);
@@ -275,21 +336,21 @@ int complex_matrix::setComplexRotation(int row, int col, double theta, double ph
 	real(row-1,col-1) = sin(theta)*cos(phi);
 	imag(row-1,col-1) = -sin(theta)*sin(phi);
 
-	//-Sin[\[Theta]] Cos[\[Delta]] - I Sin[\[Theta]] Sin[\[Delta]]
+	//-Sin[\[Theta]] Cos[\[Delta]] - I Sin[\[Theta]] Sin[\[Delta]] 
 	real(col-1,row-1) = -sin(theta)*cos(phi);
 	imag(col-1,row-1) = -sin(theta)*sin(phi);
 
 	return 0;
 }
 
-int complex_matrix::setRotation(int row, int col, double theta){
+int ComplexMatrix::SetRotation(int row, int col, double theta){
 
-	setComplexRotation(row,col,theta,0);
+	SetComplexRotation(row,col,theta,0);
 	return 0;
 }
 
 
-int complex_matrix::setIdentity(){
+int ComplexMatrix::SetIdentity(){
 	real.Zero();
 	imag.Zero();
 	for(int i=0; i< dimension; i++){
@@ -299,9 +360,9 @@ int complex_matrix::setIdentity(){
 	return 0;
 }
 
-int complex_matrix::setDiagonal(std::vector<double> ms){
+int ComplexMatrix::SetDiagonal(std::vector<double> ms){
 	if(dimension != ms.size()){
-		std::cerr<<"ERROR: complex_matrix::setDiagonal(vec) is wrong dim"<<std::endl;
+		std::cerr<<"ERROR: ComplexMatrix::SetDiagonal(vec) is wrong dim"<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -315,7 +376,7 @@ int complex_matrix::setDiagonal(std::vector<double> ms){
 	return 0;
 }
 
-int complex_matrix::transpose(){
+int ComplexMatrix::transpose(){
 	TMatrixT<double> tempR = real;
 	TMatrixT<double> tempI = imag;
 
@@ -331,7 +392,7 @@ int complex_matrix::transpose(){
 }
 
 
-int complex_matrix::hermitianConjugate(){
+int ComplexMatrix::HermitianConjugate(){
 	this->transpose();
 
 	for(int i=0; i< dimension;i++){
@@ -344,7 +405,7 @@ int complex_matrix::hermitianConjugate(){
 }
 
 
-double smearEnergy(double E, double percen, TRandom3 * rangen){
+double SmearEnergyGaussian(double E, double percen, TRandom3 * rangen){
 
 	double ans = 0;
 	while(ans <=0){
@@ -355,18 +416,18 @@ double smearEnergy(double E, double percen, TRandom3 * rangen){
 }
 
 /*********************************************
- *  Constructors for neutrinoModel
+ *  Constructors for NeutrinoModel
  * *******************************************/
 
 /******	NULL constructor ******/
-neutrinoModel::neutrinoModel(){
+NeutrinoModel::NeutrinoModel(){
 	zero();
 	difference();
 }
 
 
 /******	3+3 constructor ******/
-neutrinoModel::neutrinoModel(double * mn, double * ue, double * um, double * ph){
+NeutrinoModel::NeutrinoModel(double * mn, double * ue, double * um, double * ph){
 	zero();
 	for(int i = 0; i < 3; i ++){
 		mNu[i] = mn[i]; Ue[i] = ue[i];
@@ -383,13 +444,14 @@ neutrinoModel::neutrinoModel(double * mn, double * ue, double * um, double * ph)
 }
 
 /******	3+1 constructor ******/
-neutrinoModel::neutrinoModel(double  mn, double  ue4, double  um4){
+NeutrinoModel::NeutrinoModel(double  mn, double  ue4, double  um4){
 	zero();
 	mNu[0] = mn;
 	Ue[0]=ue4;
 	Um[0]=um4;
 
 	numsterile = 1;
+
 	difference();
 
   std::ostringstream out;
@@ -402,17 +464,19 @@ neutrinoModel::neutrinoModel(double  mn, double  ue4, double  um4){
 
 
 
+
+
 /*********************************************
  *  	Other Models
  * *******************************************/
 
-void neutrinoModel::printall(){
+void NeutrinoModel::Printall(){
 
 	std::cout<<"m4: "<<mNu[0]<<" m5: "<<mNu[1]<<" m6: "<<mNu[2]<<std::endl;
 	std::cout<<"Ue4: "<<Ue[0]<<" Ue5: "<<Ue[1]<<" Ue6: "<<Ue[2]<<std::endl;
 	std::cout<<"Uu4: "<<Um[0]<<" Uu5: "<<Um[1]<<" Uu6: "<<Um[2]<<std::endl;
 	std::cout<<"phi45: "<<phi[0]<<" phi46: "<<phi[1]<<" phi56: "<<phi[2]<<std::endl;
-	std::cout<<"NumSterile: "<<numsterile<<std::endl;
+	std::cout<<"NumSterile: "<<numsterile<<std::endl;		
 
 	std::cout<<"dm41sq: "<<dm41Sq<<" dm51sq: "<<dm51Sq<<" dm61sq: "<<dm61Sq<<std::endl;
 	std::cout<<"log10 dm41sq: "<<log10(dm41Sq)<<" log10 dm51sq: "<<log10(dm51Sq)<<" log10 dm61sq: "<<log10(dm61Sq)<<std::endl;
@@ -422,7 +486,7 @@ void neutrinoModel::printall(){
 }
 
 
-void neutrinoModel::zero(){
+void NeutrinoModel::zero(){
 	for(int i = 0; i < 3; i ++){
 		mNu[i] = 0; Ue[i] = 0;
 		Um[i] = 0;  phi[i] = 0;
@@ -442,7 +506,7 @@ void neutrinoModel::zero(){
 
 }
 
-void neutrinoModel::difference(){
+void NeutrinoModel::difference(){
 	dm41Sq = pow(mNu[0],2);
 	dm51Sq = pow(mNu[1],2);
 	dm61Sq = pow(mNu[2],2);
@@ -452,26 +516,26 @@ void neutrinoModel::difference(){
 }
 
 
-double neutrinoModel::oscProbSin(double Ev, double L)
+double NeutrinoModel::oscProbSin(double Ev, double L)
 {
 	if(dm41Sq==0 && dm51Sq==0 && dm61Sq==0)
-	{
+	{ 
 		return 1.0;
-	}
-	else
+	} 
+	else 
 	{
 		return sin(2*1.26711*dm41Sq*L/Ev);
 	}
 
 }
 
-double neutrinoModel::oscProbSinSq(double Ev, double L)
+double NeutrinoModel::oscProbSinSq(double Ev, double L)
 {
 	if(dm41Sq==0 && dm51Sq==0 &&dm61Sq==0)
-	{
+	{ 
 		return 1.0;
-	}
-	else
+	} 
+	else 
 	{
 		return pow(sin(1.26711*dm41Sq*L/Ev),2.0);
 	}
@@ -479,13 +543,13 @@ double neutrinoModel::oscProbSinSq(double Ev, double L)
 
 }
 
-double neutrinoModel::oscProb(int a, int b, double Ev, double L){
+double NeutrinoModel::oscProb(int a, int b, double Ev, double L){
 
 
 	if(a == b)
 	{
 		return oscProb_dis(a, Ev, L);
-	}
+	} 
 	else
 	{
 		return oscProb_app(a,b, Ev, L);
@@ -495,7 +559,7 @@ double neutrinoModel::oscProb(int a, int b, double Ev, double L){
 
 
 
-double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
+double NeutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 
 	double nubarmod= 1.0;
 
@@ -521,8 +585,8 @@ double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 			break;
 		case 3:
 		case -3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 	switch(b)
@@ -541,8 +605,8 @@ double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 			break;
 		case 3:
 		case -3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 
@@ -574,14 +638,14 @@ double neutrinoModel::oscProb_app(int a, int b, double Ev, double L){
 	ans += 2.0*(-fabs(Ua4*Ub4)*sin(phi64)-fabs(Ua5*Ub5)*sin(phi65))*fabs(Ua6*Ub6)*sin(2.53*dm61Sq*L/Ev);
 
 	if(ans <0 || ans >1){
-		std::cout<<"#ERROR: Lets preserve probability shall we?\n#ERROR neutrinoModel::oscProb_dis @ prob.c\n#ERROR Prob: "<<ans<<" L: "<<L<<" Ev: "<<Ev<<std::endl;
+		std::cout<<"#ERROR: Lets preserve probability shall we?\n#ERROR NeutrinoModel::oscProb_dis @ prob.c\n#ERROR Prob: "<<ans<<" L: "<<L<<" Ev: "<<Ev<<std::endl;
 	}
 
 	return ans;
 }
 
 
-double neutrinoModel::oscProb_dis(int a, double Ev, double L){
+double NeutrinoModel::oscProb_dis(int a, double Ev, double L){
 	double ans =0.0;
 
 	double Ua4 =0,Ua5=0,Ua6=0;
@@ -599,8 +663,8 @@ double neutrinoModel::oscProb_dis(int a, double Ev, double L){
 			Ua6 = Um[2];
 			break;
 		case 3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 
@@ -610,20 +674,20 @@ double neutrinoModel::oscProb_dis(int a, double Ev, double L){
 	ans += -4.0*(1.0-Ua4*Ua4-Ua5*Ua5-Ua6*Ua6)*( Ua4*Ua4*pow(sin(1.27*dm41Sq*L/Ev),2.0)+ Ua5*Ua5*pow(1.27*dm51Sq*L/Ev,2.0)+Ua6*Ua6*pow(sin(1.27*dm61Sq*L/Ev),2.0) );
 
 	if(ans <0 || ans >1){
-		std::cout<<"#ERROR: Lets preserve probability shall we?\n#ERROR neutrinoModel::oscProb_dis @ prob.c\n#ERROR Prob: "<<ans<<" L: "<<L<<" Ev: "<<Ev<<std::endl;
+		std::cout<<"#ERROR: Lets preserve probability shall we?\n#ERROR NeutrinoModel::oscProb_dis @ prob.c\n#ERROR Prob: "<<ans<<" L: "<<L<<" Ev: "<<Ev<<std::endl;
 	}
 
 
 	return ans;
 }
 
-double neutrinoModel::oscAmp(int a, int b, int which_dm, int sqornot){
+double NeutrinoModel::oscAmp(int a, int b, int which_dm, int sqornot){
 
 
 	if(a == b)
 	{
 		return oscAmp_dis(a, which_dm);
-	}
+	} 
 	else
 	{
 		return oscAmp_app(a,b, which_dm, sqornot);
@@ -634,7 +698,7 @@ double neutrinoModel::oscAmp(int a, int b, int which_dm, int sqornot){
 
 
 
-double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
+double NeutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 {
 
 	double nubarmod= 1.0;
@@ -663,8 +727,8 @@ double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 			break;
 		case 3:
 		case -3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 	switch(b)
@@ -683,8 +747,8 @@ double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 			break;
 		case 3:
 		case -3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 
@@ -775,7 +839,7 @@ double neutrinoModel::oscAmp_app(int a, int b, int which_dm, int sqornot)
 }
 
 
-double neutrinoModel::oscAmp_dis(int a, int which_dm){
+double NeutrinoModel::oscAmp_dis(int a, int which_dm){
 
 
 	double Ua4 =0,Ua5=0,Ua6=0;
@@ -796,8 +860,8 @@ double neutrinoModel::oscAmp_dis(int a, int which_dm){
 			break;
 		case 3:
 		case -3:
-			std::cout<<"#ERROR neutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
-			exit(EXIT_FAILURE);
+			std::cout<<"#ERROR NeutrinoModel::oscProb. taus not yet implemented!"<<std::endl;
+			exit(EXIT_FAILURE);	
 			break;
 	}
 
@@ -839,7 +903,7 @@ double neutrinoModel::oscAmp_dis(int a, int which_dm){
 
 
 /*********************************************
- *  Other non- neutrinoModel functions, might be useful for arbitrary complex matrix U, non-unitarity?
+ *  Other non- NeutrinoModel functions, might be useful for arbitrary complex matrix U, non-unitarity?
  * *******************************************/
 
 
@@ -853,12 +917,12 @@ double oscProb(int a, int b, double Ev, double L,  std::vector< std::vector < st
 
 	double ans = 0;
 
-	//Allocate a 6x6 vector
+	//Allocate a 6x6 vector	
 	//	std::vector< std::vector < std::complex<double> > >  U(6,std::vector<std::complex<double>>(6) );
 	//	std::vector<std::vector < double > >  dm;
 
 
-	//	U[1][2] = std::complex<double>(10.0,1.0);
+	//	U[1][2] = std::complex<double>(10.0,1.0); 
 	//	std::cout<<real(U[1][2])<<" "<<arg(U[1][2])<<std::endl;
 
 
@@ -868,7 +932,7 @@ double oscProb(int a, int b, double Ev, double L,  std::vector< std::vector < st
 		{
 			std::complex<double > temp = U[b][i]*conj(U[a][i])*conj(U[b][j])*U[a][j];
 			ans += 4.0*real(temp)*pow(sin(1.27*dm[i][j]*L/Ev),2.0);
-			ans += -2.0*imag(temp)*sin(2.53*dm[i][j]*L/Ev);
+			ans += -2.0*imag(temp)*sin(2.53*dm[i][j]*L/Ev);		
 
 		}
 	}
@@ -895,3 +959,5 @@ double Pmm(double L, double Ev, double Dm, double sinSq2thmm){
 	}
 	return ans;
 }
+
+

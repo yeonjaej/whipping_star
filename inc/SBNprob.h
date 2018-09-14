@@ -8,7 +8,7 @@
 #include <string>
 #include <array>
 #include <map>
-
+//#include <globes/globes.h>   /* GLoBES library */
 
 #include <prob.h>
 
@@ -19,43 +19,59 @@ namespace sbn{
 		public:	
 			SBNprob(int);
 			SBNprob(int, std::vector<double>,std::vector<double>, std::vector<double>);
+
 			int init();
 
 			double t12,t13,t23,t14,t24,t34;
-			double Dm21, Dm31,Dm41;
+			double dm21, dm31,dm41;
+			double ms1, ms2,ms3,ms4;
 			double d13,d24,d34;
 
-			double Vcc,Vnc;
-			bool useMatterEffect;
-			bool useNCMatterEffect;
-			bool useAntiNeutrino;
+			double potential_cc,potential_nc;
+			bool use_matter_effect;
+			bool use_nc_matter_effect;
+			bool use_antineutrino_mode;
 
 			int dimension;
-			double eV2GeV;	
-			double km2invGeV;
+			double convert_ev_to_gev;	
+			double convert_km_to_inverse_gev;
 			double rho;
 			double degree;
-			double Nneutrino;
+			double num_neutrinos;
 			double conversion_parameter;
 
-			double gaussian(double x, double mean, double sigma);
+			double GaussianPDF(double x, double mean, double sigma);
 
-			complex_matrix hamiltonian;
-			complex_matrix hamil_kin;
-			complex_matrix potential;
-			complex_matrix UtVU;
-			complex_matrix U;
-			complex_matrix Uconj;	
-	
-			int setMatterEffect(bool);
-			int setAntiNeutrinoMode(bool);
-			int setNCMatterEffect(bool);
-			int setParameters( std::vector<double>,std::vector<double>, std::vector<double>);
+			ComplexMatrix hamiltonian;
+			ComplexMatrix hamil_kin;
+			ComplexMatrix potential;
+			ComplexMatrix utvu;
+			ComplexMatrix U;
+			ComplexMatrix u_conj;	
+			
+			//New methodology
+			ComplexMatrix u_h0_ut;
 
-			double probabilityMatterExact(int a, int b ,double E, double L);
-			double probabilityMatterExactSmear(int, int ,double, double, double p, double n);
+			int SetMatterEffect(bool);
+			int SetAntiNeutrinoMode(bool);
+			int SetNCMatterEffect(bool);
+			int SetParameters( std::vector<double>,std::vector<double>, std::vector<double>);
 
-			int plotProbabilityMatter(int a, int b, double Emin, double Emax, double L, double percen, double n, std::ofstream *filestream);
+			double ProbabilityVacuumExact(int a, int b ,double E, double L);
+			double ProbabilityVacuumExact(int a, int b, int nuornubar, double E, double L );
+			
+			double ProbabilityMatterExact(int a, int b ,int nuornubar, double E, double L);
+			double ProbabilityMatterExact(int a, int b ,double E, double L);
+
+
+			//double ProbabilityGlobes(int a, int b, int panti, double E, double L );
+
+			double ProbabilityMatterExactSmear(int, int ,double, double, double p, double n);
+
+			int PlotProbabilityMatter(int a, int b, double Emin, double Emax, double L, double percen, double n, std::ofstream *filestream);
+
+			std::vector<double> GetTernaryPoints(int start_flavour, double Energy, double Length);
+
 
 	};
 

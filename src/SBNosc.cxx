@@ -2,24 +2,24 @@
 using namespace sbn;
 
 SBNosc::SBNosc(std::string name, std::string whichxml) : SBNspec(name, whichxml) {
-	workingModel.zero();
-	mStepSize = 0.04;
+	working_model.zero();
+	mass_step_size = 0.04;
 	which_mode = BOTH_ONLY;
 }
 
-SBNosc::SBNosc(std::string name, std::string whichxml, neutrinoModel in) : SBNosc(name, whichxml) {
-	load_model(in);
+SBNosc::SBNosc(std::string name, std::string whichxml, NeutrinoModel in) : SBNosc(name, whichxml) {
+	LoadModel(in);
 
 }
 
-int SBNosc::load_model(neutrinoModel in){
-	workingModel = in;
+int SBNosc::LoadModel(NeutrinoModel in){
+	working_model = in;
 	calcMassSplittings();
 	return 0;
 }
 
 /*************************************************
- * for a given workingModel.
+ * for a given working_model.
  * Calculate how many mass splittings, and which "type" it is,
  *
  * **********************************************/
@@ -27,25 +27,25 @@ int SBNosc::load_model(neutrinoModel in){
 int SBNosc::calcMassSplittings(){
 	mass_splittings.clear();
 
-	double fix41=round(log10((workingModel.dm41Sq))/mStepSize)*mStepSize;
-	double fix51=round(log10((workingModel.dm51Sq))/mStepSize)*mStepSize;
-	double fix61=round(log10((workingModel.dm61Sq))/mStepSize)*mStepSize;
+	double fix41=round(log10((working_model.dm41Sq))/mass_step_size)*mass_step_size;
+	double fix51=round(log10((working_model.dm51Sq))/mass_step_size)*mass_step_size;
+	double fix61=round(log10((working_model.dm61Sq))/mass_step_size)*mass_step_size;
 
-	double round54 = round(log10(fabs(workingModel.dm54Sq))/mStepSize)*mStepSize;
-	double round64 = round(log10(fabs(workingModel.dm64Sq))/mStepSize)*mStepSize;
-	double round65 = round(log10(fabs(workingModel.dm65Sq))/mStepSize)*mStepSize;
+	double round54 = round(log10(fabs(working_model.dm54Sq))/mass_step_size)*mass_step_size;
+	double round64 = round(log10(fabs(working_model.dm64Sq))/mass_step_size)*mass_step_size;
+	double round65 = round(log10(fabs(working_model.dm65Sq))/mass_step_size)*mass_step_size;
 
-	if(workingModel.numsterile == 1)
+	if(working_model.numsterile == 1)
 	{
 		mass_splittings.push_back( std::make_pair(fix41,41 ));
 	}
-       	else if(workingModel.numsterile ==2)
+       	else if(working_model.numsterile ==2)
 	{
 		mass_splittings.push_back( std::make_pair (fix41,41));
 		mass_splittings.push_back( std::make_pair (fix51,51));
 		mass_splittings.push_back( std::make_pair (round54,54));
 	}
-	else if(workingModel.numsterile ==3)
+	else if(working_model.numsterile ==3)
 	{
 		mass_splittings.push_back( std::make_pair (fix41,41));
 		mass_splittings.push_back( std::make_pair (fix51,51));
@@ -64,16 +64,16 @@ int SBNosc::calcMassSplittings(){
 
 
 int SBNosc::OscillateThis(std::string tag){
-	this->calcFullVector();
-	this->collapseVector();
+	this->CalcFullVector();
+	this->CollapseVector();
 
 	calcMassSplittings();
 
 	for(auto ms: mass_splittings){
 
 			//this is wrong
-			std::string name_sinsq = tag +"_SINSQ_dm_"+workingModel.mass_tag+".SBNspec.root";
-			std::string name_sin = tag +"_SIN_dm_"+workingModel.mass_tag+".SBNspec.root";
+			std::string name_sinsq = tag +"_SINSQ_dm_"+working_model.mass_tag+".SBNspec.root";
+			std::string name_sin = tag +"_SIN_dm_"+working_model.mass_tag+".SBNspec.root";
 
 
 			SBNspec single_frequency(name_sin , xmlname , false);
@@ -94,13 +94,13 @@ int SBNosc::OscillateThis(std::string tag){
 					case APP_ONLY: //Strictly nu_e app only
 						prob_mumu =0;
 						prob_ee   =0;
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case DIS_ONLY: //Strictly nu_mu dis only
-						prob_mumu = workingModel.oscAmp(2,2,which_dm,2);
+						prob_mumu = working_model.oscAmp(2,2,which_dm,2);
 						prob_ee = 0;
 						prob_mue = 0;
 						prob_mue_sq =0;
@@ -108,24 +108,24 @@ int SBNosc::OscillateThis(std::string tag){
 						prob_muebar_sq =0;
 						break;
 					case BOTH_ONLY: // This allows for both nu_e dis/app and nu_mu dis
-						prob_mumu = workingModel.oscAmp(2,2,which_dm,2);
-						prob_ee = workingModel.oscAmp(1,1,which_dm,2);
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mumu = working_model.oscAmp(2,2,which_dm,2);
+						prob_ee = working_model.oscAmp(1,1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case WIERD_ONLY: // A strange version where nu_e can appear but not disapear
-						prob_mumu =workingModel.oscAmp(2,2,which_dm,2);
+						prob_mumu =working_model.oscAmp(2,2,which_dm,2);
 						prob_ee = 0.0;
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case DISE_ONLY: // A strange version where nu_e can appear but not disapear
 						prob_mumu = 0.0;
-						prob_ee = workingModel.oscAmp(1,1,which_dm,2);
+						prob_ee = working_model.oscAmp(1,1,which_dm,2);
 						prob_mue = 0;
 						prob_mue_sq = 0;
 						prob_muebar = 0;
@@ -204,8 +204,8 @@ int SBNosc::OscillateThis(std::string tag){
 
 	}//Done looping over
 
-	this->calcFullVector();
-	this->collapseVector();
+	this->CalcFullVector();
+	this->CollapseVector();
 
 
 	return 0;
@@ -224,19 +224,19 @@ std::vector<double> SBNosc::Oscillate(std::string tag, double scale){
 /*
 std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
-		this->calcFullVector();
-		this->collapseVector();
+		this->CalcFullVector();
+		this->CollapseVector();
 
-	std::vector<double > temp = compVec;
+	std::vector<double > temp = collapsed_vector;
 
 
 	for(auto ms: mass_splittings){
 			char namei[200];
 
-			sprintf(namei, "%sprecomp/SBN_SIN_%2.2f",data_path.c_str(), ms.first );
+			sPrintf(namei, "%sprecomp/SBN_SIN_%2.2f",data_path.c_str(), ms.first );
 			SBNspec single_frequency(namei , xmlname, false);
 
-			sprintf(namei, "%sprecomp/SBN_SINSQ_%2.2f",data_path.c_str(), ms.first );
+			sPrintf(namei, "%sprecomp/SBN_SINSQ_%2.2f",data_path.c_str(), ms.first );
 			SBNspec single_frequency_square(namei , xmlname, false);
 
 			if(has_been_scaled){
@@ -269,16 +269,16 @@ std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 			}
 
 
-			single_frequency.calcFullVector();
-			single_frequency.collapseVector();
+			single_frequency.CalcFullVector();
+			single_frequency.CollapseVector();
 
 
-			single_frequency_square.calcFullVector();
-			single_frequency_square.collapseVector();
+			single_frequency_square.CalcFullVector();
+			single_frequency_square.CollapseVector();
 
 			for(int i=0;i<temp.size(); i++){
-				temp[i] += single_frequency.compVec[i];
-				temp[i] += single_frequency_square.compVec[i];
+				temp[i] += single_frequency.collapsed_vector[i];
+				temp[i] += single_frequency_square.collapsed_vector[i];
 			}
 
 	}//Done looping over
@@ -290,16 +290,16 @@ std::vector<double> SBNosc::OscillateWithAmp(double amp, double amp_sq){
 
 std::vector<double> SBNosc::Oscillate(std::string tag){
 
-		this->calcFullVector();
-		this->collapseVector();
+		this->CalcFullVector();
+		this->CollapseVector();
 
-	std::vector<double > temp = compVec;
+	std::vector<double > temp = collapsed_vector;
 
 
 	for(auto ms: mass_splittings){
 
-			std::string name_sinsq = tag +"_SINSQ_dm_"+workingModel.mass_tag;
-			std::string name_sin = tag +"_SIN_dm_"+workingModel.mass_tag;
+			std::string name_sinsq = tag +"_SINSQ_dm_"+working_model.mass_tag;
+			std::string name_sin = tag +"_SIN_dm_"+working_model.mass_tag;
 
 
 			SBNspec single_frequency(name_sin , xmlname , false);
@@ -320,13 +320,13 @@ std::vector<double> SBNosc::Oscillate(std::string tag){
 					case APP_ONLY: //Strictly nu_e app only
 						prob_mumu =0;
 						prob_ee   =0;
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case DIS_ONLY: //Strictly nu_mu dis only
-						prob_mumu = workingModel.oscAmp(2,2,which_dm,2);
+						prob_mumu = working_model.oscAmp(2,2,which_dm,2);
 						prob_ee = 0;
 						prob_mue = 0;
 						prob_mue_sq =0;
@@ -334,24 +334,24 @@ std::vector<double> SBNosc::Oscillate(std::string tag){
 						prob_muebar_sq =0;
 						break;
 					case BOTH_ONLY: // This allows for both nu_e dis/app and nu_mu dis
-						prob_mumu = workingModel.oscAmp(2,2,which_dm,2);
-						prob_ee = workingModel.oscAmp(1,1,which_dm,2);
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mumu = working_model.oscAmp(2,2,which_dm,2);
+						prob_ee = working_model.oscAmp(1,1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case WIERD_ONLY: // A strange version where nu_e can appear but not disapear
-						prob_mumu =workingModel.oscAmp(2,2,which_dm,2);
+						prob_mumu =working_model.oscAmp(2,2,which_dm,2);
 						prob_ee = 0.0;
-						prob_mue = workingModel.oscAmp(2,1,which_dm,1);
-						prob_mue_sq = workingModel.oscAmp(2,1,which_dm,2);
-						prob_muebar = workingModel.oscAmp(-2,-1,which_dm,1);
-						prob_muebar_sq = workingModel.oscAmp(-2,-1,which_dm,2);
+						prob_mue = working_model.oscAmp(2,1,which_dm,1);
+						prob_mue_sq = working_model.oscAmp(2,1,which_dm,2);
+						prob_muebar = working_model.oscAmp(-2,-1,which_dm,1);
+						prob_muebar_sq = working_model.oscAmp(-2,-1,which_dm,2);
 						break;
 					case DISE_ONLY: // A strange version where nu_e can appear but not disapear
 						prob_mumu = 0.0;
-						prob_ee = workingModel.oscAmp(1,1,which_dm,2);
+						prob_ee = working_model.oscAmp(1,1,which_dm,2);
 						prob_mue = 0;
 						prob_mue_sq = 0;
 						prob_muebar = 0;
@@ -423,16 +423,16 @@ std::vector<double> SBNosc::Oscillate(std::string tag){
 			*/
 
 
-			single_frequency.calcFullVector();
-			single_frequency.collapseVector();
+			single_frequency.CalcFullVector();
+			single_frequency.CollapseVector();
 
 
-			single_frequency_square.calcFullVector();
-			single_frequency_square.collapseVector();
+			single_frequency_square.CalcFullVector();
+			single_frequency_square.CollapseVector();
 
 			for(int i=0;i<temp.size(); i++){
-				temp[i] += single_frequency.compVec[i];
-				temp[i] += single_frequency_square.compVec[i];
+				temp[i] += single_frequency.collapsed_vector[i];
+				temp[i] += single_frequency_square.collapsed_vector[i];
 			}
 
 	}//Done looping over
@@ -443,28 +443,28 @@ std::vector<double> SBNosc::Oscillate(std::string tag){
 
 
 
-int SBNosc::setMode(int in){
+int SBNosc::SetMode(int in){
 	which_mode = in;
 
 return in;
 }
 
-void SBNosc::setAppMode(){
-	setMode(APP_ONLY);
+void SBNosc::SetAppMode(){
+	SetMode(APP_ONLY);
 }
 
-void SBNosc::setDisMode(){
-	setMode(DIS_ONLY);
+void SBNosc::SetDisMode(){
+	SetMode(DIS_ONLY);
 }
 
-void SBNosc::setBothMode(){
-	setMode(BOTH_ONLY);
+void SBNosc::SetBothMode(){
+	SetMode(BOTH_ONLY);
 }
 
-void SBNosc::setWierdMode(){
-	setMode(WIERD_ONLY);
+void SBNosc::SetWierdMode(){
+	SetMode(WIERD_ONLY);
 }
 
-void SBNosc::setDisEMode(){
-	setMode(DISE_ONLY);
+void SBNosc::SetDisEMode(){
+	SetMode(DISE_ONLY);
 }

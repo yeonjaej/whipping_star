@@ -98,9 +98,9 @@ int main(int argc, char* argv[])
 	SBNchi *chi_statonly = new SBNchi(bkg);
 
 	SBNcls cls_factory(&sig, &bkg,*cov);
-	if(sample_from_covariance) cls_factory.setSampleCovariance();
+	if(sample_from_covariance) cls_factory.SetSampleCovariance();
 
-	cls_factory.calcCLS(num_MC_events, tag);
+	cls_factory.CalcCLS(num_MC_events, tag);
 
 	return 0;
 }

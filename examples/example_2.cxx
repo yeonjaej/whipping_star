@@ -116,8 +116,8 @@ int main(int argc, char* argv[])
 		tmp.Scale("nu_uBooNE_nue_leesignal",pow(10,k));	
 
 		//calculate the chi^2 between this temp signal and the bkg_spectra with and without spectra
-		double chi2 = chi->calcChi(&tmp);
-		double chi2_statonly = chi_statonly->calcChi(&tmp);
+		double chi2 = chi->CalcChi(&tmp);
+		double chi2_statonly = chi_statonly->CalcChi(&tmp);
 
 		std::cout<<"Signal Scaling: "<<pow(10,k)<<" chi^2: "<<chi2<<" chi^2(statonly): "<<chi2_statonly<<std::endl;
 

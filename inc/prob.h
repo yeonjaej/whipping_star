@@ -23,64 +23,70 @@ namespace sbn{
 /*************************************************************
  *************************************************************
  *	ToDO:
- *	Actually:  add tau to neutrinoModel. Simple and quick, but have to adjust constructors
+ *	Actually:  add tau to NeutrinoModel. Simple and quick, but have to adjust constructors
  ************************************************************
  ************************************************************/
 
-double smearEnergy(double E, double percen, TRandom3 * rangen);
+double SmearEnergyGaussian(double E, double percen, TRandom3 * rangen);
 
 
-struct complex_matrix{
-	complex_matrix(int dim);
-
+struct ComplexMatrix{
+	ComplexMatrix(int dim);
+	
 	int dimension;
 	TMatrixT<double> real;
 	TMatrixT<double> imag;
-	int mult(complex_matrix* in);
+	int mult(ComplexMatrix* in);
 	int multI();
 	int mult(double );
 	int mult(double ,double);
-	int add(complex_matrix* in );
+	int add(ComplexMatrix* in );
+	int conj();
 
 
 
+	std::vector<double> MatrixExponent();
+	std::vector<double> MatrixExponentTest(double L, std::vector<double> *, ComplexMatrix *);
 
-	std::vector<double> matrixExp();
-	std::vector<double> matrixExpTest(double L, std::vector<double> *, complex_matrix *);
 
-	int setRotation(int,int, double);
-	int setComplexRotation(int,int,double,double);
-	int setDiagonal(std::vector<double> ms);
-	int setIdentity();
+	std::vector<double> GetEigenStuff(std::vector<double> *, ComplexMatrix *);
 
-	int hermitianConjugate();
+	int SetRotation(int,int, double);
+	int SetComplexRotation(int,int,double,double);
+	int SetDiagonal(std::vector<double> ms);
+	int SetIdentity();
+
+	int HermitianConjugate();
 	int transpose();
 
-	int print();
+	int Print();
 };
 
 
-struct neutrinoModel{
+
+struct NeutrinoModel{
 	double mNu[3], Ue[3], Um[3], phi[3];
 	double dm41Sq, dm51Sq, dm61Sq, dm54Sq, dm64Sq, dm65Sq;
-	std::vector< std::vector < std::complex<double> > >  U;
+	std::vector< std::vector < std::complex<double> > >  U; 
 	//std::vector<std::vector<double>> dm;
 
 	int numsterile;
-
 	std::string mass_tag;
 
 	//constructors!! Should overload these immensely for  3+1, 3+2, 3+3 and NULL
-	neutrinoModel();
-	neutrinoModel(double * mn, double * ue, double *um, double *ph);
-	neutrinoModel(double m4, double ue4, double um4);
+	NeutrinoModel();
+	NeutrinoModel(double * mn, double * ue, double *um, double *ph);
+	NeutrinoModel(double m4, double ue4, double um4);
+	
+	//
+	NeutrinoModel(std::vector<double> mass_splittings, std::vector<double>angles, std::vector<double> phases);
 
 	double UUem;
 	double UUme;
 	double UUmm;
 	double UUee;
 
- 	void printall();
+ 	void Printall();
 
 	void zero();
 	void difference();

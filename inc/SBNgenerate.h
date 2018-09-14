@@ -43,34 +43,34 @@ class SBNgenerate : public SBNconfig{
 
 	public:
 		
-	SBNspec spec_CV;	
-	neutrinoModel nu_model;
+	SBNspec spec_central_value;	
+	NeutrinoModel nu_model;
 
-	SBNspec spec_OSC_sin;
-	SBNspec spec_OSC_sinsq;
+	SBNspec spec_osc_sin;
+	SBNspec spec_osc_sinsq;
 	
-	SBNgenerate(std::string xmlname, neutrinoModel inModel );
+	SBNgenerate(std::string xmlname, NeutrinoModel inModel );
 	SBNgenerate(std::string xmlname);
 
-	int writeOut();
+	int WriteOut();
 
-	virtual bool eventSelection(int file);
-	virtual int fillHistograms(int file, int uni, double wei);
+	virtual bool EventSelection(int file);
+	virtual int FillHistograms(int file, int uni, double wei);
 	
-	int writePrecomputedOscSpecs(std::string tag);
+	int WritePrecomputedOscSpecs(std::string tag);
 
 	//Some checks on multisims
 
 	//Multisim input variables
 	std::vector<std::vector<double> > vars;
 
-	int Nfiles;
+	int num_files;
 	std::vector<TFile *> files;
 	std::vector<TTree *> trees;
 
 	std::vector<int> nentries;
-	std::vector< TBranch *> * bWeight;
-	std::vector< std::map<std::string, std::vector<double> > * > * fWeights;
+	std::vector< TBranch *> * branch_weight;
+	std::vector< std::map<std::string, std::vector<double> > * > * f_weights;
 
 	std::vector<std::vector<int> > vars_i;
 	std::vector<std::vector<double> > vars_d;

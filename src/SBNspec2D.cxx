@@ -42,7 +42,7 @@ SBNspec::SBNspec(const char * name, std::string whichxml) : SBNconfig(whichxml) 
 	//Contruct from a prexisting histograms!
 
 	char namei[200];
-	sprintf(namei,"%s.root",name);	
+	sPrintf(namei,"%s.root",name);	
 	TFile f(namei);
 
 	//Loop over all filenames that should be there, and load up the histograms.
@@ -70,7 +70,7 @@ int SBNspec::Clear(){
 
 
 int SBNspec::Add(SBNspec *in){
-	//Addes all hists together
+	//Addes all hists toGether
 	if(xmlname != in->xmlname){ std::cout<<"ERROR: SBNspec::Add, trying to add differently configured SBNspecs!"<<std::endl; exit(EXIT_FAILURE);}
 
 	for(int i=0; i< hist.size(); i++){
@@ -81,9 +81,9 @@ int SBNspec::Add(SBNspec *in){
 	return 0;
 }
 
-int SBNspec::setAsGaussian(double mean, double sigma, int ngen){
-	TRandom3 *seedgetter = new TRandom3(0);
-	int seed = seedgetter->Integer(1000000);
+int SBNspec::SetAsGaussian(double mean, double sigma, int ngen){
+	TRandom3 *seedGetter = new TRandom3(0);
+	int seed = seedGetter->Integer(1000000);
 
 	for(auto &h: hist){
 		TRandom3 *rangen = new TRandom3(seed);
@@ -98,7 +98,7 @@ int SBNspec::setAsGaussian(double mean, double sigma, int ngen){
 
 }
 
-int SBNspec::setAsFlat(double val){
+int SBNspec::SetAsFlat(double val){
 	for(auto &h: hist){
 		for(int i=0; i<h.GetSize(); i++){
 			h.SetBinContent(i, val );
@@ -109,7 +109,7 @@ int SBNspec::setAsFlat(double val){
 
 
 //All scaling functions are quite self explanatory
-int SBNspec::poissonScale(){
+int SBNspec::ScalePoisson(){
 	TRandom3 *rangen = new TRandom3(0);
 	for(auto &h: hist){
 		for(int i=0; i<h.GetSize(); i++){
@@ -120,7 +120,7 @@ int SBNspec::poissonScale(){
 }
 
 
-int SBNspec::randomScale(){
+int SBNspec::ScaleRandom(){
 	TRandom3 *rangen    = new TRandom3(0);
 
 	for(auto& h: hist){
@@ -150,7 +150,7 @@ int SBNspec::ScaleAll(double sc){
 	for(auto& h: hist){
 		h.Scale(sc, "nosw2");
 	}
-	this->collapseVector();
+	this->CollapseVector();
 
 	return 0;
 }
@@ -166,7 +166,7 @@ int SBNspec::Scale(std::string name, double val){
 
 	}
 
-	this->collapseVector();
+	this->CollapseVector();
 	return 0;
 }
 
@@ -191,25 +191,25 @@ int SBNspec::Norm(std::string name, double val){
 	return 0;
 }
 
-int SBNspec::calcFullVector(){
-	fullVec.clear();
+int SBNspec::CalcFullVector(){
+	full_vector.clear();
 
 	for(auto& h: hist){
 		//std::cout<<"Hist size: "<<h.GetSize()-2<<std::endl;
 		for(int i = 1; i <= h.GetSize()-2; i++){
 			//std::cout<<h.GetBinContent(i)<<" ";
-			fullVec.push_back(h.GetBinContent(i));
+			full_vector.push_back(h.GetBinContent(i));
 		}	
 	}
 
 	return 0;
 }
 
-int SBNspec::collapseVector(){
+int SBNspec::CollapseVector(){
 
-	compVec.clear();
+	collapsed_vector.clear();
 	//This needs to be confirmed and checked. Looks good, mark 24th april
-	calcFullVector();
+	CalcFullVector();
 	//std::cout<<"num_modes: "<<num_modes<<" num_detectors: "<<num_detectors<<" num_channels: "<<num_channels<<std::endl;
 
 	for(int im = 0; im < num_modes; im++){
@@ -227,10 +227,10 @@ int SBNspec::collapseVector(){
 					for(int sc = 0; sc < num_subchannels[ic]; sc++){
 
 						//					std::cout<<im<<"/"<<num_modes<<" "<<id<<"/"<<num_detectors<<" "<<ic<<"/"<<num_channels<<" "<<j<<"/"<<num_bins[ic]<<" "<<sc<<"/"<<num_subchannels[ic]<<std::endl;
-						tempval += fullVec[j+sc*num_bins[ic]+corner];
+						tempval += full_vector[j+sc*num_bins[ic]+corner];
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
-					compVec.push_back(tempval);
+					collapsed_vector.push_back(tempval);
 				}
 
 
@@ -244,16 +244,16 @@ int SBNspec::collapseVector(){
 	return 0;
 }
 
-int SBNspec::printFullVec(){
-	for(double d: fullVec){
+int SBNspec::PrintFullVector(){
+	for(double d: full_vector){
 		std::cout<<d<<" ";
 	}
 	std::cout<<std::endl;
 	return 0;
 }
 
-int SBNspec::printCompVec(){ 
-	for(double d: compVec){
+int SBNspec::PrintCollapsedVector(){ 
+	for(double d: collapsed_vector){
 		std::cout<<d<<" ";
 	}
 	std::cout<<std::endl;
@@ -261,7 +261,7 @@ int SBNspec::printCompVec(){
 }
 
 
-int SBNspec::writeOut(std::string filename){
+int SBNspec::WriteOut(std::string filename){
 	//kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
@@ -344,7 +344,7 @@ int SBNspec::writeOut(std::string filename){
 
 
 
-int SBNspec::getBinNumber(double invar, int which_hist)
+int SBNspec::GetBinNumber(double invar, int which_hist)
 {
 	int localbin = hist.at(which_hist).GetXaxis()->FindBin(invar);
 	double bin = localbin-1;

@@ -5,7 +5,7 @@ using namespace sbn;
 SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	otag = "SBNconfig::SBNconfig\t|| ";
 
-	isVerbose = isverbose;
+	is_verbose = isverbose;
 	has_oscillation_patterns = false;
 
 	//max subchannels 100?
@@ -18,7 +18,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	TiXmlDocument doc( whichxml.c_str() );
 	bool loadOkay = doc.LoadFile();
 	if(loadOkay){
-		if(isVerbose)	std::cout<<otag<<"Loaded XML configuration file: "<<whichxml<<std::endl;
+		if(is_verbose)	std::cout<<otag<<"Loaded XML configuration file: "<<whichxml<<std::endl;
 	}else{
 		std::cout<<otag<<"ERROR: Failed to load XML configuration file:  "<<whichxml<<std::endl;
 		exit(EXIT_FAILURE);
@@ -47,7 +47,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			mode_bool.push_back(strtod(pMode->Attribute("use"),&end));
 
 			pMode = pMode->NextSiblingElement("mode");
-			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading mode: "<<mode_names.back()<<" with use_bool "<<mode_bool.back()<<std::endl;
+			if(is_verbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading mode: "<<mode_names.back()<<" with use_bool "<<mode_bool.back()<<std::endl;
 
 		}
 	}
@@ -62,7 +62,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			detector_names.push_back(pDet->Attribute("name"));
 			detector_bool.push_back(strtod(pDet->Attribute("use"),&end));
 			pDet = pDet->NextSiblingElement("detector");
-			if(isVerbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading detector: "<<detector_names.back()<<" with use_bool "<<detector_bool.back()<<std::endl;
+			if(is_verbose)	std::cout<<"SBNconfig::SBnconfig\t|| loading detector: "<<detector_names.back()<<" with use_bool "<<detector_bool.back()<<std::endl;
 		}
 	}
 
@@ -80,7 +80,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			channel_bool.push_back(strtod(pChan->Attribute("use"),&end));
 			num_bins.push_back(strtod(pChan->Attribute("numbins"), &end));
 
-			if(isVerbose)	std::cout<<otag<<"Loading Channel : "<<channel_names.back()<<" with use_bool: "<<channel_bool.back()<<std::endl;
+			if(is_verbose)	std::cout<<otag<<"Loading Channel : "<<channel_names.back()<<" with use_bool: "<<channel_bool.back()<<std::endl;
 
 			// What are the bin edges and bin widths (bin widths just calculated from edges now)
 			TiXmlElement *pBin = pChan->FirstChildElement("bins");
@@ -119,7 +119,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 				subchannel_osc_patterns.at(nchan).push_back(strtod(pSubChan->Attribute("osc"), &end));
 
-				if(isVerbose)	std::cout<<otag<<"--> Subchannel: "<<subchannel_names.at(nchan).back()<<" with use_bool "<<subchannel_bool.at(nchan).back()<<" and osc_pattern "<<subchannel_osc_patterns.at(nchan).back()<<std::endl;
+				if(is_verbose)	std::cout<<otag<<"--> Subchannel: "<<subchannel_names.at(nchan).back()<<" with use_bool "<<subchannel_bool.at(nchan).back()<<" and osc_pattern "<<subchannel_osc_patterns.at(nchan).back()<<std::endl;
 
 				nsubchan++;
 				pSubChan = pSubChan->NextSiblingElement("subchannel");
@@ -185,7 +185,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 			pBranch = pMC->FirstChildElement("branch");
 
 
-			std::vector<branch_var*> TEMP_branch_variables;
+			std::vector<BranchVariable*> TEMP_branch_variables;
 			while(pBranch){
 
 				std::string bnam = pBranch->Attribute("name");
@@ -195,14 +195,14 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				//if(btype == "int"){
 				//	std::cout<<"NO INT ALLOWED "<<bnam<<std::endl;
 				//	exit(EXIT_FAILURE);
-					//TEMP_branch_variables.push_back( new branch_var_i(bnam,btype, bhist ) );
+					//TEMP_branch_variables.push_back( new BranchVariable_i(bnam,btype, bhist ) );
 				//}else
 				 if(btype == "double"){
-					if(isVerbose)std::cout<<otag<<"Setting double variable "<<bnam<<" @ "<<bhist<<std::endl;
-					TEMP_branch_variables.push_back( new branch_var_d(bnam, btype, bhist ) );
+					if(is_verbose)std::cout<<otag<<"Setting double variable "<<bnam<<" @ "<<bhist<<std::endl;
+					TEMP_branch_variables.push_back( new BranchVariable_d(bnam, btype, bhist ) );
 				//}else if(btype == "float"){
 				//	std::cout<<otag<<"Setting float variable "<<bnam<<" @ "<<bhist<<std::endl;
-				//	TEMP_branch_variables.push_back( new branch_var_f(bnam, btype, bhist ) );
+				//	TEMP_branch_variables.push_back( new BranchVariable_f(bnam, btype, bhist ) );
 				}else{
 					std::cout<<otag<<"ERROR: currently only double, allowed for reco variables (sorry!)\n";
 					exit(EXIT_FAILURE);
@@ -214,17 +214,17 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				}	
 								
 				if(oscillate == "false"){
-					if(isVerbose)std::cout<<otag<<"Oscillations are Off. oscillate="<<oscillate<<std::endl;
-					TEMP_branch_variables.back()->setOscillate(false);
+					if(is_verbose)std::cout<<otag<<"Oscillations are Off. oscillate="<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->SetOscillate(false);
 				}else if(oscillate == "true"){
-					if(isVerbose)std::cout<<otag<<"Setting Oscillate! "<<oscillate<<std::endl;
-					TEMP_branch_variables.back()->setOscillate(true);
+					if(is_verbose)std::cout<<otag<<"Setting Oscillate! "<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->SetOscillate(true);
 					TEMP_branch_variables.back()->true_param_name = pBranch->Attribute("true_param_name");
 					TEMP_branch_variables.back()->true_L_name = pBranch->Attribute("true_L_name");
 					std::cout<<otag<<"Set Oscillate! "<<pBranch->Attribute("true_param_name")<<" "<<pBranch->Attribute("true_L_name")<<std::endl;
 				}else{
-					if(isVerbose)std::cout<<otag<<"Do Not Oscillate "<<oscillate<<std::endl;
-					TEMP_branch_variables.back()->setOscillate(false);
+					if(is_verbose)std::cout<<otag<<"Do Not Oscillate "<<oscillate<<std::endl;
+					TEMP_branch_variables.back()->SetOscillate(false);
 				}
 
 
@@ -241,7 +241,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	while(pData){
 		data_path = pData->Attribute("path");
 		pData = pData->NextSiblingElement("data");
-		if(isVerbose)std::cout<<otag<<"data path loaded as: "<<data_path<<std::endl;
+		if(is_verbose)std::cout<<otag<<"data path loaded as: "<<data_path<<std::endl;
 	}
 
 
@@ -253,7 +253,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	}
 
 
-	if(isVerbose) std::cout<<otag<<"|| Calculating used things"<<std::endl;
+	if(is_verbose) std::cout<<otag<<"|| Calculating used things"<<std::endl;
 
 	// so num_channels here is number of TOTAL channels in xml.
 	num_channels = channel_names.size();
@@ -283,7 +283,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 				for(int sc = 0; sc < num_subchannels.at(ic); sc++){
 
 					tempn = mode_names[im] +"_" +detector_names[id]+"_"+channel_names[ic]+"_"+subchannel_names[ic][sc];
-					if(isVerbose)std::cout<<otag<<""<<tempn<<" "<<im<<" "<<id<<" "<<ic<<" "<<sc<<std::endl;
+					if(is_verbose)std::cout<<otag<<""<<tempn<<" "<<im<<" "<<id<<" "<<ic<<" "<<sc<<std::endl;
 
 					// This is where you choose NOT to use some fields
 					if(mode_bool[im] && detector_bool[id] && channel_bool[ic] && subchannel_bool[ic][sc]){
@@ -297,7 +297,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 					}
 					std::vector<int> tvec = {indexcount, indexcount+num_bins.at(ic)-1};
 
-					mapIndex[tempn] = 	tvec;
+					map_tag_to_covariance_index[tempn] = 	tvec;
 					indexcount = indexcount + num_bins.at(ic);
 
 
@@ -310,8 +310,8 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-	//For here on down everything is derivable, above is just until I actually get config working.
-	if(isVerbose) std::cout<<otag<<"Starting on MC file parameters"<<std::endl;
+	//For here on down everything is derivable, above is just until I actually Get config working.
+	if(is_verbose) std::cout<<otag<<"Starting on MC file parameters"<<std::endl;
 
 	num_modes=0;
 	for(int i=0;i<mode_bool.size(); i++){	if(mode_bool.at(i)){num_modes++; mode_used.push_back(i);}	}
@@ -335,11 +335,11 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-	if(isVerbose) std::cout<<otag<<"Calculating Total Bins"<<std::endl;
-	this->calcTotalBins();
+	if(is_verbose) std::cout<<otag<<"Calculating Total Bins"<<std::endl;
+	this->CalcTotalBins();
 
 
-	if(isVerbose){
+	if(is_verbose){
 		std::cout<<otag<<"Checking number of XX"<<std::endl;
 		std::cout<<otag<<"--> num_modes: "<<num_modes<<" out of "<<num_modes_xml<<std::endl;
 		std::cout<<otag<<"--> num_detectors: "<<num_detectors<<" out of "<<num_detectors<<std::endl;
@@ -397,7 +397,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 	for(int c: channel_used){
-		//if(isVerbose){std::cout<<otag<<"Adding channel: "<<c<<std::endl;}
+		//if(is_verbose){std::cout<<otag<<"Adding channel: "<<c<<std::endl;}
 		num_subchannels.push_back( temp_num_subchannels.at(c));
 		num_bins.push_back( temp_num_bins.at(c));
 		subchannel_names.push_back( temp_subchannel_names.at(c));
@@ -412,7 +412,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 	for(int d: detector_used){
 		detector_names.push_back(temp_detector_names.at(d));
 		detector_bool.push_back(temp_detector_bool.at(d));
-		//if(isVerbose) std::cout<<otag<<"Using Detector: "<<detector_names.back()<<std::endl;
+		//if(is_verbose) std::cout<<otag<<"Using Detector: "<<detector_names.back()<<std::endl;
 	}
 
 	for(int m: mode_used){
@@ -422,7 +422,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-	if(isVerbose) {
+	if(is_verbose) {
 
 		//	std::cout<<"--> num_channels: "<<num_channels<<" channel_bool.size(): "<<channel_bool.size()<<" channel_names.size(): "<<channel_names.size()<<std::endl;
 		//	std::cout<<"--> num_modes: "<<num_modes<<" mode_bool.size(): "<<mode_bool.size()<<" mode_names.size(): "<<mode_names.size()<<std::endl;
@@ -437,7 +437,7 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
-	if(isVerbose){std::cout<<otag<<"Done!"<<std::endl;}
+	if(is_verbose){std::cout<<otag<<"Done!"<<std::endl;}
 
 
 
@@ -450,7 +450,7 @@ SBNconfig::SBNconfig(std::string whichxml): SBNconfig(whichxml, true) {}
 SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> detin, std::vector<std::string> chanin, std::vector<std::vector<std::string>> subchanin, std::vector<std::vector<double>> binin){
 
 	otag = "SBNconfig::SBNconfig\t|| ";
-	isVerbose = true;
+	is_verbose = true;
 
 	num_detectors = detin.size();
 	num_channels = chanin.size();
@@ -469,7 +469,7 @@ SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> d
 		num_bins.push_back(bn.size()-1);
 	}
 
-	this->calcTotalBins();
+	this->CalcTotalBins();
 
 	xmlname = "NULL";
 
@@ -529,7 +529,7 @@ SBNconfig::SBNconfig(std::vector<std::string> modein, std::vector<std::string> d
 };
 
 
-int SBNconfig::calcTotalBins(){
+int SBNconfig::CalcTotalBins(){
 
 	// These variables are important
 	// They show how big each mode block and decector block are, for any given number of channels/subchannels

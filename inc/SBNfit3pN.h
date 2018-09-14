@@ -25,7 +25,7 @@ class SBNfit3pN : public SBNfit {
 	protected:
 	public:
 	
-	SBNosc sigOsc;
+	SBNosc signal_osc_spectrum;
 	double MinimizerCalcChi(const double * X);
 	
 	SBNfit3pN(SBNosc,SBNosc,int);
@@ -38,7 +38,7 @@ class SBNfit3p1 : public SBNfit {
 	protected:
 	public:
 	
-	SBNosc sigOsc;
+	SBNosc signal_osc_spectrum;
 	double MinimizerCalcChi(const double * X);
 	
 	SBNfit3p1(SBNosc,SBNosc,int);

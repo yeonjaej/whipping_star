@@ -30,7 +30,7 @@
 #include "SBNosc.h"
 #include "SBNfit.h"
 #include "SBNfit3pN.h"
-#include "SBNmultisim.h"
+#include "SBNcovariance.h"
 
 #define no_argument 0
 #define required_argument 1
@@ -99,20 +99,20 @@ int main(int argc, char* argv[])
 
 	std::cout<<"Begining Covariance Calculation for tag: "<<tag<<std::endl;
 
-	//Create a SBNmultisim object initilizing with the inputted xml
+	//Create a SBNcovariance object initilizing with the inputted xml
 	//This will load all the files and weights as laid out
-	SBNmultisim example_multisim(xml);
+	SBNcovariance example_covar(xml);
 
 	//Form the covariance matrix from loaded weights and MC events
-	example_multisim.formCovarianceMatrix(tag);
+	example_covar.formCovarianceMatrix(tag);
 
 	if(print_mode){
 		//and make some plots of the resulting things
 		//Will be outputted in the form: SBNfit_covariance_plots_TAG.root
-		example_multisim.printMatricies(tag);
+		example_covar.PrintMatricies(tag);
 
 		//Will be outputted in the form: SBNfit_variation_plots_TAG.root
-		example_multisim.printVariations(tag);
+		example_covar.PrintVariations(tag);
 	}
 
 	std::cout << "Total wall time: " << difftime(time(0), start_time)/60.0 << " Minutes.\n";

@@ -30,7 +30,7 @@ SBNspec::SBNspec(std::string whichxml, int which_universe, bool isverbose) : SBN
 
 	has_been_scaled = false;
 
-	this->collapseVector();
+	this->CollapseVector();
 
 }
 
@@ -63,7 +63,7 @@ SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool 
 
 	for(int i=0; i< input_full_vec.size(); i++){
 
-		int which_hist = getHistNumber(i);
+		int which_hist = GetHistNumber(i);
 
 		int exact_bin = i;
 		for(int b=0; b<which_hist; b++){
@@ -74,7 +74,7 @@ SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool 
 	}
 
 
-	this->calcFullVector();
+	this->CalcFullVector();
 }
 
 
@@ -84,7 +84,7 @@ SBNspec::SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool 
 
 
 int SBNspec::Add(std::string which_hist, TH1 * histin){
-	//Addes all hists together
+	//Addes all hists toGether
 	if(map_hist.count(which_hist) <= 0){
 		std::cout<<"SBNspec::Add || ERROR the passed in histgram name is not one defined in the xml! passsed in: "<<which_hist<<" "<<map_hist.count(which_hist)<<std::endl;
 
@@ -107,7 +107,7 @@ int SBNspec::Add(std::string which_hist, TH1 * histin){
 
 	hist.at(h).Add(histin);
 
-	this->collapseVector();
+	this->CollapseVector();
 	return 0;
 }
 
@@ -117,20 +117,20 @@ int SBNspec::Add(std::string which_hist, TH1 * histin){
 
 
 int SBNspec::Add(SBNspec *in){
-	//Addes all hists together
+	//Addes all hists toGether
 	if(xmlname != in->xmlname){ std::cout<<"ERROR: SBNspec::Add, trying to add differently configured SBNspecs!"<<std::endl; exit(EXIT_FAILURE);}
 
 	for(int i=0; i< hist.size(); i++){
 		hist[i].Add( &(in->hist[i]));
 	}
 
-	this->collapseVector();
+	this->CollapseVector();
 	return 0;
 }
 
-int SBNspec::setAsGaussian(double mean, double sigma, int ngen){
-	TRandom3 *seedgetter = new TRandom3(0);
-	int seed = seedgetter->Integer(1000000);
+int SBNspec::SetAsGaussian(double mean, double sigma, int ngen){
+	TRandom3 *seedGetter = new TRandom3(0);
+	int seed = seedGetter->Integer(1000000);
 
 	for(auto &h: hist){
 		TRandom3 *rangen = new TRandom3(seed);
@@ -145,7 +145,7 @@ int SBNspec::setAsGaussian(double mean, double sigma, int ngen){
 
 }
 
-int SBNspec::setAsFlat(double val){
+int SBNspec::SetAsFlat(double val){
 	for(auto &h: hist){
 		for(int i=0; i<h.GetSize(); i++){
 			h.SetBinContent(i, val );
@@ -156,7 +156,7 @@ int SBNspec::setAsFlat(double val){
 
 
 //All scaling functions are quite self explanatory
-int SBNspec::poissonScale(){
+int SBNspec::ScalePoisson(){
 	TRandom3 *rangen = new TRandom3(0);
 	for(auto &h: hist){
 		for(int i=0; i<h.GetSize(); i++){
@@ -166,7 +166,7 @@ int SBNspec::poissonScale(){
 	return 0;
 }
 
-int SBNspec::poissonScale(TRandom3* rangen){
+int SBNspec::ScalePoisson(TRandom3* rangen){
 	for(auto &h: hist){
 		for(int i=0; i<h.GetSize(); i++){
 			h.SetBinContent(i, rangen->Poisson( h.GetBinContent(i)    ));
@@ -177,7 +177,7 @@ int SBNspec::poissonScale(TRandom3* rangen){
 
 
 
-int SBNspec::randomScale(){
+int SBNspec::ScaleRandom(){
 	TRandom3 *rangen    = new TRandom3(0);
 
 	for(auto& h: hist){
@@ -208,7 +208,7 @@ int SBNspec::ScaleAll(double sc){
 	for(auto& h: hist){
 		h.Scale(sc);
 	}
-	this->collapseVector();
+	this->CollapseVector();
 
 	return 0;
 }
@@ -228,7 +228,7 @@ int SBNspec::Scale(std::string name, double val){
 	scale_hist_name =name;
 	scale_hist_val = val;
 
-	this->collapseVector();
+	this->CollapseVector();
 	return 0;
 }
 
@@ -258,24 +258,24 @@ int SBNspec::Norm(std::string name, double val){
 
 
 
-int SBNspec::calcFullVector(){
-	fullVec.clear();
+int SBNspec::CalcFullVector(){
+	full_vector.clear();
 
 	for(auto& h: hist){
 		//std::cout<<"Hist size: "<<h.GetSize()-2<<std::endl;
 		for(int i = 1; i <= h.GetSize()-2; i++){
 			//std::cout<<h.GetBinContent(i)<<" ";
-			fullVec.push_back(h.GetBinContent(i));
+			full_vector.push_back(h.GetBinContent(i));
 		}
 	}
 
 	return 0;
 }
 
-int SBNspec::collapseVector(){
+int SBNspec::CollapseVector(){
 
-	compVec.clear();
-	calcFullVector();
+	collapsed_vector.clear();
+	CalcFullVector();
 
 	for(int im = 0; im < num_modes; im++){
 		for(int id =0; id < num_detectors; id++){
@@ -291,10 +291,10 @@ int SBNspec::collapseVector(){
 					for(int sc = 0; sc < num_subchannels.at(ic); sc++){
 
 						//std::cout<<im<<"/"<<num_modes<<" "<<id<<"/"<<num_detectors<<" "<<ic<<"/"<<num_channels<<" "<<j<<"/"<<num_bins[ic]<<" "<<sc<<"/"<<num_subchannels[ic]<<std::endl;
-						tempval += fullVec.at(j+sc*num_bins.at(ic)+corner);
+						tempval += full_vector.at(j+sc*num_bins.at(ic)+corner);
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
-					compVec.push_back(tempval);
+					collapsed_vector.push_back(tempval);
 				}
 			}
 		}
@@ -302,11 +302,11 @@ int SBNspec::collapseVector(){
 	return 0;
 }
 
-double SBNspec::getTotalEvents(){
+double SBNspec::GetTotalEvents(){
 	double ans =0;
-	this->calcFullVector();
+	this->CalcFullVector();
 
-	for(double d: fullVec){
+	for(double d: full_vector){
 		ans+=d;
 	}
 
@@ -315,16 +315,16 @@ double SBNspec::getTotalEvents(){
 
 }
 
-int SBNspec::printFullVec(){
-	for(double d: fullVec){
+int SBNspec::PrintFullVector(){
+	for(double d: full_vector){
 		std::cout<<d<<" ";
 	}
 	std::cout<<std::endl;
 	return 0;
 }
 
-int SBNspec::printCompVec(){
-	for(double d: compVec){
+int SBNspec::PrintCollapsedVector(){
+	for(double d: collapsed_vector){
 		std::cout<<d<<" ";
 	}
 	std::cout<<std::endl;
@@ -332,7 +332,7 @@ int SBNspec::printCompVec(){
 }
 
 
-int SBNspec::writeOut(std::string tag){
+int SBNspec::WriteOut(std::string tag){
 	//kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
@@ -420,7 +420,7 @@ int SBNspec::writeOut(std::string tag){
 					}
 				}
 				//Sort!
-				for (int i: sort_indexes(integral_sorter)) {
+				for (int i: SortIndexes(integral_sorter)) {
 					hs->Add(to_sort.at(i));
 					legStack.AddEntry(to_sort.at(i), l_to_sort.at(i).c_str(),"f");
 				}
@@ -432,12 +432,12 @@ int SBNspec::writeOut(std::string tag){
 
 					double title_size_ratio=0.1;
 					double label_size_ratio=0.1;
-					double title_offset_ratioY = 0.3 ;
-					double title_offset_ratioX = 1.1;
+					double title_offSet_ratioY = 0.3 ;
+					double title_offSet_ratioX = 1.1;
 
 					double title_size_upper=0.15;
 					double label_size_upper=0.05;
-					double title_offset_upper = 1.45;
+					double title_offSet_upper = 1.45;
 
 					Cstack->cd();
 					hs->Draw();
@@ -474,7 +474,7 @@ int SBNspec::writeOut(std::string tag){
 
 
 
-int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
+int SBNspec::CompareSBNspecs(SBNspec * compsec, std::string tag){
 	//kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
 	//kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
 	//kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
@@ -618,7 +618,7 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 					}
 				}
 				//Sort!
-				for (int i: sort_indexes(integral_sorter)) {
+				for (int i: SortIndexes(integral_sorter)) {
 					hs->Add(to_sort.at(i));
 					legStack.AddEntry(to_sort.at(i), l_to_sort.at(i).c_str(),"f");
 				}
@@ -636,12 +636,12 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 
 					double title_size_ratio=0.1;
 					double label_size_ratio=0.1;
-					double title_offset_ratioY = 0.3 ;
-					double title_offset_ratioX = 1.1;
+					double title_offSet_ratioY = 0.3 ;
+					double title_offSet_ratioX = 1.1;
 
 					double title_size_upper=0.15;
 					double label_size_upper=0.05;
-					double title_offset_upper = 1.45;
+					double title_offSet_upper = 1.45;
 
 
 					Cstack->cd();
@@ -695,8 +695,8 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 					ratpre->SetLineColor(kBlack);
 					ratpre->SetTitle("");
 					ratpre->GetYaxis()->SetTitle("Ratio");
-					ratpre->GetXaxis()->SetTitleOffset(title_offset_ratioX);
-					ratpre->GetYaxis()->SetTitleOffset(title_offset_ratioY);
+					ratpre->GetXaxis()->SetTitleOffset(title_offSet_ratioX);
+					ratpre->GetYaxis()->SetTitleOffset(title_offSet_ratioY);
 					ratpre->SetMinimum(ratpre->GetMinimum()*0.92);
 					ratpre->SetMaximum(ratpre->GetMaximum()*1.08);
 					ratpre->GetYaxis()->SetTitleSize(title_size_ratio);
@@ -718,7 +718,7 @@ int SBNspec::compareSBNspecs(SBNspec * compsec, std::string tag){
 	return 0;
 }
 
-int SBNspec::getHistNumber(int f){
+int SBNspec::GetHistNumber(int f){
 	//Get which histogram (in hist) that a full_vector entry comes from	
 	int counter = 0;	
 	for(int i=0; i<hist.size(); i++){
@@ -730,7 +730,7 @@ int SBNspec::getHistNumber(int f){
 }
 
 
-int SBNspec::getLocalBinNumber(double invar, int which_hist)
+int SBNspec::GetLocalBinNumber(double invar, int which_hist)
 {
 	int localbin = hist.at(which_hist).GetXaxis()->FindBin(invar);
 	double bin = localbin-1;
@@ -740,7 +740,7 @@ int SBNspec::getLocalBinNumber(double invar, int which_hist)
 }
 
 
-int SBNspec::getGlobalBinNumber(double invar, int which_hist)
+int SBNspec::GetGlobalBinNumber(double invar, int which_hist)
 {
 	int localbin = hist.at(which_hist).GetXaxis()->FindBin(invar);
 	double bin = localbin-1;

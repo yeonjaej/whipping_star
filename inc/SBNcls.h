@@ -33,8 +33,19 @@ class SBNcls{
 
 	public:
 
-	SBNspec * H0;
-	SBNspec * H1;
+	SBNcls(SBNspec *inh0, SBNspec * inh1, TMatrixD matin) : h0(inh0), h1(inh1), covariance_matrix(matin), chi(*inh0, matin){
+		which_sample = 0; //default Poisson
+		rangen= new TRandom3(0);
+	}
+	SBNcls(SBNspec *inh0, SBNspec * inh1) : h0(inh0), h1(inh1), chi(*inh0){
+		which_sample = 0; //default Poisson
+		rangen= new TRandom3(0);
+	}
+
+
+
+	SBNspec * h0;
+	SBNspec * h1;
 	
 	SBNchi chi;
 	TMatrixD covariance_matrix;
@@ -43,19 +54,11 @@ class SBNcls{
 
 	int which_sample;
 
-	SBNcls(SBNspec *inH0, SBNspec * inH1, TMatrixD matin) : H0(inH0), H1(inH1), covariance_matrix(matin), chi(*inH0, matin){
-		which_sample = 0; //default Poisson
-		rangen= new TRandom3(0);
-	}
-	SBNcls(SBNspec *inH0, SBNspec * inH1) : H0(inH0), H1(inH1), chi(*inH0){
-		which_sample = 0; //default Poisson
-		rangen= new TRandom3(0);
-	}
 
-	int calcCLS(int,std::string);
-
-	int setSampleCovariance();
-	int setSamplePoisson();
+	/****************** Member Functions *************/
+	int CalcCLS(int,std::string);
+	int SetSampleCovariance();
+	int SetSamplePoisson();
 
 
 };

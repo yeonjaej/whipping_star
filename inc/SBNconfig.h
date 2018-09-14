@@ -51,7 +51,25 @@ class SBNconfig {
 	protected:
 	
 	public:
-	bool isVerbose;
+	
+	//Constructors
+	SBNconfig(std::string,bool);
+	SBNconfig(std::string);
+	SBNconfig(){};
+	SBNconfig(std::vector<std::string>, std::vector<std::string>, std::vector<std::string>, std::vector<std::vector<std::string>>, std::vector<std::vector<double>>);
+	//This is going to be a manual Setup thing
+
+	//Some stringsteam stuff
+	std::string otag;
+
+	// Fullnames is kinda important, it contains all the concatanated names of all individual histograms that have been configured with the "use=1" attribute
+	// The order is IMPORTANT its the same as defined in xml
+	std::vector<std::string> fullnames;
+
+
+	//Bools to contain what is and is not in the xml
+	bool has_oscillation_patterns;
+	bool is_verbose;
 
 	int num_detectors;
 	int num_detectors_xml;
@@ -66,6 +84,10 @@ class SBNconfig {
 	std::vector<int> num_bins;
 
 
+	std::string xmlname;	
+
+	std::string data_path;
+
 	int num_bins_detector_block;
 	int num_bins_mode_block;
 	int num_bins_total;
@@ -77,24 +99,13 @@ class SBNconfig {
 	std::string correlation_matrix_rootfile;
 	std::string correlation_matrix_name;
 
-	std::string xmlname;	
-
-	std::string data_path;
-
-	int calcTotalBins();
-
-
-	//Bools to contain what is and is not in the xml
-	bool has_oscillation_patterns;
-
-
+	
 	//the xml names are the way we track which channels and subchannels we want to use later
 	std::vector<std::string> mode_names; 			
 	std::vector<std::string> detector_names; 		
 	std::vector<std::string> channel_names; 		
 	std::vector<std::string> channel_units; 		
 	std::vector<std::vector<std::string >> subchannel_names; 
-
 
 	// vector Bools for turning on and off certain modes/detectors..etc..
 	std::vector<bool> mode_bool; 
@@ -114,23 +125,10 @@ class SBNconfig {
 	std::vector<std::vector<double> > bin_widths;
 
 	//Given a string e.g "nu_ICARUS_elike_intrinisc" this map returns the index of the corresponding covariance matrix. Not really used.
-	std::map <std::string, std::vector<int> > mapIndex;
+	std::map <std::string, std::vector<int> > map_tag_to_covariance_index;
 
-	// Fullnames is kinda important, it contains all the concatanated names of all individual histograms that have been configured with the "use=1" attribute
-	// The order is IMPORTANT its the same as defined in xml
-	std::vector<std::string> fullnames;
-	// If you have a large covariance matrix/spectrum (say containing nu and nubar mode) but only want to run with nu-mode (so you set use=0 in nubarmode) the vector used_bins contains all the bins that are actually in use. 
+	// If you have a large covariance matrix/spectrum (say containing nu and nubar mode) but only want to run with nu-mode (so you Set use=0 in nubarmode) the vector used_bins contains all the bins that are actually in use. 
 	std::vector<int> used_bins; 
-
-	SBNconfig(std::string,bool);
-	SBNconfig(std::string);
-	SBNconfig(){};
-	SBNconfig(std::vector<std::string>, std::vector<std::string>, std::vector<std::string>, std::vector<std::vector<std::string>>, std::vector<std::vector<double>>);
-	//This is going to be a manual setup thing
-
-
-	//Some stringsteam stuff
-	std::string otag;
 
 	//For generating a covariance matrix from scratch, this contains the number of multisims (weights in weight vector) and their names.
 	// For some reason I have decided that the first multisim, weight[0] must be the central value, =1
@@ -139,7 +137,7 @@ class SBNconfig {
 	std::vector<std::string> multisim_name;	
 	std::vector<std::string> multisim_file;	
         std::map<std::string,std::vector<std::string>> multisim_file_friend_map;
-         std::map<std::string,std::vector<std::string>> multisim_file_friend_treename_map;
+        std::map<std::string,std::vector<std::string>> multisim_file_friend_treename_map;
 
 
 	std::vector<int> multisim_maxevents;	
@@ -149,9 +147,12 @@ class SBNconfig {
 	std::vector<double> pot;
 	
 	std::vector<std::vector<std::string>> parameter_names;	//obsolete code
-	std::vector<std::vector<branch_var*>> branch_variables;
-	
+	std::vector<std::vector<BranchVariable*>> branch_variables;
 
+
+	/*********************************** Member Functions ********************************/	
+
+	int CalcTotalBins();
 	
 };
 

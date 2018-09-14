@@ -4,17 +4,17 @@
 using namespace sbn;
 
 SBNgenerate::SBNgenerate(std::string xmlname) {
-	neutrinoModel nullModel;
+	NeutrinoModel nullModel;
 	SBNgenerate(xmlname, nullModel);
 }
 
-SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfig(xmlname), nu_model(inModel) {
+SBNgenerate::SBNgenerate(std::string xmlname, NeutrinoModel inModel ) : SBNconfig(xmlname), nu_model(inModel) {
 
 //	gROOT->ProcessLine("#include <map>");
 //	gROOT->ProcessLine("#include <vector>");
 //	gROOT->ProcessLine("#include <string>");
 
-	//gSystem->Load("../src/libWeightsMapDict.so");
+	//gSystem->Load("../src/libranch_weightsMapDict.so");
 
 	std::string dict_location = "../../dict/AutoDict_map_string__vector_double____cxx.so";
 	gSystem->Load(  (dict_location).c_str());
@@ -28,11 +28,11 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 
 	//Initialise the central value SBNspec.
 	SBNspec tm(xmlname,-1,false);
-	spec_CV = tm;
-	spec_OSC_sin  = tm;
-	spec_OSC_sinsq  = tm;
+	spec_central_value = tm;
+	spec_osc_sin  = tm;
+	spec_osc_sinsq  = tm;
 
-	int Nfiles = multisim_file.size();
+	int num_files = multisim_file.size();
 
 	for(auto &fn: multisim_file){
 		files.push_back(new TFile(fn.c_str()));
@@ -63,21 +63,21 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 		nentries.push_back(t->GetEntries());
 	}
 
-	fWeights = new std::vector<std::map<std::string, std::vector<double>>* >(Nfiles,0);
+	f_weights = new std::vector<std::map<std::string, std::vector<double>>* >(num_files,0);
 
 
-	for(int i=0; i< Nfiles; i++){
-		delete fWeights->at(i);	fWeights->at(i) = 0;
-		trees.at(i)->SetBranchAddress("weights", &fWeights->at(i) );
-		delete fWeights->at(i);	fWeights->at(i) = 0;
+	for(int i=0; i< num_files; i++){
+		delete f_weights->at(i);	f_weights->at(i) = 0;
+		trees.at(i)->SetBranchAddress("weights", &f_weights->at(i) );
+		delete f_weights->at(i);	f_weights->at(i) = 0;
 		for(int k=0; k<branch_variables.at(i).size(); k++){
 			std::cout<<"Setting Branch: "<<branch_variables.at(i).at(k)->name<<std::endl;
-			trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->name.c_str(), branch_variables.at(i).at(k)->getValue() );
+			trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->name.c_str(), branch_variables.at(i).at(k)->GetValue() );
 
-			if(branch_variables.at(i).at(k)->getOscillate()){
+			if(branch_variables.at(i).at(k)->GetOscillate()){
 				std::cout<<"Setting true branch variables"<<std::endl;
-				trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->true_param_name.c_str(), branch_variables.at(i).at(k)->getTrueValue() );
-				trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->true_L_name.c_str(), branch_variables.at(i).at(k)->getTrueL() );
+				trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->true_param_name.c_str(), branch_variables.at(i).at(k)->GetTrueValue() );
+				trees.at(i)->SetBranchAddress( branch_variables.at(i).at(k)->true_L_name.c_str(), branch_variables.at(i).at(k)->GetTrueL() );
 			}
 		}
 	}
@@ -85,16 +85,16 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 
 	std::cout<<"SBNgenerate::SBNgenerate\t|| -------------------------------------------------------------\n";
 	std::cout<<"SBNgenerate::SBNgenerate\t|| -------------------------------------------------------------\n";
-	std::vector<double> base_vec (spec_CV.num_bins_total,0.0);
+	std::vector<double> base_vec (spec_central_value.num_bins_total,0.0);
 
-	for(int j=0;j<Nfiles;j++){
+	for(int j=0;j<num_files;j++){
 
-		delete fWeights->at(j);
-		fWeights->at(j)=0;
+		delete f_weights->at(j);
+		f_weights->at(j)=0;
 
 		for(int i=0; i< std::min(  multisim_maxevents.at(j)  ,nentries.at(j)); i++){
 			trees.at(j)->GetEntry(i);
-			std::map<std::string, std::vector<double>> * thisfWeight = fWeights->at(j);
+			std::map<std::string, std::vector<double>> * thisfWeight = f_weights->at(j);
 
 			if(i%100==0) std::cout<<"SBNgenerate::SBNgenerate\t|| On event: "<<i<<" of "<<nentries[j]<<" from File: "<<multisim_file[j]<<std::endl;
 
@@ -110,32 +110,32 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 				exit(EXIT_FAILURE);
 			}
 
-			if( this->eventSelection(j) ){
+			if( this->EventSelection(j) ){
 				for(int t=0; t<branch_variables.at(j).size();t++){
 					//std::cout<<"Starting branch : "<<branch_variables.at(j).at(t)->name<<" "<<branch_variables.at(j).at(t)->associated_hist<<std::endl;
 					//Need the histogram index, the value, the global bin...
-					int ih = spec_CV.map_hist.at(branch_variables.at(j).at(t)->associated_hist);
-					double reco_var = *(static_cast<double*>(branch_variables.at(j).at(t)->getValue()));
-					int reco_bin = spec_CV.getGlobalBinNumber(reco_var,ih);
+					int ih = spec_central_value.map_hist.at(branch_variables.at(j).at(t)->associated_hist);
+					double reco_var = *(static_cast<double*>(branch_variables.at(j).at(t)->GetValue()));
+					int reco_bin = spec_central_value.GetGlobalBinNumber(reco_var,ih);
 
 					//Find if this event should be oscillated
-					if(branch_variables.at(j).at(t)->getOscillate()){
+					if(branch_variables.at(j).at(t)->GetOscillate()){
 						//Working
-						double true_var = *(static_cast<double*>(branch_variables.at(j).at(t)->getTrueValue()));
-						double true_L = *(static_cast<double*>(branch_variables.at(j).at(t)->getTrueL()));
+						double true_var = *(static_cast<double*>(branch_variables.at(j).at(t)->GetTrueValue()));
+						double true_L = *(static_cast<double*>(branch_variables.at(j).at(t)->GetTrueL()));
 
-						double osc_probability_sin = nu_model.oscProbSin(true_var, true_L);
-						double osc_probability_sinsq = nu_model.oscProbSinSq(true_var, true_L);
+						double osc_Probability_sin = nu_model.oscProbSin(true_var, true_L);
+						double osc_Probability_sinsq = nu_model.oscProbSinSq(true_var, true_L);
 
-						spec_OSC_sinsq.hist.at(ih).Fill(reco_var, global_weight*osc_probability_sinsq);
-						spec_OSC_sin.hist.at(ih).Fill(reco_var, global_weight*osc_probability_sin);
-						spec_CV.hist.at(ih).Fill(reco_var,global_weight);
-						//std::cout<<"Reco: "<<reco_var<<" True: "<<true_var<<" L: "<<true_L<<" "<<osc_probability_sin<<" "<<osc_probability_sinsq<<" glob: "<<global_weight<<std::endl;
+						spec_osc_sinsq.hist.at(ih).Fill(reco_var, global_weight*osc_Probability_sinsq);
+						spec_osc_sin.hist.at(ih).Fill(reco_var, global_weight*osc_Probability_sin);
+						spec_central_value.hist.at(ih).Fill(reco_var,global_weight);
+						//std::cout<<"Reco: "<<reco_var<<" True: "<<true_var<<" L: "<<true_L<<" "<<osc_Probability_sin<<" "<<osc_Probability_sinsq<<" glob: "<<global_weight<<std::endl;
 					}else{
 						std::cout<<"Not Oscillated"<<std::endl;
-						spec_CV.hist.at(ih).Fill(reco_var,global_weight);
-						spec_OSC_sinsq.hist.at(ih).Fill(reco_var, global_weight);
-						spec_OSC_sin.hist.at(ih).Fill(reco_var, global_weight);
+						spec_central_value.hist.at(ih).Fill(reco_var,global_weight);
+						spec_osc_sinsq.hist.at(ih).Fill(reco_var, global_weight);
+						spec_osc_sin.hist.at(ih).Fill(reco_var, global_weight);
 					//	std::cout<<reco_var<<" "<<std::endl;
 					}
 				}
@@ -143,7 +143,7 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
 		} //end of entry loop
 	}//end of file loop
 
-	delete fWeights;
+	delete f_weights;
 
 	/***************************************************************
 	 *		Now some clean-up and Writing
@@ -158,18 +158,18 @@ SBNgenerate::SBNgenerate(std::string xmlname, neutrinoModel inModel ) : SBNconfi
  *		Some virtual functions for selection and histogram filling
  * ************************************************************/
 
-int SBNgenerate::writePrecomputedOscSpecs(std::string tag){
-	spec_OSC_sinsq.writeOut(tag+"_SINSQ_dm_"+nu_model.mass_tag);
-	spec_OSC_sin.writeOut(tag+"_SIN_dm_"+nu_model.mass_tag);
+int SBNgenerate::WritePrecomputedOscSpecs(std::string tag){
+	spec_osc_sinsq.WriteOut(tag+"_SINSQ_dm_"+nu_model.mass_tag);
+	spec_osc_sin.WriteOut(tag+"_SIN_dm_"+nu_model.mass_tag);
 
 	return 0;
 }
 
 
-bool SBNgenerate::eventSelection(int which_file){
+bool SBNgenerate::EventSelection(int which_file){
 	return true;
 }
 
-int SBNgenerate::fillHistograms(int file, int uni, double wei){
+int SBNgenerate::FillHistograms(int file, int uni, double wei){
 	return 0;
 }

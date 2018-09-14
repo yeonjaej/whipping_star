@@ -24,14 +24,14 @@ class SBNosc : public SBNspec{
 	protected:
 	public:
 	//this is the structure contains 3+N oscillation parameters (find in prob.h)
-	struct neutrinoModel workingModel;	
+	struct NeutrinoModel working_model;	
 	
 	// which_mode to oscillate in  (APP, DIS, etc..) 
 	int which_mode;
-	double mStepSize;	//has to be 0.04 for now
+	double mass_step_size;	//has to be 0.04 for now
 
 	SBNosc(std::string, std::string); //constructor
-	SBNosc(std::string, std::string, neutrinoModel); //constructor
+	SBNosc(std::string, std::string, NeutrinoModel); //constructor
 
 	//find all the frequencies! Needs to know if a frequency corresponds to 41 51 54..etc.. so thats the int
 	std::vector< std::pair <double, int>> mass_splittings;	
@@ -43,19 +43,19 @@ class SBNosc : public SBNspec{
 	std::vector<double> Oscillate(std::string, double);
 	//std::vector<double> OscillateWithAmp(double amp, double amp_sq);
 
-	int load_model(neutrinoModel);	
+	int LoadModel(NeutrinoModel);	
 	int calcMassSplittings();	
 
-	int precomputeSpectra(double dm);
+	int PrecomputeSpectra(double dm);
 
 
 	//Oscillation mode 
-	int setMode(int);
-	void setAppMode();
-	void setDisMode();
-	void setBothMode();
-	void setWierdMode();
-	void setDisEMode();
+	int SetMode(int);
+	void SetAppMode();
+	void SetDisMode();
+	void SetBothMode();
+	void SetWierdMode();
+	void SetDisEMode();
 
 
 };

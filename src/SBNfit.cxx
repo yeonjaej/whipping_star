@@ -3,7 +3,7 @@ using namespace sbn;
 
 
 
-SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, TMatrixD mat, int npar) : SBNchi(inBk, mat), sigOsc(inSg), num_params(npar) {
+SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, TMatrixD mat, int npar) : SBNchi(inBk, mat), signal_osc_spectrum(inSg), num_params(npar) {
 
 	for(int i =0; i< num_params; i++){
 		f_is_fixed.push_back(0);
@@ -21,7 +21,7 @@ SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, TMatrixD mat, int npar) : SBNchi(inBk
 }
 
 
-SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, int npar) : SBNchi(inBk), sigOsc(inSg), num_params(npar) {
+SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, int npar) : SBNchi(inBk), signal_osc_spectrum(inSg), num_params(npar) {
 
 
 	for(int i =0; i< num_params; i++){
@@ -39,12 +39,12 @@ SBNfit::SBNfit(SBNspec inBk, SBNspec inSg, int npar) : SBNchi(inBk), sigOsc(inSg
 	num_func_calls = 0;
 }
 
-int SBNfit::load_signal(SBNspec inSg){
-	sigOsc = inSg;
+int SBNfit::LoadSignal(SBNspec inSg){
+	signal_osc_spectrum = inSg;
 	return 0;
 }
 
-int SBNfit::initialize_norm(std::vector< std::pair< std::string, int > > vecIn  ){
+int SBNfit::InitializeNorm(std::vector< std::pair< std::string, int > > vecIn  ){
 	vec_scales = vecIn;
 
 	return 0;
@@ -52,17 +52,17 @@ int SBNfit::initialize_norm(std::vector< std::pair< std::string, int > > vecIn  
 
 double SBNfit::MinimizerCalcChi(const double * X){
 	num_func_calls++;
-	fOsc = sigOsc;
+	f_osc_spectrum = signal_osc_spectrum;
 
 	for(auto& v: vec_scales){
-		fOsc.Scale(v.first, X[v.second] );
+		f_osc_spectrum.Scale(v.first, X[v.second] );
 	}
 
-	fOsc.collapseVector();
+	f_osc_spectrum.CollapseVector();
 
-	lastChi =this->calcChi(&fOsc);
+	last_calculated_chi =this->CalcChi(&f_osc_spectrum);
 
-	return lastChi;
+	return last_calculated_chi;
 
 }
 
@@ -101,10 +101,10 @@ double SBNfit::Minimize(){
 }
 
 /****************************************************
- ***		Some initial setup things
+ ***		Some initial Setup things
  * *************************************************/
 
-int SBNfit::setMethod(std::string mode, std::string algo){
+int SBNfit::SetMethod(std::string mode, std::string algo){
 	f_minimizer_mode =mode; //"GSLSimAn"
 	f_minimizer_algo= algo;
 
@@ -113,13 +113,13 @@ return 0;
 }
 
 
-int SBNfit::setInitialValues(std::vector<double> inv){
+int SBNfit::SetInitialValues(std::vector<double> inv){
 	for(int i = 0; i< num_params; i++){
 		f_initial_values[i]=inv[i];
 	}
 	return 0;
 }
-int SBNfit::setInitialValues(double in){
+int SBNfit::SetInitialValues(double in){
 	for(int i = 0; i< num_params; i++){
 		f_initial_values[i]=in;
 	}
@@ -128,13 +128,13 @@ int SBNfit::setInitialValues(double in){
 
 
 
-int SBNfit::setUpperValues(std::vector<double>  inv){
+int SBNfit::SetUpperValues(std::vector<double>  inv){
 	for(int i = 0; i< num_params; i++){
 		f_upper_values[i]=inv[i];
 	}
 	return 0;
 }
-int SBNfit::setUpperValues(double in){
+int SBNfit::SetUpperValues(double in){
 	for(int i = 0; i< num_params; i++){
 		f_upper_values[i]=in;
 	}
@@ -143,26 +143,26 @@ int SBNfit::setUpperValues(double in){
 
 
 
-int SBNfit::setLowerValues(std::vector<double>  inv){
+int SBNfit::SetLowerValues(std::vector<double>  inv){
 	for(int i = 0; i< num_params; i++){
 		f_lower_values[i]=inv[i];
 	}
 	return 0;
 }
-int SBNfit::setLowerValues(double in){
+int SBNfit::SetLowerValues(double in){
 	for(int i = 0; i< num_params; i++){
 		f_lower_values[i]=in;
 	}
 	return 0;
 }
 
-int SBNfit::setStepSizes(std::vector<double>  inv){
+int SBNfit::SetStepSizes(std::vector<double>  inv){
 	for(int i = 0; i< num_params; i++){
 		f_step_sizes[i]=inv[i];
 	}
 	return 0;
 }
-int SBNfit::setStepSizes(double in){
+int SBNfit::SetStepSizes(double in){
 	for(int i = 0; i< num_params; i++){
 		f_step_sizes[i]=in;
 	}
@@ -171,13 +171,13 @@ int SBNfit::setStepSizes(double in){
 
 
 
-int SBNfit::setFixed(std::vector<int>  inv){
+int SBNfit::SetFixed(std::vector<int>  inv){
 	for(int i = 0; i< num_params; i++){
 		f_is_fixed[i]=inv[i];
 	}
 	return 0;
 }
-int SBNfit::setFixed(int in){
+int SBNfit::SetFixed(int in){
 	for(int i = 0; i< num_params; i++){
 		f_is_fixed[i]=in;
 	}
@@ -185,7 +185,7 @@ int SBNfit::setFixed(int in){
 }
 
 
-int SBNfit::setNames(std::vector<std::string> inv){
+int SBNfit::SetNames(std::vector<std::string> inv){
 	for(int i = 0; i< num_params; i++){
 		f_param_names[i]=inv[i];
 	}

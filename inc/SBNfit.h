@@ -39,10 +39,17 @@ class SBNfit : public SBNchi {
 	std::string f_minimizer_algo;
 
 
-	SBNspec fOsc;
+	SBNspec f_osc_spectrum;
 
 	public:
-	SBNspec sigOsc;
+	//using SBNchi::SBNchi;
+	SBNfit(SBNspec bk, SBNspec sk,int npa);
+	
+	SBNfit(SBNspec inBk, SBNspec inSg, TMatrixD mat, int npar);
+
+
+
+	SBNspec signal_osc_spectrum;
 
 	int num_params;
 	std::vector<std::pair<std::string, int>> vec_scales;
@@ -53,39 +60,34 @@ class SBNfit : public SBNchi {
 	
 	int num_func_calls;
 
-	//using SBNchi::SBNchi;
-	SBNfit(SBNspec bk, SBNspec sk,int npa);
 	
-	SBNfit(SBNspec inBk, SBNspec inSg, TMatrixD mat, int npar);
 
+	int LoadSignal(SBNspec);
 
-
-	int load_signal(SBNspec);
-
-	int initialize_norm(std::vector< std::pair<std::string, int>> );
+	int InitializeNorm(std::vector< std::pair<std::string, int>> );
 	virtual double MinimizerCalcChi(const double * X);
 	double Minimize();	
 
 	//ROOT::Math::Minimizer* min ;     
 
-	int setMethod(std::string, std::string);
+	int SetMethod(std::string, std::string);
 
-	int setInitialValues(std::vector<double>);
-	int setInitialValues(double);
+	int SetInitialValues(std::vector<double>);
+	int SetInitialValues(double);
 	
-	int setUpperValues(std::vector<double>);
-	int setUpperValues(double);
+	int SetUpperValues(std::vector<double>);
+	int SetUpperValues(double);
 
-	int setLowerValues(std::vector<double>);
-	int setLowerValues(double);
+	int SetLowerValues(std::vector<double>);
+	int SetLowerValues(double);
 	
-	int setStepSizes(std::vector<double>);
-	int setStepSizes(double);
+	int SetStepSizes(std::vector<double>);
+	int SetStepSizes(double);
 	
-	int setFixed(std::vector<int>);
-	int setFixed(int);
+	int SetFixed(std::vector<int>);
+	int SetFixed(int);
 	
-	int setNames(std::vector<std::string>);
+	int SetNames(std::vector<std::string>);
 
 };
 

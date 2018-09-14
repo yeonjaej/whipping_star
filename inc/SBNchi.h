@@ -30,14 +30,6 @@ namespace sbn{
 class SBNchi : public SBNconfig{
 
 	public:
-	//This is the background spectra that you are comparing too. Obviously can be any existing injected spectra either.
-	SBNspec bkgSpec;
-	bool stat_only;
-
-	//always contains the last chi^2 value calculated
-	double lastChi;
-	std::vector<std::vector<double>> lastChi_vec;
-
 
 	//Either initilize from a SBNspec (and use its .xml file)
 	SBNchi(SBNspec);
@@ -47,73 +39,87 @@ class SBNchi : public SBNconfig{
 	SBNchi(SBNspec,TMatrixT<double>);
 	//Initialise a stat_only one;
 	SBNchi(SBNspec, bool is_stat_only);
-
 	SBNchi(std::string);
+	
+
+	//This is the core spectra that you are comparing too. This is used to calculate covariance matrix and in a way is on the 'bottom' of the chi^2.
+	SBNspec core_spectrum;
+	bool is_stat_only;
+
+	//always contains the last chi^2 value calculated
+	double last_calculated_chi;
+	std::vector<std::vector<double>> vec_last_calculated_chi;
 
 
-	int reload_core_spec(SBNspec *bkgin);
 
-
-	TMatrixT<double> Msys;
-	TMatrixT<double> MfracCov;
-
-	//load up systematic covariabnce matrix from a rootfile, location in xml
-	TMatrixT<double> sys_fill_direct(std::string, std::string);
-	TMatrixT<double> sys_fill_direct();
-
+	TMatrixT<double> matrix_systematics;
+	TMatrixT<double> matrix_fractional_covariance;
 	TMatrixT<double> matrix_collapsed;
 
-	void fake_fill(TMatrixT <double>&  M);
-	void stats_fill(TMatrixT <double>&  M, std::vector<double> diag);
-
-	// These are the powerhouse of of the SBNchi, the ability to collapse any number of modes,detectors,channels and subchannels down to a physically observable subset
-	// layer 1 is the cheif bit, taking each detector and collapsing the subchannels
-	void collapse_layer1(TMatrixT <double> & M, TMatrixT <double> & Mc);
-	//layer 2 just loops layer_1 over all detectors in a given mode
-	void collapse_layer2(TMatrixT <double> & M, TMatrixT <double> & Mc);
-	//layer 3 just loops layer_2 over all modes we have setup
-	void collapse_layer3(TMatrixT <double> & M, TMatrixT <double> & Mc);
-
-	TMatrixT<double> * getCompressedMatrix();
-	int fillCollapsedCovarianceMatrix(TMatrixT<double>*);
-	int fillCollapsedCorrelationMatrix(TMatrixT<double>*);
-	int fillCollapsedFractionalMatrix(TMatrixT<double>*);
-
-	//Return chi^2 from eith a SBnspec (RECCOMENDED as it checks to make sure xml compatable)
-	//double calcChi(SBNspec sigSpec);
-	double calcChi(SBNspec *sigSpec);
-	// Or a vector
-	double calcChi(std::vector<double> );
-	//Or you are taking covariance from one, and prediciton from another
-	double calcChi(SBNspec *sigSpec, SBNspec *obsSpec);
-	//or a log ratio (miniboone esque)
-	double calcChiLog(SBNspec *sigSpec);
-
-	int printMatricies(std::string);
-
-	//Cholosky related
+	//Used in cholosky decompositions
 	bool cholosky_performed;
-	int performCholoskyDecomposition(SBNspec *specin);
-	TMatrixT<double> lower_trian;
-
-
-	TH1D samplePoisson_varyCore(SBNspec *specin, int num_MC);
-
-	SBNspec sampleCovariance(SBNspec *specin); 
-
-	TH1D samplePoisson_varyInput(SBNspec *specin, int num_MC);
-	TH1D samplePoisson_varyInput(SBNspec *specin, int num_MC, std::vector<double>*);
-	TH1D sampleCovariance_varyInput(SBNspec *specin, int num_MC);
-	TH1D sampleCovariance_varyInput(SBNspec *specin, int num_MC, std::vector<double>*);
-
-
+	TMatrixT<double> matrix_lower_triangular;
 
 	//Some reason eventually store the reuslt in vectors, I think there was memory issues.
-	std::vector<std::vector<double >> to_vector(TMatrixT <double> McI);
-	std::vector<std::vector<double >> vMcI;
-	std::vector<std::vector<double >> vMc;
+	std::vector<std::vector<double >> vec_matrix_inverted;
+	std::vector<std::vector<double >> vec_matrix_collapsed;
 
-	TH2D* getChiogram();
+
+
+
+	/*********************************** Member Functions ********************************/	
+
+
+	int ReloadCoreSpectrum(SBNspec *bkgin);
+
+	//load up systematic covariabnce matrix from a rootfile, location in xml
+	//These are pretty obsolete.
+	TMatrixT<double> FillSystematicsFromXML(std::string, std::string);
+	TMatrixT<double> FillSystematicsFromXML();
+
+	void FakeFillMatrix(TMatrixT <double>&  M);
+	void FillStatsMatrix(TMatrixT <double>&  M, std::vector<double> diag);
+
+	// These are the powerhouse of of the SBNchi, the ability to collapse any number of modes,detectors,channels and subchannels down to a physically observable subSet
+	// layer 1 is the cheif bit, taking each detector and collapsing the subchannels
+	void CollapseSubchannels(TMatrixT <double> & M, TMatrixT <double> & Mc);
+	//layer 2 just loops layer_1 over all detectors in a given mode
+	void CollapseDetectors(TMatrixT <double> & M, TMatrixT <double> & Mc);
+	//layer 3 just loops layer_2 over all modes we have Setup
+	void CollapseModes(TMatrixT <double> & M, TMatrixT <double> & Mc);
+
+	TMatrixT<double> * GetCollapsedMatrix();
+	int FillCollapsedCovarianceMatrix(TMatrixT<double>*);
+	int FillCollapsedCorrelationMatrix(TMatrixT<double>*);
+	int FillCollapsedFractionalMatrix(TMatrixT<double>*);
+
+	//Return chi^2 from eith a SBnspec (RECCOMENDED as it checks to make sure xml compatable)
+	//double CalcChi(SBNspec sigSpec);
+	double CalcChi(SBNspec *sigSpec);
+	// Or a vector
+	double CalcChi(std::vector<double> );
+	//Or you are taking covariance from one, and prediciton from another
+	double CalcChi(SBNspec *sigSpec, SBNspec *obsSpec);
+	//or a log ratio (miniboone esque)
+	double CalcChiLog(SBNspec *sigSpec);
+
+
+	std::vector<std::vector<double >> TMatrixDToVector(TMatrixT <double> McI);
+	
+
+	//Cholosky related
+	int PerformCholoskyDecomposition(SBNspec *specin);
+
+	SBNspec SampleCovariance(SBNspec *specin); 
+	TH1D SamplePoissonVaryCore(SBNspec *specin, int num_MC);
+	TH1D SamplePoissonVaryInput(SBNspec *specin, int num_MC);
+	TH1D SamplePoissonVaryInput(SBNspec *specin, int num_MC, std::vector<double>*);
+	TH1D SampleCovarianceVaryInput(SBNspec *specin, int num_MC);
+	TH1D SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double>*);
+
+		//some plotting things
+	TH2D* GetChiogram();
+	int PrintMatricies(std::string);
 
 };
 

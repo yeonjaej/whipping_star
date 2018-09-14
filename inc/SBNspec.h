@@ -27,7 +27,7 @@
 
 
 template <typename T> 
-std::vector<size_t> sort_indexes(const std::vector<T> &v) { 
+std::vector<size_t> SortIndexes(const std::vector<T> &v) { 
 
 	// initialize original index locations 
 	std::vector<size_t> idx(v.size()); 
@@ -49,17 +49,10 @@ namespace sbn{
 	class SBNspec : public SBNconfig{
 
 		public:
-			// this vector of hists contains all spectra used.
-			// The order of filling is the same as the order defined in xml file!
-			std::vector<TH1D > hist;
-			std::map<std::string, int> map_hist;
-
-			//This is the full concatanated vector (in xml order)	
-			std::vector<double > fullVec;
-			//This is the compessed vector, collapsing all subchannels down to a single channel
-			std::vector<double > compVec;
 
 
+
+			SBNspec() {};
 			SBNspec(std::string); //Load in config file EMPTY hists
 			SBNspec(std::string, int); //Load in config file, create EMPTY hists, with optional numbering (e.g for multisims!) 
 			SBNspec(std::string, int, bool); //Load in config file, create EMPTY hists, with optional numbering (e.g for multisims!) 
@@ -67,20 +60,40 @@ namespace sbn{
 			SBNspec(std::string, std::string);
 			SBNspec(std::string, std::string, bool);
 
-
 			SBNspec(std::vector<double> input_full_vec, std::string whichxml);
 			SBNspec(std::vector<double> input_full_vec, std::string whichxml, bool isverbose);
 
 
-			SBNspec() {};
 
-			int randomScale(); //mainly a debugging function, just randomly scales each hist by 0-2
-			int poissonScale(); //Scales every histogram by a poissonian random number
-			int poissonScale(TRandom3*); //Scales every histogram by a poissonian random number
+			// this vector of hists contains all spectra used.
+			// The order of filling is the same as the order defined in xml file!
+			std::vector<TH1D > hist;
+			std::map<std::string, int> map_hist;
+
+			//This is the full concatanated vector (in xml order)	
+			std::vector<double > full_vector;
+			//This is the compessed vector, collapsing all subchannels down to a single channel
+			std::vector<double > collapsed_vector;
 
 
-			int setAsGaussian(double mean, double sigma, int n);
-			int setAsFlat(double val);
+
+			//need to store a history of the scales for oscillation purposes.  FIX THIS
+			std::string scale_hist_name;
+			double scale_hist_val;
+			bool has_been_scaled;
+
+
+
+			/*************************** Member Functions ****************/
+
+
+			int ScaleRandom(); //mainly a debugging function, just randomly scales each hist by 0-2
+			int ScalePoisson(); //Scales every histogram by a poissonian random number
+			int ScalePoisson(TRandom3*); //Scales every histogram by a poissonian random number
+
+
+			int SetAsGaussian(double mean, double sigma, int n);
+			int SetAsFlat(double val);
 
 			//Scales all vectors in hist by double
 			int ScaleAll(double);
@@ -92,38 +105,35 @@ namespace sbn{
 			int NormAll(double);
 			int Norm(std::string name, double val);
 
-			//need to store a history of the scales for oscillation purposes.  FIX THIS
-			std::string scale_hist_name;
-			double scale_hist_val;
-			bool has_been_scaled;
-
 			int Clear();
 
-			//Recaculates the fullVec and compVec's
-			int calcFullVector();
-			int collapseVector();
-
-			double getTotalEvents();
-
-			int getGlobalBinNumber(double invar, int which_hist);
-			int getLocalBinNumber(double invar, int which_hist);
-
-			int getHistNumber(int f);
-
-
-			//Just some debugging/checking
-			int printFullVec();
-			int printCompVec();
-			//writeOut saves all to an externam rootfile, each individual subchannel and a stacked channel plot.
-			int writeOut(std::string);
-			int compareSBNspecs(SBNspec * compsec, std::string tag);
-			//Addes two SBNspec together. must have same xml!
+			//Addes two SBNspec toGether. must have same xml!
 			int Add(SBNspec*);
 
 			//Addes histin to the mode_det_channel_subchannel 
 			int Add(std::string which_hist, TH1 * histin);
 
-	};
+
+			//Recaculates the full_vector and collapsed_vector's
+			int CalcFullVector();
+			int CollapseVector();
+
+			double GetTotalEvents();
+
+			int GetGlobalBinNumber(double invar, int which_hist);
+			int GetLocalBinNumber(double invar, int which_hist);
+
+			int GetHistNumber(int f);
+
+
+			//Just some debugging/checking
+			int PrintFullVector();
+			int PrintCollapsedVector();
+			//WriteOut saves all to an externam rootfile, each individual subchannel and a stacked channel plot.
+			int WriteOut(std::string);
+			
+			int CompareSBNspecs(SBNspec * compsec, std::string tag);
+			};
 
 
 
