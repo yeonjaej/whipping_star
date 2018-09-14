@@ -138,7 +138,7 @@ int SBNchi::ReloadCoreSpectrum(SBNspec *bkgin){
 	if(Mstat.IsSymmetric()){
 		if(is_verbose)std::cout<<otag<<"Stat matrix is symmetric (it is just diagonal core)"<<std::endl;
 	}else{
-		std::cout<<otag<<"ERROR: SBNchi::formCovarianceMatrix, stats  is not symmetric!"<<std::endl;
+		std::cout<<otag<<"ERROR: SBNchi::FormCovarianceMatrix, stats  is not symmetric!"<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 

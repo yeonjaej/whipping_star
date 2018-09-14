@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	SBNcovariance example_covar(xml);
 
 	//Form the covariance matrix from loaded weights and MC events
-	example_covar.formCovarianceMatrix(tag);
+	example_covar.FormCovarianceMatrix(tag);
 
 	if(print_mode){
 		//and make some plots of the resulting things
