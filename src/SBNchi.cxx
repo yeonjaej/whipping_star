@@ -887,64 +887,73 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC){
 }
 
 TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double> * chival){
-  if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
+	if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
 
-  int n_t = specin->full_vector.size();
-  std::vector<int> nlower(chival->size(),0);
-
-
-  TVectorT<double> u(n_t);
-  for(int i=0; i<n_t; i++){
-    u(i) = specin->full_vector.at(i);
-  }
-
-  TRandom3 * rangen = new TRandom3(0);
+	int n_t = specin->full_vector.size();
+	std::vector<int> nlower(chival->size(),0);
 
 
-  TH1D ans("","",150,0,150);
-  ans.GetXaxis()->SetCanExtend(kTRUE);
-  is_verbose = false;
+	TVectorT<double> u(n_t);
+	for(int i=0; i<n_t; i++){
+		u(i) = specin->full_vector.at(i);
+	}
 
-  // #pragma acc parallel loop
-  for(int i=0; i < num_MC;i++){
+	TRandom3 * rangen = new TRandom3(0);
 
-    TVectorT<double> gaus_sample(n_t);
-    TVectorT<double> multi_sample(n_t);
-    for(int a=0; a<n_t; a++){
-      // gaus_sample(a) = rangen->Gaus(0,1);	
-      gaus_sample(a) = 1.0;
-    }
-    
-    multi_sample = u + matrix_lower_triangular*gaus_sample;
-    
-    std::vector<double> sampled_fullvector(n_t,0.0);
-    
-    // #pragma acc parallel loop
-    for(int j=0; j<n_t; j++){
-      sampled_fullvector.at(j) = multi_sample(j);
-    }
-    
-    //SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
-    
-    std::vector<double> collapsed(num_bins_total_compressed, 0.0);
-    this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
-    
-    double thischi = this->CalcChi(&collapsed);
-    ans.Fill(thischi);
-    
+
+	TH1D ans("","",150,0,150);
+	ans.GetXaxis()->SetCanExtend(kTRUE);
+	is_verbose = false;
+
+	std::vector<double> vec_chis (num_MC, 0.0);
+	
+#pragma acc parallel loop
+	for(int i=0; i < num_MC;i++){
+
+
+		TVectorT<double> gaus_sample(n_t);
+		TVectorT<double> multi_sample(n_t);
+		for(int a=0; a<n_t; a++){
+		  // gaus_sample(a) = rangen->Gaus(0,1);	
+		  gaus_sample(a) = 1.0;
+		}
+
+		multi_sample = u + matrix_lower_triangular*gaus_sample;
+
+
+		std::vector<double> sampled_fullvector(n_t,0.0);
+		// #pragma acc parallel loop
+		for(int j=0; j<n_t; j++){
+			sampled_fullvector[j] = multi_sample(j);
+		}
+		
+ 		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
+
+		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
+		this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
+		
+		double thischi = this->CalcChi(&collapsed);
+		vec_chis[i]=thischi;
+
+		for(int j=0; j< chival->size(); j++){
+			if(thischi>=chival->at(j)) nlower.at(j)++;
+		}
 #ifndef _OPENACC
-    if(i%1000==0) std::cout<<"SBNchi::SampleCovarianceVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
+		if(i%1000==0) std::cout<<"SBNchi::SampleCovarianceVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 #endif
-  }
+	}
+	is_verbose = true;
 
-  is_verbose = true;
+	
+	for(int i=0; i<num_MC; i++){
+		ans.Fill(vec_chis[i]);
+	}
 
-  for(int n =0; n< nlower.size(); n++){
-    chival->at(n) = nlower.at(n)/(double)num_MC;
-  }
+	for(int n =0; n< nlower.size(); n++){
+		chival->at(n) = nlower.at(n)/(double)num_MC;
+	}
 
-  std::cout << "bye!" << std::endl;
-  return ans;
+	return ans;
 }
 
 int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vector<double> *collapsed_vector){
@@ -952,10 +961,11 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 	for(int im = 0; im < num_modes; im++){
 		for(int id =0; id < num_detectors; id++){
 			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+			int out_edge = edge;
 			int tmp_chan = 0;
 			for(int ic = 0; ic < num_channels; ic++){
 				int corner=edge;
-					
+						
 				for(int j=0; j< num_bins[ic]; j++){
 
 					double tempval=0;
@@ -965,10 +975,11 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
 					//we can size this vector beforehand and get rid of all push_back()
-					int collapsed_index = j+corner+tmp_chan;
-					(*collapsed_vector).at(collapsed_index) = tempval;
+
+					int collapsed_index = tmp_chan+out_edge;
+					(*collapsed_vector)[collapsed_index] = tempval;
+					tmp_chan++;
 				}
-				tmp_chan+=num_bins[ic];
 			}
 		}
 	}
