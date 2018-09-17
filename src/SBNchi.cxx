@@ -887,6 +887,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	is_verbose = false;
 	for(int i=0; i < num_MC;i++){
 
+
 		TVectorT<double> gaus_sample(n_t);
 		TVectorT<double> multi_sample(n_t);
 		for(int a=0; a<n_t; a++){
@@ -922,6 +923,36 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
 
 	return ans;
+}
+
+int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vector<double> *collapsed_vector){
+	
+	for(int im = 0; im < num_modes; im++){
+		for(int id =0; id < num_detectors; id++){
+			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+			int tmp_chan = 0;
+			for(int ic = 0; ic < num_channels; ic++){
+				int corner=edge;
+					
+				for(int j=0; j< num_bins[ic]; j++){
+
+					double tempval=0;
+
+					for(int sc = 0; sc < num_subchannels[ic]; sc++){
+						tempval += (*full_vector)[j+sc*num_bins[ic]+corner];
+						edge +=1;	//when your done with a channel, add on every bin you just summed
+					}
+					//we can size this vector beforehand and get rid of all push_back()
+					int collapsed_index = j+corner+tmp_chan;
+					(*collapsed_vector)[collapsed_index] = tempval;
+				}
+				tmp_chan+=num_bins[ic];
+			}
+		}
+	}
+
+
+	return 0;
 }
 
 
@@ -981,6 +1012,7 @@ TH1D SBNchi::SamplePoissonVaryInput(SBNspec *specin, int num_MC, std::vector<dou
 	//So save the core one that we will sample for
 	ans.GetXaxis()->SetCanExtend(kTRUE);
 	is_verbose = false;
+
 	for(int i=0; i < num_MC;i++){
 
 		SBNspec tmp = *specin;

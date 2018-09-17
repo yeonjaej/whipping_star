@@ -117,6 +117,8 @@ class SBNchi : public SBNconfig{
 	TH1D SampleCovarianceVaryInput(SBNspec *specin, int num_MC);
 	TH1D SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double>*);
 
+	intt CollapseVectorStandAlone(std::vector<double> * full_vector, std::vector<double> *collapsed_vector);
+
 		//some plotting things
 	TH2D* GetChiogram();
 	int PrintMatricies(std::string);

@@ -294,6 +294,7 @@ int SBNspec::CollapseVector(){
 						tempval += full_vector.at(j+sc*num_bins.at(ic)+corner);
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
+					//we can size this vector beforehand and get rid of all push_back()
 					collapsed_vector.push_back(tempval);
 				}
 			}
