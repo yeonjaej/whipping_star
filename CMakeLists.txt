@@ -32,7 +32,10 @@ FIND_PROGRAM(GSL_CONFIG gsl-config)
 EXEC_PROGRAM(${GSL_CONFIG} ARGS --cflags OUTPUT_VARIABLE GSL_CXX_FLAGS)
 EXEC_PROGRAM(${GSL_CONFIG} ARGS --libs OUTPUT_VARIABLE GSL_LIBS)
 ##set (CMAKE_CXX_FLAGS "${ROOT_CXX_FLAGS} ${GSL_LIBS} ${GSL_CXX_FLAGS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations ")
-set (CMAKE_CXX_FLAGS "-ta=multicore -Minfo=accel -acc -w -gopt -noswitcherror ${ROOT_CXX_FLAGS} ${GSL_LIBS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations ")
+## this is host parallelize
+##set (CMAKE_CXX_FLAGS "-ta=multicore -Minfo=accel -acc -w -gopt -noswitcherror ${ROOT_CXX_FLAGS} ${GSL_LIBS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations ")
+## this is device prallalize
+set (CMAKE_CXX_FLAGS "-ta=tesla -Minfo=accel -acc -w -gopt -noswitcherror ${ROOT_CXX_FLAGS} ${GSL_LIBS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations ")
 
 message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 

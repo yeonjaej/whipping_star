@@ -104,6 +104,7 @@ class SBNchi : public SBNconfig{
 	double CalcChiLog(SBNspec *sigSpec);
 
 	double CalcChi(std::vector<double> * sigVec);
+	double CalcChi(double* sigVec);
 
 	std::vector<std::vector<double >> TMatrixDToVector(TMatrixT <double> McI);
 	
@@ -119,6 +120,7 @@ class SBNchi : public SBNconfig{
 	TH1D SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double>*);
 
 	int CollapseVectorStandAlone(std::vector<double> * full_vector, std::vector<double> *collapsed_vector);
+	int CollapseVectorStandAlone(double* full_vector, double* collapsed_vector);
 
 		//some plotting things
 	TH2D* GetChiogram();

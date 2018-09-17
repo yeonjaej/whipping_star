@@ -292,21 +292,37 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 double SBNchi::CalcChi(std::vector<double> * sigVec){
   double tchi = 0;
 
+#ifndef _OPENACC
   if(sigVec->size() != num_bins_total_compressed ){
     std::cerr<<"ERROR: SBNchi::CalcChi(std::vector<double>) ~ your inputed vector does not have correct dimensions"<<std::endl;
     std::cerr<<"sigVec.size(): "<<sigVec->size()<<" num_bins_total_compressed: "<<num_bins_total_compressed<<std::endl;
     exit(EXIT_FAILURE);
   }
-
+#endif
+  
   for(int i =0; i<num_bins_total_compressed; i++){
     for(int j =0; j<num_bins_total_compressed; j++){
       tchi += (core_spectrum.collapsed_vector[i]-(*sigVec)[i])*vec_matrix_inverted[i][j]*(core_spectrum.collapsed_vector[j]-(*sigVec)[j] );
     }
   }
 
-  last_calculated_chi = tchi;
+  //last_calculated_chi = tchi;
   return tchi;
 }
+
+double SBNchi::CalcChi(double* sigVec){
+  double tchi = 0;
+
+  for(int i =0; i<num_bins_total_compressed; i++){
+    for(int j =0; j<num_bins_total_compressed; j++){
+      tchi += (core_spectrum.collapsed_vector[i]-(sigVec)[i])*vec_matrix_inverted[i][j]*(core_spectrum.collapsed_vector[j]-(sigVec)[j] );
+    }
+  }
+
+  //last_calculated_chi = tchi;
+  return tchi;
+}
+
 
 
 //same as above but passing in a vector instead of whole SBNspec
@@ -893,11 +909,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	std::vector<int> nlower(chival->size(),0);
 
 
-	TVectorT<double> u(n_t);
-	for(int i=0; i<n_t; i++){
-		u(i) = specin->full_vector.at(i);
-	}
-
 	TRandom3 * rangen = new TRandom3(0);
 
 
@@ -906,33 +917,42 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	is_verbose = false;
 
 	std::vector<double> vec_chis (num_MC, 0.0);
+	std::vector < double > gaus_sample_v(n_t), sampled_fullvector_v(n_t);
+	std::vector<double> collapsed_v(num_bins_total_compressed, 0.0);
 	
-#pragma acc parallel loop
+	// double* gaus_sample = gaus_sample_v.data();
+	// double* sampled_fullvector = sampled_fullvector_v.data();
+	// double* collapsed = collapsed_v.data();
+	
+	// double* gaus_sample = new double[n_t];
+	// double* sampled_fullvector = new double[n_t];
+	// double* collapsed = new double[num_bins_total_compressed];
+
+	double gaus_sample[81];
+	double sampled_fullvector[81];
+	double collapsed[56];
+
+#pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
 	for(int i=0; i < num_MC;i++){
+	  
+                for(int a=0; a<n_t; a++){
+                      //gaus_sample[a] = rangen->Gaus(0,1);
+                      gaus_sample[a] = 1.0;
+                }
+                for(int k = 0; k < n_t; k++){
+                        sampled_fullvector[k] = specin->full_vector.at(k);
+                        for(int j = 0; j < n_t; j++){
+                                sampled_fullvector[k] += matrix_lower_triangular[k][j] * gaus_sample[j];
+                        }
+                }
 
 
-		TVectorT<double> gaus_sample(n_t);
-		TVectorT<double> multi_sample(n_t);
-		for(int a=0; a<n_t; a++){
-		  // gaus_sample(a) = rangen->Gaus(0,1);	
-		  gaus_sample(a) = 1.0;
-		}
-
-		multi_sample = u + matrix_lower_triangular*gaus_sample;
-
-
-		std::vector<double> sampled_fullvector(n_t,0.0);
-		// #pragma acc parallel loop
-		for(int j=0; j<n_t; j++){
-			sampled_fullvector[j] = multi_sample(j);
-		}
-		
  		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
 
-		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
-		this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
+		this->CollapseVectorStandAlone(sampled_fullvector, collapsed); //this line important isnt it!
 		
-		double thischi = this->CalcChi(&collapsed);
+		double thischi = this->CalcChi(collapsed);
+
 		vec_chis[i]=thischi;
 
 		for(int j=0; j< chival->size(); j++){
@@ -952,6 +972,10 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	for(int n =0; n< nlower.size(); n++){
 		chival->at(n) = nlower.at(n)/(double)num_MC;
 	}
+
+	// delete[] gaus_sample;
+	// delete[] sampled_fullvector;
+	// delete[] collapsed;
 
 	return ans;
 }
@@ -978,6 +1002,38 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 
 					int collapsed_index = tmp_chan+out_edge;
 					(*collapsed_vector)[collapsed_index] = tempval;
+					tmp_chan++;
+				}
+			}
+		}
+	}
+
+
+	return 0;
+}
+
+int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
+	
+	for(int im = 0; im < num_modes; im++){
+		for(int id =0; id < num_detectors; id++){
+			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+			int out_edge = edge;
+			int tmp_chan = 0;
+			for(int ic = 0; ic < num_channels; ic++){
+				int corner=edge;
+						
+				for(int j=0; j< num_bins[ic]; j++){
+
+					double tempval=0;
+
+					for(int sc = 0; sc < num_subchannels[ic]; sc++){
+						tempval += (full_vector)[j+sc*num_bins[ic]+corner];
+						edge +=1;	//when your done with a channel, add on every bin you just summed
+					}
+					//we can size this vector beforehand and get rid of all push_back()
+
+					int collapsed_index = tmp_chan+out_edge;
+					(collapsed_vector)[collapsed_index] = tempval;
 					tmp_chan++;
 				}
 			}
