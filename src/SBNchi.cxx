@@ -289,6 +289,25 @@ double SBNchi::CalcChi(SBNspec *sigSpec){
 	return tchi;
 }
 
+double SBNchi::CalcChi(std::vector<double> * sigVec){
+	double tchi = 0;
+
+	if(sigVec->size() != num_bins_total_compressed ){
+		std::cerr<<"ERROR: SBNchi::CalcChi(std::vector<double>) ~ your inputed vector does not have correct dimensions"<<std::endl;
+		std::cerr<<"sigVec.size(): "<<sigVec->size()<<" num_bins_total_compressed: "<<num_bins_total_compressed<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	for(int i =0; i<num_bins_total_compressed; i++){
+		for(int j =0; j<num_bins_total_compressed; j++){
+			tchi += (core_spectrum.collapsed_vector[i]-(*sigVec)[i])*vec_matrix_inverted[i][j]*(core_spectrum.collapsed_vector[j]-(*sigVec)[j] );
+		}
+	}
+
+	last_calculated_chi = tchi;
+	return tchi;
+}
+
 
 //same as above but passing in a vector instead of whole SBNspec
 double SBNchi::CalcChi(std::vector<double> sigVec){
@@ -898,13 +917,15 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
 		std::vector<double> sampled_fullvector(n_t,0.0);
 		for(int j=0; j<n_t; j++){
-			sampled_fullvector.at(j) = multi_sample(j);
+			sampled_fullvector[j] = multi_sample(j);
 		}
-		SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
+		
+ 		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
 
-		sampled_spectra.CollapseVector(); //this line important isnt it!
+		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
+		this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
 
-		double thischi = this->CalcChi(&sampled_spectra);
+		double thischi = this->CalcChi(&collapsed);
 		ans.Fill(thischi);
 
 		for(int j=0; j< chival->size(); j++){

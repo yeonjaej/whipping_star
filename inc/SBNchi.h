@@ -103,6 +103,7 @@ class SBNchi : public SBNconfig{
 	//or a log ratio (miniboone esque)
 	double CalcChiLog(SBNspec *sigSpec);
 
+	double CalcChi(std::vector<double> * sigVec);
 
 	std::vector<std::vector<double >> TMatrixDToVector(TMatrixT <double> McI);
 	
