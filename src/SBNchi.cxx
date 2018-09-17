@@ -906,7 +906,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	is_verbose = false;
 
 	std::vector<double> vec_chis (num_MC, 0.0);
-
+	
 	for(int i=0; i < num_MC;i++){
 
 
@@ -917,6 +917,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 		}
 
 		multi_sample = u + matrix_lower_triangular*gaus_sample;
+
 
 		std::vector<double> sampled_fullvector(n_t,0.0);
 		for(int j=0; j<n_t; j++){
@@ -935,8 +936,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 			if(thischi>=chival->at(j)) nlower.at(j)++;
 		}
 
-
-
 		if(i%1000==0) std::cout<<"SBNchi::SampleCovarianceVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	is_verbose = true;
@@ -950,7 +949,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 		chival->at(n) = nlower.at(n)/(double)num_MC;
 	}
 
-
 	return ans;
 }
 
@@ -959,10 +957,11 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 	for(int im = 0; im < num_modes; im++){
 		for(int id =0; id < num_detectors; id++){
 			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+			int out_edge = edge;
 			int tmp_chan = 0;
 			for(int ic = 0; ic < num_channels; ic++){
 				int corner=edge;
-					
+						
 				for(int j=0; j< num_bins[ic]; j++){
 
 					double tempval=0;
@@ -972,10 +971,10 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
 					//we can size this vector beforehand and get rid of all push_back()
-					int collapsed_index = j+corner+tmp_chan;
+					int collapsed_index = tmp_chan+out_edge;
 					(*collapsed_vector)[collapsed_index] = tempval;
+					tmp_chan++;
 				}
-				tmp_chan+=num_bins[ic];
 			}
 		}
 	}
