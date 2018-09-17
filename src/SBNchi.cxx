@@ -909,21 +909,17 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	
 	for(int i=0; i < num_MC;i++){
 
+		std::vector < double > gaus_sample(n_t), sampled_fullvector(n_t);
+                for(int a=0; a<n_t; a++){
+                        gaus_sample[a] = rangen->Gaus(0,1);
+                }
+                for(int i = 0; i < n_t; i++){
+                        sampled_fullvector[i] = u(0);
+                        for(int j = 0; j < n_t; j++){
+                                sampled_fullvector[i] += matrix_lower_triangle[i][j] * gaus_sample[j];
+                        }
+                }
 
-		TVectorT<double> gaus_sample(n_t);
-		TVectorT<double> multi_sample(n_t);
-		for(int a=0; a<n_t; a++){
-			gaus_sample(a) = rangen->Gaus(0,1);	
-		}
-
-		multi_sample = u + matrix_lower_triangular*gaus_sample;
-
-
-		std::vector<double> sampled_fullvector(n_t,0.0);
-		for(int j=0; j<n_t; j++){
-			sampled_fullvector[j] = multi_sample(j);
-		}
-		
  		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
 
 		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
