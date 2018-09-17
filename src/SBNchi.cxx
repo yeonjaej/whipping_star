@@ -916,7 +916,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
                 for(int i = 0; i < n_t; i++){
                         sampled_fullvector[i] = u(0);
                         for(int j = 0; j < n_t; j++){
-                                sampled_fullvector[i] += matrix_lower_triangle[i][j] * gaus_sample[j];
+                                sampled_fullvector[i] += matrix_lower_triangular[i][j] * gaus_sample[j];
                         }
                 }
 
