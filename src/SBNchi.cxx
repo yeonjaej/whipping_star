@@ -892,8 +892,16 @@ int SBNchi::PerformCholoskyDecomposition(SBNspec *specin){
   matrix_lower_triangular = upper_trian;
   matrix_lower_triangular.T();
 
-  cholosky_performed = true;	
-  return 0;
+
+	vec_matrix_lower_triangular.resize(n_t, std::vector<double>(n_t));
+	for(int i=0; i< n_t; i++){
+	for(int j=0; j< n_t; j++){
+		vec_matrix_lower_triangular[i][j] = matrix_lower_triangular[i][j];
+	}
+	}
+
+	cholosky_performed = true;	
+	return 0;
 }
 
 
@@ -932,7 +940,10 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	double sampled_fullvector[81];
 	double collapsed[56];
 
-#pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
+	// this is cpu
+	// #pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
+	
+#pragma acc parallel loop private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
 	for(int i=0; i < num_MC;i++){
 	  
                 for(int a=0; a<n_t; a++){
@@ -942,12 +953,9 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
                 for(int k = 0; k < n_t; k++){
                         sampled_fullvector[k] = specin->full_vector.at(k);
                         for(int j = 0; j < n_t; j++){
-                                sampled_fullvector[k] += matrix_lower_triangular[k][j] * gaus_sample[j];
+                                sampled_fullvector[k] += vec_matrix_lower_triangular[k][j] * gaus_sample[j];
                         }
                 }
-
-
- 		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
 
 		this->CollapseVectorStandAlone(sampled_fullvector, collapsed); //this line important isnt it!
 		
