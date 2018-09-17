@@ -876,6 +876,13 @@ int SBNchi::PerformCholoskyDecomposition(SBNspec *specin){
 	matrix_lower_triangular = upper_trian;
 	matrix_lower_triangular.T();
 
+	vec_matrix_lower_triangular.resize(n_t, std::vector<double>(n_t));
+	for(int i=0; i< n_t; i++){
+	for(int j=0; j< n_t; j++){
+		vec_matrix_lower_triangular[i][j] = matrix_lower_triangular[i][j];
+	}
+	}
+
 	cholosky_performed = true;	
 	return 0;
 }
@@ -909,17 +916,19 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	
 	for(int i=0; i < num_MC;i++){
 
-		std::vector < double > gaus_sample(n_t), sampled_fullvector(n_t);
+		std::vector < double > gaus_sample(n_t,0.0), sampled_fullvector(n_t,0.0);
                 for(int a=0; a<n_t; a++){
                         gaus_sample[a] = rangen->Gaus(0,1);
                 }
+
                 for(int i = 0; i < n_t; i++){
                         sampled_fullvector[i] = u(0);
                         for(int j = 0; j < n_t; j++){
-                                sampled_fullvector[i] += matrix_lower_triangular[i][j] * gaus_sample[j];
+                                sampled_fullvector[i] += vec_matrix_lower_triangular[i][j] * gaus_sample[j];
                         }
                 }
-
+	
+	
  		//SBNspec sampled_spectra(sampled_fullvector, specin->xmlname ,false);
 
 		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
