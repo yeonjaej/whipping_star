@@ -904,6 +904,9 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	TH1D ans("","",150,0,150);
 	ans.GetXaxis()->SetCanExtend(kTRUE);
 	is_verbose = false;
+
+	std::vector<double> vec_chis (num_MC, 0.0);
+
 	for(int i=0; i < num_MC;i++){
 
 
@@ -926,7 +929,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 		this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
 
 		double thischi = this->CalcChi(&collapsed);
-		ans.Fill(thischi);
+		vec_chis[i]=thischi;
 
 		for(int j=0; j< chival->size(); j++){
 			if(thischi>=chival->at(j)) nlower.at(j)++;
@@ -937,6 +940,11 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 		if(i%1000==0) std::cout<<"SBNchi::SampleCovarianceVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
 	}
 	is_verbose = true;
+
+	
+	for(int i=0; i<num_MC; i++){
+		ans.Fill(vec_chis[i]);
+	}
 
 	for(int n =0; n< nlower.size(); n++){
 		chival->at(n) = nlower.at(n)/(double)num_MC;
