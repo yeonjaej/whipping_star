@@ -106,6 +106,8 @@ class SBNchi : public SBNconfig{
 
 	double CalcChi(std::vector<double> * sigVec);
 
+	double CalcChi(double ** inv, double *, double *);
+
 	std::vector<std::vector<double >> TMatrixDToVector(TMatrixT <double> McI);
 	
 

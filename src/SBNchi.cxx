@@ -308,6 +308,19 @@ double SBNchi::CalcChi(std::vector<double> * sigVec){
 	return tchi;
 }
 
+double SBNchi::CalcChi(double **invert_matrix, double* core, double *sig){
+	double tchi = 0;
+
+	for(int i =0; i<num_bins_total_compressed; i++){
+		for(int j =0; j<num_bins_total_compressed; j++){
+			tchi += (core[i]-sig[i])*invert_matrix[i][j]*(core[j]-sig[j] );
+		}
+	}
+
+	return tchi;
+}
+
+
 
 //same as above but passing in a vector instead of whole SBNspec
 double SBNchi::CalcChi(std::vector<double> sigVec){
@@ -900,6 +913,40 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	std::vector<int> nlower(chival->size(),0);
 
 
+	double ** a_vec_matrix_lower_triangular;
+	a_vec_matrix_lower_triangular = (double**)malloc(num_bins_total_compressed);
+	for(int i=0; i< num_bins_total_compressed; i++){
+		a_vec_matrix_lower_triangular[i] = (double*)malloc(num_bins_total_compressed);
+	}
+
+	double ** a_vec_matrix_inverted;
+	a_vec_matrix_inverted = (double**)malloc(num_bins_total_compressed);
+	for(int i=0; i< num_bins_total_compressed; i++){
+	for(int j=0; j< num_bins_total_compressed; j++){
+		a_vec_matrix_inverted[i] = (double*)malloc(num_bins_total_compressed);
+	}}
+
+	for(int i=0; i< num_bins_total_compressed; i++){
+	for(int j=0; j< num_bins_total_compressed; j++){
+		a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
+		a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
+	}}
+
+
+	double *a_specin;
+	a_specin = (double*)malloc(n_t);
+	for(int i=0; i< n_t; i++){
+		a_specin[i] = specin->full_vector[i]  ;
+	}
+
+
+	double *a_corein;
+	a_corein = (double*)malloc(num_bins_total_compressed);
+	for(int i=0; i< num_bins_total_compressed; i++){
+		a_corein[i] = core_spectrum.collapsed_vector[i];
+	}
+
+
 	TVectorT<double> u(n_t);
 	for(int i=0; i<n_t; i++){
 		u(i) = specin->full_vector.at(i);
@@ -924,7 +971,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
                 for(int i = 0; i < n_t; i++){
                         sampled_fullvector[i] = u(0);
                         for(int j = 0; j < n_t; j++){
-                                sampled_fullvector[i] += vec_matrix_lower_triangular[i][j] * gaus_sample[j];
+                                sampled_fullvector[i] += a_vec_matrix_lower_triangular[i][j] * gaus_sample[j];
                         }
                 }
 	
@@ -934,7 +981,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 		std::vector<double> collapsed(num_bins_total_compressed, 0.0);
 		this->CollapseVectorStandAlone(&sampled_fullvector, &collapsed); //this line important isnt it!
 
-		double thischi = this->CalcChi(&collapsed);
+		double thischi = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin );
 		vec_chis[i]=thischi;
 
 		for(int j=0; j< chival->size(); j++){
@@ -953,6 +1000,19 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	for(int n =0; n< nlower.size(); n++){
 		chival->at(n) = nlower.at(n)/(double)num_MC;
 	}
+
+
+	free(a_corein);
+	free(a_specin);
+
+	for(int i=0; i< num_bins_total_compressed; i++){
+		free(a_vec_matrix_lower_triangular[i]);
+		free(a_vec_matrix_inverted[i]);
+	}
+
+	free(a_vec_matrix_lower_triangular);
+	free(a_vec_matrix_inverted);
+
 
 	return ans;
 }
