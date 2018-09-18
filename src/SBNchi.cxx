@@ -1,4 +1,7 @@
 #include "SBNchi.h"
+#include "openacc.h"
+#include "openacc_curand.h"
+
 using namespace sbn;
 
 
@@ -324,15 +327,15 @@ double SBNchi::CalcChi(double* sigVec){
 }
 
 double SBNchi::CalcChi(double **invert_matrix, double* core, double *sig){
-	double tchi = 0;
+  double tchi = 0;
 
-	for(int i =0; i<num_bins_total_compressed; i++){
-		for(int j =0; j<num_bins_total_compressed; j++){
-			tchi += (core[i]-sig[i])*invert_matrix[i][j]*(core[j]-sig[j] );
-		}
-	}
+  for(int i =0; i<num_bins_total_compressed; i++){
+    for(int j =0; j<num_bins_total_compressed; j++){
+      tchi += (core[i]-sig[i])*invert_matrix[i][j]*(core[j]-sig[j] );
+    }
+  }
 
-	return tchi;
+  return tchi;
 }
 
 
@@ -906,15 +909,15 @@ int SBNchi::PerformCholoskyDecomposition(SBNspec *specin){
   matrix_lower_triangular.T();
 
 
-	vec_matrix_lower_triangular.resize(n_t, std::vector<double>(n_t));
-	for(int i=0; i< n_t; i++){
-	for(int j=0; j< n_t; j++){
-		vec_matrix_lower_triangular[i][j] = matrix_lower_triangular[i][j];
-	}
-	}
+  vec_matrix_lower_triangular.resize(n_t, std::vector<double>(n_t));
+  for(int i=0; i< n_t; i++){
+    for(int j=0; j< n_t; j++){
+      vec_matrix_lower_triangular[i][j] = matrix_lower_triangular[i][j];
+    }
+  }
 
-	cholosky_performed = true;	
-	return 0;
+  cholosky_performed = true;	
+  return 0;
 }
 
 
@@ -924,157 +927,167 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC){
 }
 
 TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double> * chival){
-	if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
+  if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
 
-	int n_t = specin->full_vector.size();
-	std::vector<int> nlower(chival->size(),0);
+  int n_t = specin->full_vector.size();
+  std::vector<int> nlower(chival->size(),0);
 
-	double ** a_vec_matrix_lower_triangular;
-	a_vec_matrix_lower_triangular = (double**)malloc(sizeof(double*)*n_t);
-	for(int i=0; i<n_t; i++){
-	  a_vec_matrix_lower_triangular[i] = (double*)malloc(sizeof(double)*n_t);
-	}
+  double ** a_vec_matrix_lower_triangular;
+  a_vec_matrix_lower_triangular = (double**)malloc(sizeof(double*)*n_t);
+  for(int i=0; i<n_t; i++){
+    a_vec_matrix_lower_triangular[i] = (double*)malloc(sizeof(double)*n_t);
+  }
 
-	double ** a_vec_matrix_inverted;
-	a_vec_matrix_inverted = (double**)malloc(sizeof(double*)*num_bins_total_compressed);
-	for(int i=0; i< num_bins_total_compressed; i++){
-		a_vec_matrix_inverted[i] = (double*)malloc(sizeof(double)*num_bins_total_compressed);
-	}
+  double ** a_vec_matrix_inverted;
+  a_vec_matrix_inverted = (double**)malloc(sizeof(double*)*num_bins_total_compressed);
+  for(int i=0; i< num_bins_total_compressed; i++){
+    a_vec_matrix_inverted[i] = (double*)malloc(sizeof(double)*num_bins_total_compressed);
+  }
 
-	for(int i=0; i< num_bins_total_compressed; i++){
-	for(int j=0; j< num_bins_total_compressed; j++){
-		a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
-		a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
-	}}
-
-
-	double *a_specin;
-	a_specin = (double*)malloc(sizeof(double)*n_t);
-	for(int i=0; i< n_t; i++){
-		a_specin[i] = specin->full_vector[i]  ;
-	}
+  for(int i=0; i< num_bins_total_compressed; i++){
+    for(int j=0; j< num_bins_total_compressed; j++){
+      a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
+      a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
+    }}
 
 
-	double *a_corein;
-	a_corein = (double*)malloc(sizeof(double)*num_bins_total_compressed);
-	for(int i=0; i< num_bins_total_compressed; i++){
-		a_corein[i] = core_spectrum.collapsed_vector[i];
-	}
-
-	TRandom3 * rangen = new TRandom3(0);
+  double *a_specin;
+  a_specin = (double*)malloc(sizeof(double)*n_t);
+  for(int i=0; i< n_t; i++){
+    a_specin[i] = specin->full_vector[i]  ;
+  }
 
 
-	TH1D ans("","",150,0,150);
-	ans.GetXaxis()->SetCanExtend(kTRUE);
-	is_verbose = false;
+  double *a_corein;
+  a_corein = (double*)malloc(sizeof(double)*num_bins_total_compressed);
+  for(int i=0; i< num_bins_total_compressed; i++){
+    a_corein[i] = core_spectrum.collapsed_vector[i];
+  }
 
-	std::vector<double> vec_chis (num_MC, 0.0);
+  TRandom3 * rangen = new TRandom3(0);
 
-	double* a_vec_chis  = vec_chis.data();
 
-	std::vector < double > gaus_sample_v(n_t), sampled_fullvector_v(n_t);
-	std::vector<double> collapsed_v(num_bins_total_compressed, 0.0);
+  TH1D ans("","",150,0,150);
+  ans.GetXaxis()->SetCanExtend(kTRUE);
+  is_verbose = false;
+
+  std::vector<double> vec_chis (num_MC, 0.0);
+
+  double* a_vec_chis  = vec_chis.data();
+
+  std::vector < double > gaus_sample_v(n_t), sampled_fullvector_v(n_t);
+  std::vector<double> collapsed_v(num_bins_total_compressed, 0.0);
 	
-	// double* gaus_sample = gaus_sample_v.data();
-	// double* sampled_fullvector = sampled_fullvector_v.data();
-	// double* collapsed = collapsed_v.data();
+  // double* gaus_sample = gaus_sample_v.data();
+  // double* sampled_fullvector = sampled_fullvector_v.data();
+  // double* collapsed = collapsed_v.data();
 	
-	// double* gaus_sample = new double[n_t];
-	// double* sampled_fullvector = new double[n_t];
-	// double* collapsed = new double[num_bins_total_compressed];
+  // double* gaus_sample = new double[n_t];
+  // double* sampled_fullvector = new double[n_t];
+  // double* collapsed = new double[num_bins_total_compressed];
 
-	double gaus_sample[81];
-	double sampled_fullvector[81];
-	double collapsed[56];
+  double gaus_sample[81];
+  double sampled_fullvector[81];
+  double collapsed[56];
 
-	// this is cpu
-	// #pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
-	
+  // this is cpu
+  // #pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
+  unsigned long long seed[2048];
+  unsigned long long seq = 0ULL;
+  unsigned long long offset = 0ULL;
+  curandState_t states[2048];
+  
+  for(int i=0; i<2048; ++i)
+    seed[i] = (int)rangen->Uniform(1000);
 
-#pragma acc parallel loop private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
+#pragma acc parallel loop
+  for(int i=0; i<2048; ++i) {
+    curand_init(seed[i], seq, offset, &(states[i]));
+  }
+    
+  
+#pragma acc parallel loop num_gangs(2048) private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
   copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\ 
- 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed]) \
-  copyout(a_vec_chis[:num_MC])
+  a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \ 
+    states[:2048])				\
+    copyout(a_vec_chis[:num_MC])
 	
-	for(int i=0; i < num_MC;i++){
-	  
-                for(int a=0; a<n_t; a++){
-                      //gaus_sample[a] = rangen->Gaus(0,1);
-                      gaus_sample[a] = 1.0;
-                }
-                for(int k = 0; k < n_t; k++){
-              		  sampled_fullvector[k] = a_specin[k];
-                        for(int j = 0; j < n_t; j++){
-                                sampled_fullvector[k] += a_vec_matrix_lower_triangular[k][j] * gaus_sample[j];
-                        }
-                }
+  for(int i=0; i < num_MC;i++){
 
-		this->CollapseVectorStandAlone(sampled_fullvector, collapsed); //this line important isnt it!
-		
-		a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin );
-		
-		// for(int j=0; j< chival->size(); j++){
-		// 	if(thischi>=chival->at(j)) nlower.at(j)++;
-		// }
-#ifndef _OPENACC
-		if(i%1000==0) std::cout<<"SBNchi::SampleCovarianceVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
-#endif
-	}
-	is_verbose = true;
+    int gnum = __pgi_gangidx();
+    curandState_t state = states[gnum];
+
+    for(int a=0; a<n_t; a++) {
+      gaus_sample[a]= curand_normal(&state);
+    }
+
+    for(int j = 0; j < n_t; j++){
+      sampled_fullvector[j] = a_specin[j];
+      for(int k = 0; k < n_t; k++){
+	sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+      }
+    }
+    
+    this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+    
+    a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin );
+  }
+
+is_verbose = true;
 
 	
-	for(int i=0; i<num_MC; i++){
-		ans.Fill(vec_chis[i]);
-	}
+for(int i=0; i<num_MC; i++){
+  ans.Fill(vec_chis[i]);
+ }
 
-	for(int n =0; n< nlower.size(); n++){
-		chival->at(n) = nlower.at(n)/(double)num_MC;
-	}
+for(int n =0; n< nlower.size(); n++){
+  chival->at(n) = nlower.at(n)/(double)num_MC;
+ }
 	
-	free(a_corein);
-	free(a_specin);
+free(a_corein);
+free(a_specin);
 
-	for(int i=0; i< num_bins_total_compressed; i++){
-		free(a_vec_matrix_lower_triangular[i]);
-		free(a_vec_matrix_inverted[i]);
-	}
+for(int i=0; i< num_bins_total_compressed; i++){
+  free(a_vec_matrix_lower_triangular[i]);
+  free(a_vec_matrix_inverted[i]);
+ }
 
-	free(a_vec_matrix_lower_triangular);
-	free(a_vec_matrix_inverted);
+free(a_vec_matrix_lower_triangular);
+free(a_vec_matrix_inverted);
 
-	return ans;
+return ans;
 }
 
 int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vector<double> *collapsed_vector){
   
-	for(int im = 0; im < num_modes; im++){
-		for(int id =0; id < num_detectors; id++){
-			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
-			int out_edge = edge;
-			int tmp_chan = 0;
-			for(int ic = 0; ic < num_channels; ic++){
-				int corner=edge;
+  for(int im = 0; im < num_modes; im++){
+    for(int id =0; id < num_detectors; id++){
+      int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+      int out_edge = edge;
+      int tmp_chan = 0;
+      for(int ic = 0; ic < num_channels; ic++){
+	int corner=edge;
 						
-				for(int j=0; j< num_bins[ic]; j++){
+	for(int j=0; j< num_bins[ic]; j++){
 
-					double tempval=0;
+	  double tempval=0;
 
-					for(int sc = 0; sc < num_subchannels[ic]; sc++){
-						tempval += (*full_vector)[j+sc*num_bins[ic]+corner];
-						edge +=1;	//when your done with a channel, add on every bin you just summed
-					}
-					//we can size this vector beforehand and get rid of all push_back()
+	  for(int sc = 0; sc < num_subchannels[ic]; sc++){
+	    tempval += (*full_vector)[j+sc*num_bins[ic]+corner];
+	    edge +=1;	//when your done with a channel, add on every bin you just summed
+	  }
+	  //we can size this vector beforehand and get rid of all push_back()
 
-					int collapsed_index = tmp_chan+out_edge;
-					(*collapsed_vector)[collapsed_index] = tempval;
-					tmp_chan++;
-				}
-			}
-		}
+	  int collapsed_index = tmp_chan+out_edge;
+	  (*collapsed_vector)[collapsed_index] = tempval;
+	  tmp_chan++;
 	}
+      }
+    }
+  }
 
 
-	return 0;
+  return 0;
 }
 
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
@@ -1084,36 +1097,36 @@ int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vect
   int tmp_num_subchannels[3] = {2,1,1};
   
 
-	for(int im = 0; im < num_modes; im++){
-		for(int id =0; id < num_detectors; id++){
-			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
-			int out_edge = edge;
-			int tmp_chan = 0;
-			for(int ic = 0; ic < num_channels; ic++){
-				int corner=edge;
+  for(int im = 0; im < num_modes; im++){
+    for(int id =0; id < num_detectors; id++){
+      int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+      int out_edge = edge;
+      int tmp_chan = 0;
+      for(int ic = 0; ic < num_channels; ic++){
+	int corner=edge;
 
-				//for(int j=0; j< num_bins[ic]; j++){
-				for(int j=0; j< tmp_num_bins[ic]; j++){
+	//for(int j=0; j< num_bins[ic]; j++){
+	for(int j=0; j< tmp_num_bins[ic]; j++){
 
-					double tempval=0;
+	  double tempval=0;
 
-					//for(int sc = 0; sc < num_subchannels[ic]; sc++){
-					for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
-						tempval += (full_vector)[j+sc*tmp_num_bins[ic]+corner];
-						edge +=1;	//when your done with a channel, add on every bin you just summed
-					}
-					//we can size this vector beforehand and get rid of all push_back()
+	  //for(int sc = 0; sc < num_subchannels[ic]; sc++){
+	  for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
+	    tempval += (full_vector)[j+sc*tmp_num_bins[ic]+corner];
+	    edge +=1;	//when your done with a channel, add on every bin you just summed
+	  }
+	  //we can size this vector beforehand and get rid of all push_back()
 
-					int collapsed_index = tmp_chan+out_edge;
-					(collapsed_vector)[collapsed_index] = tempval;
-					tmp_chan++;
-				}
-			}
-		}
+	  int collapsed_index = tmp_chan+out_edge;
+	  (collapsed_vector)[collapsed_index] = tempval;
+	  tmp_chan++;
 	}
+      }
+    }
+  }
 
 
-	return 0;
+  return 0;
 }
 
 
