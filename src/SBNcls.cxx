@@ -79,7 +79,7 @@ int SBNcls::CalcCLS(int numMC, std::string tag){
 	h0_pdf.SetFillStyle(3445);
 	h1_pdf.SetFillStyle(3454);
 
-	h0_pdf.Draw("hist");
+	h1_pdf.Draw("hist");
 		
 	double maxval =std::max(h0_pdf.GetMaximum(),h1_pdf.GetMaximum());
 	double minval = std::min( h0_pdf.GetBinContent(h0_pdf.FindFirstBinAbove(0)), h1_pdf.GetBinContent(h1_pdf.FindFirstBinAbove(0)));
@@ -89,6 +89,8 @@ int SBNcls::CalcCLS(int numMC, std::string tag){
 
 	double minbin = std::min(h0_pdf.GetBinLowEdge(h0_pdf.FindFirstBinAbove(0))+h0_pdf.GetBinWidth(h0_pdf.FindFirstBinAbove(0)), h1_pdf.GetBinLowEdge(h1_pdf.FindFirstBinAbove(0))+h1_pdf.GetBinWidth(h1_pdf.FindFirstBinAbove(0)));
 	double maxbin = std::max(h0_pdf.GetBinLowEdge(h0_pdf.FindLastBinAbove(0))+h0_pdf.GetBinWidth(h0_pdf.FindLastBinAbove(0)), h1_pdf.GetBinLowEdge(h1_pdf.FindLastBinAbove(0))+h1_pdf.GetBinWidth(h1_pdf.FindLastBinAbove(0)));
+
+
 
 	h0_pdf.GetXaxis()->SetRangeUser(minbin,maxbin);
 
