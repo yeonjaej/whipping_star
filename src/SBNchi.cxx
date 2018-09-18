@@ -984,10 +984,10 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	// double* collapsed = new double[num_bins_total_compressed];
 
 
- 	int* tmp_num_bins = this->num_bins.data();
-  	int* tmp_num_subchannels = this->num_subchannels.data();
+ //	int* tmp_num_bins = this->num_bins.data();
+  //	int* tmp_num_subchannels = this->num_subchannels.data();
   
-#pragma acc enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
+ // #pragma acc enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	double gaus_sample[81];
 	double sampled_fullvector[81];
@@ -1002,7 +1002,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
  	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed])\
   copyout(a_vec_chis[:num_MC])
 	
-	for(int i=0; i < num_MC;i++){
+	for(int i=0; i < num_MC; i++){
 	  
                 for(int a=0; a<n_t; a++){
                       //gaus_sample[a] = rangen->Gaus(0,1);
@@ -1028,7 +1028,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	}
 	is_verbose = true;
 
-#pragma acc exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
+// #pragma acc exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	
 	for(int i=0; i<num_MC; i++){
@@ -1088,8 +1088,8 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
   
 
-//  int tmp_num_bins[3] = {25,25,6};
-//  int tmp_num_subchannels[3] = {2,1,1};
+  int tmp_num_bins[3] = {25,25,6};
+  int tmp_num_subchannels[3] = {2,1,1};
   
 
 	for(int im = 0; im < num_modes; im++){
@@ -1101,13 +1101,13 @@ int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vect
 				int corner=edge;
 
 				//for(int j=0; j< num_bins[ic]; j++){
-				for(int j=0; j< num_bins[ic]; j++){
+				for(int j=0; j< tmp_num_bins[ic]; j++){
 
 					double tempval=0;
 
-					//for(int sc = 0; sc < num_subchannels[ic]; sc++){
-					for(int sc = 0; sc < num_subchannels[ic]; sc++){
-						tempval += (full_vector)[j+sc*num_bins[ic]+corner];
+					//for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
+					for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
+						tempval += (full_vector)[j+sc*tmp_num_bins[ic]+corner];
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
 					//we can size this vector beforehand and get rid of all push_back()
