@@ -434,6 +434,8 @@ SBNconfig::SBNconfig(std::string whichxml, bool isverbose): xmlname(whichxml) {
 
 
 
+	a_num_bins = num_bins.data();
+	a_num_subchannels = num_subchannels.data();
 
 
 

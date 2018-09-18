@@ -80,9 +80,10 @@ class SBNconfig {
 	
 	//vectors of length num_channels
 	std::vector<int> num_subchannels; 
+	int* a_num_subchannels;
 	std::vector<int> num_subchannels_xml; 
 	std::vector<int> num_bins;
-
+	int* a_num_bins;
 
 	std::string xmlname;	
 
