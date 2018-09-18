@@ -943,8 +943,12 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
   for(int i=0; i< num_bins_total_compressed; i++){
     for(int j=0; j< num_bins_total_compressed; j++){
-      a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
       a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
+    }}
+
+ for(int i=0; i< num_bins_total; i++){
+    for(int j=0; j< num_bins_total; j++){
+      a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
     }}
 
 
@@ -1059,8 +1063,11 @@ free(a_corein);
 free(a_specin);
 free(nlower);
 
-for(int i=0; i< num_bins_total_compressed; i++){
+for(int i=0; i< num_bins_total; i++){
   free(a_vec_matrix_lower_triangular[i]);
+ }
+
+for(int i=0; i< num_bins_total_compressed; i++){
   free(a_vec_matrix_inverted[i]);
  }
 
