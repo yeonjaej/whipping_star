@@ -966,7 +966,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
   TRandom3 * rangen = new TRandom3(0);
 
-
   TH1D ans("","",150,0,150);
   ans.GetXaxis()->SetCanExtend(kTRUE);
   is_verbose = false;
@@ -992,57 +991,58 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
   // this is cpu
   // #pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
-  unsigned long long seed[2048];
+
+  unsigned long long seed[num_MC];
   unsigned long long seq = 0ULL;
   unsigned long long offset = 0ULL;
-  curandState_t states[2048];
+  curandState_t state;
   
-  for(int i=0; i<2048; ++i)
+  for(int i=0; i<num_MC; ++i) {
     seed[i] = (int)rangen->Uniform(1000);
-
-#pragma acc parallel loop
-  for(int i=0; i<2048; ++i) {
-    curand_init(seed[i], seq, offset, &(states[i]));
   }
-    
   
-#pragma acc parallel loop num_gangs(2048) private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
+#pragma acc parallel loop num_gangs(2048) private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38],state) \
   copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\ 
-  a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \ 
-    states[:2048])				\
+  a_corein[:num_bins_total_compressed],				\
+    a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \
+    seed[0:num_MC])							\
     copyout(a_vec_chis[:num_MC])
-	
-  for(int i=0; i < num_MC;i++){
+      
+    for(int i=0; i < num_MC;i++){
 
-    int gnum = __pgi_gangidx();
-    curandState_t state = states[gnum];
+      // int gnum = __pgi_gangidx();
 
-    for(int a=0; a<n_t; a++) {
-      gaus_sample[a]= curand_normal(&state);
-    }
+      unsigned long long seed_sd = seed[i];
+      curand_init(seed_sd, seq, offset, &state);
 
-    for(int j = 0; j < n_t; j++){
-      sampled_fullvector[j] = a_specin[j];
-      for(int k = 0; k < n_t; k++){
-	sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+      for(int a=0; a<n_t; a++) {
+	gaus_sample[a]= curand_normal(&state);
       }
+	
+      for(int j = 0; j < n_t; j++){
+	sampled_fullvector[j] = a_specin[j];
+	for(int k = 0; k < n_t; k++){
+	  sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+	}
+      }
+	
+      this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+	
+      a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed );
     }
-    
-    this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
-    
-    a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin );
-  }
 
 is_verbose = true;
 
-	
+
 for(int i=0; i<num_MC; i++){
-  ans.Fill(vec_chis[i]);
+  if (i<(int)1e3)
+    std::cout << "@i=" << a_vec_chis[i] << std::endl;
+  ans.Fill(a_vec_chis[i]);
  }
 
-for(int n =0; n< nlower.size(); n++){
-  chival->at(n) = nlower.at(n)/(double)num_MC;
- }
+// for(int n =0; n< nlower.size(); n++){
+//   chival->at(n) = nlower.at(n)/(double)num_MC;
+//  }
 	
 free(a_corein);
 free(a_specin);
@@ -1093,7 +1093,7 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
   
 
-  int tmp_num_bins[3] = {25,25,6};
+  int tmp_num_bins[3] = {16,16,6};
   int tmp_num_subchannels[3] = {2,1,1};
   
 
