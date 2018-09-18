@@ -984,22 +984,32 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	// double* collapsed = new double[num_bins_total_compressed];
 
 
- //	int* tmp_num_bins = this->num_bins.data();
-  //	int* tmp_num_subchannels = this->num_subchannels.data();
-  
- // #pragma acc enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
-
-	double gaus_sample[81];
+ 	double gaus_sample[81];
 	double sampled_fullvector[81];
 	double collapsed[56];
 
+	int* tmp_num_bins = num_bins.data();
+ 	int* tmp_num_subchannels = num_subchannels.data();
+
+	for(int i=0; i< num_bins.size(); i++){
+		std::cout<<num_bins.at(i);
+	}
+	for(int i=0; i< num_subchannels.size(); i++){
+		std::cout<<num_subchannels.at(i);
+	}
+
+
+	exit(0);
+  
 	// this is cpu
 	// #pragma acc parallel loop gang private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56])
-	
+
+#pragma acc enter data create(num_bins[:num_channels],tmp_num_bins[:num_channels], num_subchannels[:num_channels],tmp_num_subchannels[:num_channels]) 
+{
 
 #pragma acc parallel loop private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
-  copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\ 
- 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed])\
+  copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\
+  	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed])\
   copyout(a_vec_chis[:num_MC])
 	
 	for(int i=0; i < num_MC; i++){
@@ -1028,7 +1038,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	}
 	is_verbose = true;
 
-// #pragma acc exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
+} //#pragma acc exit data delete(tmp_num_bins,tmp_num_subchannels) 
 
 	
 	for(int i=0; i<num_MC; i++){
@@ -1088,8 +1098,8 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
   
 
-  int tmp_num_bins[3] = {25,25,6};
-  int tmp_num_subchannels[3] = {2,1,1};
+//  int tmp_num_bins[3] = {25,25,6};
+  //int tmp_num_subchannels[3] = {2,1,1};
   
 
 	for(int im = 0; im < num_modes; im++){
@@ -1101,13 +1111,13 @@ int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vect
 				int corner=edge;
 
 				//for(int j=0; j< num_bins[ic]; j++){
-				for(int j=0; j< tmp_num_bins[ic]; j++){
+				for(int j=0; j< num_bins[ic]; j++){
 
 					double tempval=0;
 
-					//for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
-					for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
-						tempval += (full_vector)[j+sc*tmp_num_bins[ic]+corner];
+					//for(int sc = 0; sc < num_subchannels[ic]; sc++){
+					for(int sc = 0; sc < num_subchannels[ic]; sc++){
+						tempval += (full_vector)[j+sc*num_bins[ic]+corner];
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
 					//we can size this vector beforehand and get rid of all push_back()
