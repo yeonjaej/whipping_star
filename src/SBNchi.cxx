@@ -910,13 +910,13 @@ int SBNchi::PerformCholoskyDecomposition(SBNspec *specin){
 
 
   vec_matrix_lower_triangular.resize(n_t, std::vector<double>(n_t));
-  for(int i=0; i< n_t; i++){
-    for(int j=0; j< n_t; j++){
+  for(int i=0; i< num_bins_total; i++){
+    for(int j=0; j< num_bins_total; j++){
       vec_matrix_lower_triangular[i][j] = matrix_lower_triangular[i][j];
     }
   }
 
-  cholosky_performed = true;	
+  //cholosky_performed = true;	
   return 0;
 }
 
@@ -1027,7 +1027,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
       this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
 	
       a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
-      a_vec_chis[i] = collapsed[0];
  
 
      //Just to get some pvalues that were asked for.
