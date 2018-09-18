@@ -981,18 +981,9 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
   std::vector < double > gaus_sample_v(num_bins_total), sampled_fullvector_v(num_bins_total);
   std::vector<double> collapsed_v(num_bins_total_compressed, 0.0);
 	
-  // double* gaus_sample = gaus_sample_v.data();
-  // double* sampled_fullvector = sampled_fullvector_v.data();
-  // double* collapsed = collapsed_v.data();
-	
-  // double* gaus_sample = new double[num_bins_total];
-  // double* sampled_fullvector = new double[num_bins_total];
-  // double* collapsed = new double[num_bins_total_compressed];
-
   double gaus_sample[54];
   double sampled_fullvector[54];
   double collapsed[38];
-
 
   unsigned long long seed[num_MC];
   unsigned long long seq = 0ULL;
@@ -1000,13 +991,13 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
   curandState_t state;
   
   for(int i=0; i<num_MC; ++i) {
-    seed[i] = (int)rangen->Uniform(1000);
+    seed[i] = (int)rangen->Uniform(100000);
   }
 
 
 #pragma acc parallel loop num_gangs(2048) private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38],state) \
-  copyin(this[0:1],a_specin[:num_bins_total],a_vec_matrix_lower_triangular[:num_bins_total][:num_bins_total],\ 
-    a_corein[:num_bins_total_compressed],				\
+  copyin(this[0:1],a_specin[:num_bins_total],a_vec_matrix_lower_triangular[:num_bins_total][:num_bins_total], \ 
+    a_corein[:num_bins_total_compressed],\
     a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \
     seed[0:num_MC],  a_chival[:num_chival], this->a_num_bins[:num_channels], this->a_num_subchannels[:num_channels])							\
   copyout(a_vec_chis[:num_MC]) 			\
@@ -1029,17 +1020,19 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	for(int k = 0; k < num_bins_total; k++){
 	  sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
 	}
-      }
+	if(sampled_fullvector[j]<0) sampled_fullvector[j]=0.0;
+       }
+	
 	
       this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
 	
       a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
-      //a_vec_chis[i] = collapsed[30];
+      a_vec_chis[i] = collapsed[0];
  
 
      //Just to get some pvalues that were asked for.
      for(int j=0; j< num_chival; j++){
-       if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
+        if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
      }
 
 
