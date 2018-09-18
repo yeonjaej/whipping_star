@@ -983,6 +983,11 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	// double* sampled_fullvector = new double[n_t];
 	// double* collapsed = new double[num_bins_total_compressed];
 
+
+ 	 int* tmp_num_bins = num_bins.data();
+  	 int* tmp_num_subchannels = num_subchannels.data();
+  
+
 	double gaus_sample[81];
 	double sampled_fullvector[81];
 	double collapsed[56];
@@ -993,7 +998,8 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
 #pragma acc parallel loop private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
   copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\ 
- 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed]) \
+ 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \
+	tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels])\
   copyout(a_vec_chis[:num_MC])
 	
 	for(int i=0; i < num_MC;i++){
@@ -1080,33 +1086,33 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
   
 
-  int tmp_num_bins[3] = {25,25,6};
-  int tmp_num_subchannels[3] = {2,1,1};
+//  int tmp_num_bins[3] = {25,25,6};
+//  int tmp_num_subchannels[3] = {2,1,1};
   
 
 	for(int im = 0; im < num_modes; im++){
 		for(int id =0; id < num_detectors; id++){
 			int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
 			int out_edge = edge;
-			int tmp_chan = 0;
+			int chan = 0;
 			for(int ic = 0; ic < num_channels; ic++){
 				int corner=edge;
 
 				//for(int j=0; j< num_bins[ic]; j++){
-				for(int j=0; j< tmp_num_bins[ic]; j++){
+				for(int j=0; j< num_bins[ic]; j++){
 
 					double tempval=0;
 
 					//for(int sc = 0; sc < num_subchannels[ic]; sc++){
-					for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
-						tempval += (full_vector)[j+sc*tmp_num_bins[ic]+corner];
+					for(int sc = 0; sc < num_subchannels[ic]; sc++){
+						tempval += (full_vector)[j+sc*num_bins[ic]+corner];
 						edge +=1;	//when your done with a channel, add on every bin you just summed
 					}
 					//we can size this vector beforehand and get rid of all push_back()
 
-					int collapsed_index = tmp_chan+out_edge;
+					int collapsed_index = chan+out_edge;
 					(collapsed_vector)[collapsed_index] = tempval;
-					tmp_chan++;
+					chan++;
 				}
 			}
 		}
