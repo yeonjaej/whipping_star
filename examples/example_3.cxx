@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
   std::string tag = "EXAMPLE3";
 
   SBNspec sig("EXAMPLE1.SBNspec.root",xml);
-  sig.Scale("leesignal",0.0);
+  sig.Scale("leesignal",1.5);
 	
   SBNspec bkg("EXAMPLE1.SBNspec.root",xml);
   bkg.Scale("leesignal",0.0);
