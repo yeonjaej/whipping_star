@@ -987,7 +987,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
  	int* tmp_num_bins = this->num_bins.data();
   	int* tmp_num_subchannels = this->num_subchannels.data();
   
-#pragma enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
+#pragma acc enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	double gaus_sample[81];
 	double sampled_fullvector[81];
@@ -1028,7 +1028,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	}
 	is_verbose = true;
 
-	#pragma exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
+#pragma acc exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	
 	for(int i=0; i<num_MC; i++){
