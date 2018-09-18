@@ -79,7 +79,7 @@ int SBNcls::CalcCLS(int numMC, std::string tag){
 	h0_pdf.SetFillStyle(3445);
 	h1_pdf.SetFillStyle(3454);
 
-	h1_pdf.Draw("hist");
+	h0_pdf.Draw("hist");
 		
 	double maxval =std::max(h0_pdf.GetMaximum(),h1_pdf.GetMaximum());
 	double minval = std::min( h0_pdf.GetBinContent(h0_pdf.FindFirstBinAbove(0)), h1_pdf.GetBinContent(h1_pdf.FindFirstBinAbove(0)));
