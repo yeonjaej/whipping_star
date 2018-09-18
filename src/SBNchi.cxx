@@ -984,9 +984,10 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 	// double* collapsed = new double[num_bins_total_compressed];
 
 
- 	 int* tmp_num_bins = num_bins.data();
-  	 int* tmp_num_subchannels = num_subchannels.data();
+ 	int* tmp_num_bins = this->num_bins.data();
+  	int* tmp_num_subchannels = this->num_subchannels.data();
   
+#pragma enter data create(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	double gaus_sample[81];
 	double sampled_fullvector[81];
@@ -998,8 +999,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
 #pragma acc parallel loop private(gaus_sample[:81],sampled_fullvector[:81],collapsed[:56]) \
   copyin(a_specin[:n_t],a_vec_matrix_lower_triangular[:n_t][:n_t],\ 
- 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \
-	tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels])\
+ 	a_corein[:num_bins_total_compressed],a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed])\
   copyout(a_vec_chis[:num_MC])
 	
 	for(int i=0; i < num_MC;i++){
@@ -1017,7 +1017,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
 		this->CollapseVectorStandAlone(sampled_fullvector, collapsed); //this line important isnt it!
 		
-		a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin );
+		a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, a_specin);
 		
 		// for(int j=0; j< chival->size(); j++){
 		// 	if(thischi>=chival->at(j)) nlower.at(j)++;
@@ -1027,6 +1027,8 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 #endif
 	}
 	is_verbose = true;
+
+	#pragma exit data delete(tmp_num_bins[:num_channels],tmp_num_subchannels[:num_channels]) 
 
 	
 	for(int i=0; i<num_MC; i++){
