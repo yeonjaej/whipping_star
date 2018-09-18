@@ -48,19 +48,25 @@ unset (CMAKE_CXX_FLAGS)
 message("GSL_LIBS: ${GSL_LIBS}")
 message("GSL_CXX_FLAGS: ${GSL_CXX_FLAGS}")
 
-set (CMAKE_CXX_FLAGS "-ta=tesla -Minfo=accel -acc -w -gopt -noswitcherror ${ROOT_CXX_FLAGS} ${GSL_LIBS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations ")
+#gopt is forcing LLVM compilation
+set (CMAKE_SO_CXX_FLAGS "-noswitcherror ${ROOT_CXX_FLAGS} ${GSL_LIBS} ${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+set (CMAKE_ACC_CXX_FLAGS "-ta=tesla:nollvm,keep -Mcudalib=curand -Minfo=accel -acc -w ${CMAKE_SO_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_ACC_CXX_FLAGS}")
 
-message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message("@main CMAKE_SO_CXX_FLAGS: ${CMAKE_SO_CXX_FLAGS}")
+message("@main CMAKE_ACC_CXX_FLAGS: ${CMAKE_ACC_CXX_FLAGS}")
+message("@main CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tinyxml/)
-#ROOT_GENERATE_DICTIONARY(G__Event MCEventWeight.h LINKDEF MCEventWeightLinkDef.h)
-##include(${ROOT_USE_FILE})
-message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+add_subdirectory(libio)
 
-#add_subdirectory(inc)
+unset(CMAKE_CXX_FLAGS)
+set(CMAKE_CXX_FLAGS "${CMAKE_ACC_CXX_FLAGS}")
+message("@main CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
 add_subdirectory(tinyxml)
 add_subdirectory(src)
 add_subdirectory(examples)

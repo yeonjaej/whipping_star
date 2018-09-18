@@ -2,3 +2,5 @@
 trash/
 build
 *.root
+*.so
+*.o
