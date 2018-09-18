@@ -29,7 +29,7 @@
 
 <!-- ############################# MultiSims #####################################################-->
 <!-- <MultisimFile treename="events" filename="/gpfshome01/u/markross/data/1e1p.root" scale = "0.002" maxevents ="20000" > -->
-<MultisimFile treename="events" filename="/gpfshome01/u/markross/data/1e1p.root" scale = "0.004" maxevents ="10000" >
+<MultisimFile treename="events" filename="/gpfshome01/u/yj2429/data/1e1p.root" scale = "0.004" maxevents ="10000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -38,7 +38,7 @@
 	/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/gpfshome01/u/markross/data/signal.root" scale = "0.03" maxevents ="1000" >
+<MultisimFile treename="events" filename="/gpfshome01/u/yj2429/data/signal.root" scale = "0.03" maxevents ="1000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -49,7 +49,7 @@
 
 
 <!-- <MultisimFile treename="events" filename="/gpfshome01/u/markross/data/1m1p.root" scale = "0.01" maxevents ="50000" > -->
-<MultisimFile treename="events" filename="/gpfshome01/u/markross/data/1m1p.root" scale = "0.1" maxevents ="5000" >
+<MultisimFile treename="events" filename="/gpfshome01/u/yj2429/data/1m1p.root" scale = "0.1" maxevents ="5000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"
@@ -58,7 +58,7 @@
 	/>
 </MultisimFile>
 
-<MultisimFile treename="events" filename="/gpfshome01/u/markross/data/ccpi0.root" scale = "0.1" maxevents ="5000" >
+<MultisimFile treename="events" filename="/gpfshome01/u/yj2429/data/ccpi0.root" scale = "0.1" maxevents ="5000" >
 	<parameters names = "ALL"/>
 	<branch
 		name="ereco"

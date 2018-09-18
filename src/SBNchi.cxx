@@ -1003,48 +1003,67 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
     seed[i] = (int)rangen->Uniform(1000);
   }
 
+  
+  double yj_testing[num_MC];
+
 
 #pragma acc parallel loop num_gangs(2048) private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38],state) \
   copyin(this[0:1],a_specin[:num_bins_total],a_vec_matrix_lower_triangular[:num_bins_total][:num_bins_total],\ 
-    a_corein[:num_bins_total_compressed],				\
+  a_corein[:num_bins_total_compressed],				\
     a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed], \
     seed[0:num_MC],  a_chival[:num_chival], this->a_num_bins[:num_channels], this->a_num_subchannels[:num_channels])							\
-  copyout(a_vec_chis[:num_MC]) 			\
-  copy(nlower[:num_chival])
-{
+    copyout(a_vec_chis[:num_MC], yj_testing[:num_MC])				\
+    copy(nlower[:num_chival])
+    {
       
-    for(int i=0; i < num_MC;i++){
+      for(int i=0; i < num_MC;i++){
 
-      // int gnum = __pgi_gangidx();
+	// int gnum = __pgi_gangidx();
 
-      unsigned long long seed_sd = seed[i];
-      curand_init(seed_sd, seq, offset, &state);
-
-      for(int a=0; a<num_bins_total; a++) {
-	gaus_sample[a]= curand_normal(&state);
-      }
-	
-      for(int j = 0; j < num_bins_total; j++){
-	sampled_fullvector[j] = a_specin[j];
-	for(int k = 0; k < num_bins_total; k++){
-	  sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+	unsigned long long seed_sd = seed[i];
+	curand_init(seed_sd, seq, offset, &state);
+	/*
+	for(int a=0; a<num_bins_total; a++) {
+	  gaus_sample[a]= curand_normal(&state);
 	}
-      }
 	
-      this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+	for(int j = 0; j < num_bins_total; j++){
+	  sampled_fullvector[j] = a_specin[j];
+	  for(int k = 0; k < num_bins_total; k++){
+	    sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+	  }
+	}
+	*/
+	//     	
+   	for(int a=0; a<num_bins_total; a++) {
+	  sampled_fullvector[a]= 0.;
+	}
+	#pragma acc loop
+	for(int j = 0; j < num_bins_total; j++){
+	  gaus_sample[j]= curand_normal(&state);
+	  for(int k = 0; k < num_bins_total; k++){
+	    sampled_fullvector[k] += a_vec_matrix_lower_triangular[k][j] * gaus_sample[j];
+	  }
+	  sampled_fullvector[j] += a_specin[j];
+	}
+	//
+
+
 	
-      a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
-      //a_vec_chis[i] = collapsed[30];
+	this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+	
+	a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
+	//a_vec_chis[i] = collapsed[30];
  
 
-     //Just to get some pvalues that were asked for.
-     for(int j=0; j< num_chival; j++){
-       if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
-     }
+	//Just to get some pvalues that were asked for.
+	for(int j=0; j< num_chival; j++){
+	  if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
+	}
 
 
-    }
-}//end pragma
+      }
+    }//end pragma
 
 
 is_verbose = true;
