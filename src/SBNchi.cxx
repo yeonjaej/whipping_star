@@ -929,9 +929,6 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC){
 TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double> * chival){
   if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
 
-  const unsigned int nb1 = num_bins_total;
-  const unsigned int nb2 = num_bins_total_compressed;
-
   double** a_vec_matrix_lower_triangular = new double*[num_bins_total];
   double** a_vec_matrix_inverted = new double*[num_bins_total_compressed];
   
@@ -1047,6 +1044,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 
      //Just to get some pvalues that were asked for.
      for(int j=0; j< num_chival; j++){
+    #pragma acc atomic update
         if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
      }
 
