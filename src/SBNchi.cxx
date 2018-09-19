@@ -1015,7 +1015,7 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 #endif
     
     for(int i=0; i < num_MC;i++){
-
+      //
 #ifdef USE_GPU
       unsigned long long seed_sd = seed[i];
       curand_init(seed_sd, seq, offset, &state);
@@ -1026,17 +1026,17 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
 #else
       for(int a=0; a<num_bins_total; a++) {
 	gaus_sample[a]= (double)rangen->Gaus(0,1);
-      }      
-#endif
+      } 
 
+#endif
+      
       for(int j = 0; j < num_bins_total; j++){
 	sampled_fullvector[j] = a_specin[j];
 	for(int k = 0; k < num_bins_total; k++){
 	  sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
 	}
 	if(sampled_fullvector[j]<0) sampled_fullvector[j]=0.0;
-       }
-	
+      }
 	
       this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
 	
