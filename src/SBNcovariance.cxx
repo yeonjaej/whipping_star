@@ -41,9 +41,9 @@ SBNcovariance::SBNcovariance(std::string xmlname) : SBNconfig(xmlname) {
     }
   }
 
-  std::vector<int> nentries;
-  for(auto &t: trees){
-    nentries.push_back(t->GetEntries());
+  std::vector<int> nentries(multisim_name.size(),0);
+  for(int i=0; i< multisim_name.size(); i++){
+    nentries[i]= trees[i]->GetEntries();
   }
 
   f_weights = new std::vector<std::map<std::string, std::vector<double>>* >(num_files,0);
@@ -147,7 +147,7 @@ SBNcovariance::SBNcovariance(std::string xmlname) : SBNconfig(xmlname) {
 
 
 
-    for(int i=0; i< std::min(  multisim_maxevents.at(j)  ,nentries.at(j)); i++){
+    for(int i=0; i< std::min(  multisim_maxevents[j]  ,nentries[j]); i++){
       trees.at(j)->GetEntry(i);
       std::map<std::string, std::vector<double>> * thisfWeight = f_weights->at(j);
 
@@ -251,19 +251,19 @@ SBNcovariance::SBNcovariance(std::string xmlname) : SBNconfig(xmlname) {
 			}
 	*/
 
-	for(int t=0; t<branch_variables.at(j).size();t++){
+	for(int t=0; t<branch_variables[j].size();t++){
 	  //Need the histogram index, the value, the global bin...
-	  int ih = spec_central_value.map_hist.at(branch_variables.at(j).at(t)->associated_hist);
-	  double reco_var = *(static_cast<double*>(branch_variables.at(j).at(t)->GetValue()));
+	  int ih = spec_central_value.map_hist.at(branch_variables[j][t]->associated_hist);
+	  double reco_var = *(static_cast<double*>(branch_variables[j][t]->GetValue()));
 	  int reco_bin = spec_central_value.GetGlobalBinNumber(reco_var,ih);
-	  spec_central_value.hist.at(ih).Fill(reco_var,global_weight);
+	  spec_central_value.hist[ih].Fill(reco_var,global_weight);
 
 	  for(int m=0; m< weights.size(); m++){
-	    if(reco_bin>=0)  multi_vecspec.at(m).at(reco_bin)   +=  weights.at(m);
+	    if(reco_bin>=0)  multi_vecspec[m][reco_bin]   +=  weights[m];
 
 	    //important check. failure mode
-	    if(weights.at(m)!=weights.at(m) || std::isinf(weights.at(m)) ){
-	      std::cout<<"SBNcovariance::SBNcovariance\t|| ERROR weight has a value of: "<<weights.at(m)<<". So I am killing all. on Dim: "<<m<<" global_eright is "<<global_weight<<std::endl;
+	    if(weights[m]!=weights[m] || std::isinf(weights[m]) ){
+	      std::cout<<"SBNcovariance::SBNcovariance\t|| ERROR weight has a value of: "<<weights[m]<<". So I am killing all. on Dim: "<<m<<" global_eright is "<<global_weight<<std::endl;
 	      exit(EXIT_FAILURE);
 	    }
 
@@ -353,8 +353,8 @@ int SBNcovariance::FormCovarianceMatrix(std::string tag){
 	std::string var = map_universe_to_var.at(m);
 	int which_matrix = map_var_to_matrix.at(var);
 
-	full_covariance(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
-	vec_full_covariance.at(which_matrix)(i,j) += 1.0/((double)num_universes_per_variation.at(m))*(CV[i]-multi_vecspec.at(m).at(i))*(CV[j]-multi_vecspec.at(m).at(j));
+	full_covariance(i,j) += 1.0/((double)num_universes_per_variation[m])*(CV[i]-multi_vecspec[m][i])*(CV[j]-multi_vecspec[m][j]);
+	vec_full_covariance.at(which_matrix)(i,j) += 1.0/((double)num_universes_per_variation[m])*(CV[i]-multi_vecspec[m][i])*(CV[j]-multi_vecspec[m][j]);
 
 	//if(false) std::cout<<"BinTest: "<<i<<" "<<j<<" universe: "<<m<<" @ "<<var<<" total: "<<num_universes_per_variation.at(m)<<" which_matrix "<<which_matrix<<std::endl;
 
