@@ -29,8 +29,9 @@ int SBNcls::CalcCLS(int numMC, std::string tag){
 
 	//step one, find median h1 
 	TH1D h1_pdf;
-	if(which_sample == 0) h1_pdf = chi.SamplePoissonVaryInput(h1, numMC);
-	else if(which_sample ==1) h1_pdf = chi.SampleCovarianceVaryInput(h1, numMC);
+	if(which_sample == 0) h1_pdf = chi.SamplePoissonVaryInput(h1, numMC);                                                          
+        else if(which_sample ==1) h1_pdf = chi.SampleCovarianceVaryInput(h1, numMC);                   
+
 	
 	double sig1 = 0.5-(0.6827)/2.0;
 	double sig2 = 0.5-(0.9545)/2.0;

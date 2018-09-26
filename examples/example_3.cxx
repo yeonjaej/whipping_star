@@ -83,6 +83,10 @@ int main(int argc, char* argv[])
     }
 
   std::string tag = "EXAMPLE3";
+ 
+  
+  tag = "DUNE";
+  if(tag=="EXAMPLE3"){
 
   SBNspec sig("EXAMPLE1.SBNspec.root",xml);
   sig.Scale("leesignal",1.5);
@@ -101,6 +105,36 @@ int main(int argc, char* argv[])
   if(sample_from_covariance) cls_factory.SetSampleCovariance();
 
   cls_factory.CalcCLS(num_MC_events, tag);
+  }
 
+
+  else if(tag=="DUNE"){
+
+    std::string path = "/sdcc/u/yj2429/whipping_star";
+
+  SBNspec sig("/sdcc/u/yj2429/whipping_star/NO_DCP_0.000_T23_44.000_T14_7.026_T24_9.908_T34_0.000_D14_0.000000.SBNspec.root",xml);
+  //sig.Scale("leesignal",1.5);
+
+  SBNspec bkg("/sdcc/u/yj2429/whipping_star/NO_DCP_0.000_T23_44.000.SBNspec.root",xml);
+  //SBNspec bkg("/sdcc/u/yj2429/whipping_star/three_neutrino.SBNspec.root",xml);
+  //bkg.Scale("leesignal",0.0);
+
+  // Stats + sys
+  TFile * fsys = new TFile("/sdcc/u/yj2429/whipping_star/covariance_matrices_xcheck_1408x1408.root","read");
+  //TMatrixD * cov = (TMatrixD*)fsys->Get("frac_covariance_EXAMPLE1");
+  TMatrixT<double> * cov = (TMatrixT<double>*)fsys->Get("TMatrixT<double>;1");
+
+  SBNchi *chi = new SBNchi(bkg,*cov);
+  SBNchi *chi_statonly = new SBNchi(bkg);
+
+  SBNcls cls_factory(&sig, &bkg, *cov);
+  if(sample_from_covariance) cls_factory.SetSampleCovariance();
+
+  cls_factory.CalcCLS(num_MC_events, tag);
+  }
+
+
+
+  
   return 0;
 }

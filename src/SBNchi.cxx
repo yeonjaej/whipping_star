@@ -321,7 +321,6 @@ double SBNchi::CalcChi(double* sigVec){
             tchi += (core_spectrum.collapsed_vector[i]-(sigVec)[i])*vec_matrix_inverted[i][j]*(core_spectrum.collapsed_vector[j]-(sigVec)[j] );
         }
     }
-
     //last_calculated_chi = tchi;
     return tchi;
 }
@@ -928,37 +927,32 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC){
 
 TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<double> * chival){
     if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
-
+ 
     double** a_vec_matrix_lower_triangular = new double*[num_bins_total];
     double** a_vec_matrix_inverted = new double*[num_bins_total_compressed];
-
+    bool debug = true;
+    if (debug) std::cout << "num_bins_total : " << num_bins_total << " , num_bins_total_compressed : " << num_bins_total_compressed << std::endl; 
     for(int i=0; i < num_bins_total; i++){
         a_vec_matrix_lower_triangular[i] = new double[num_bins_total];
     }
-
     for(int i=0; i < num_bins_total_compressed; i++){
         a_vec_matrix_inverted[i] = new double[num_bins_total_compressed];
     }
-
     for(int i=0; i < num_bins_total; i++){
         for(int j=0; j < num_bins_total; j++){
             a_vec_matrix_lower_triangular[i][j] = vec_matrix_lower_triangular[i][j]; 
         }
     }
-
     for(int i=0; i< num_bins_total_compressed; i++){
         for(int j=0; j< num_bins_total_compressed; j++){
             a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
         }
     }
-
     double *a_specin = new double[num_bins_total];
     double *a_corein = new double[num_bins_total_compressed];
-
     for(int i=0; i< num_bins_total; i++){
         a_specin[i] = specin->full_vector[i];
     }
-
     for(int i=0; i< num_bins_total_compressed; i++) {
         a_corein[i] = core_spectrum.collapsed_vector[i];
     }
@@ -969,9 +963,9 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
     ans.GetXaxis()->SetCanExtend(kTRUE);
     is_verbose = false;
 
-    std::vector<double> vec_chis (num_MC, 0.0);
-
-    double* a_vec_chis  = vec_chis.data();
+    //   std::vector<double> vec_chis (num_MC, 0.0);
+    double * a_vec_chis = new double [num_MC];
+    //double* a_vec_chis  = vec_chis.data();
     double* a_chival = chival->data();
     int num_chival = chival->size();
 
@@ -987,122 +981,127 @@ TH1D SBNchi::SampleCovarianceVaryInput(SBNspec *specin, int num_MC, std::vector<
     double sampled_fullvector[54];
     double collapsed[38];
 
+    //double * gaus_sample = new double [num_bins_total];
+    //double * sampled_fullvector = new double [num_bins_total];
+    //double * collapsed = new double [num_bins_total_compressed];
+
 
 #ifdef USE_GPU
-    unsigned long long seed[num_MC];
+    int num_seed = 1;
+    unsigned long long seed[1]; //want to give 1seed/gang , 1seq/thread
     unsigned long long seq = 0ULL;
     unsigned long long offset = 0ULL;
     curandState_t state;
 
-    for(int i=0; i<num_MC; ++i) {
+    //for(int i=0; i<num_MC; ++i) {
+    for(int i=0; i<num_seed; ++i){
         seed[i] = (int)rangen->Uniform(1e8);
     }
+    
+    unsigned long long single_seed = seed[0];
+
 #endif
 
-    //   #pragma acc parallel loop num_gangs(20000) private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38],state) 
+
 #ifdef USE_GPU
-#pragma acc parallel loop private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38],state) \
+
+    std::cout << "Calling the very outer loop of VaryInput" << std::endl; 
+
+#pragma acc parallel loop gang vector firstprivate(single_seed) private(gaus_sample[:54],sampled_fullvector[:54],collapsed[:38], state) \
     copyin(this[0:1],							\
+  seed[:num_MC], \
             a_specin[:num_bins_total],					\
             a_vec_matrix_lower_triangular[:num_bins_total][:num_bins_total],\ 
             a_corein[:num_bins_total_compressed],				\
-            a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed],	\
-            seed[0:num_MC],						\
+            a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed],	\   
             a_chival[:num_chival],						\
             this->a_num_bins[:num_channels],				\
             this->a_num_subchannels[:num_channels])			\    
         copyout(a_vec_chis[:num_MC]) \
         copy(nlower[:num_chival])
 #endif
-<<<<<<< HEAD
-    
-    for(int i=0; i < num_MC;i++){
-      //
-=======
 
         for(int i=0; i < num_MC;i++){
 
->>>>>>> 8d250ab34bc1fe06ed09343cc0267569a16b2a27
-#ifdef USE_GPU
-            unsigned long long seed_sd = seed[i];
-            curand_init(seed_sd, seq, offset, &state);
+	  //	  single_seed = sigle_seed+i;
+	  
 
-            for(int a=0; a<num_bins_total; a++) {
-                gaus_sample[a]= curand_normal(&state);
+#ifdef USE_GPU
+	  
+	  //single_seed = seed[i];
+	  single_seed = single_seed+i;
+//	  unsigned long long seed_sd = seed[gang_idx];
+//#pragma acc loop seq private(seq)
+	  //curandState_t state;
+	  curand_init(single_seed, seq, offset, &state);//maybe take this outside the loop?? 
+	  
+
+	  
+#pragma acc loop seq //private(seq)            
+	  for(int a=0; a<num_bins_total; a++) {
+	    //seq = seq + a ;//could be random enough
+	  //    curandState_t state;
+	  //   curand_init(single_seed, seq, a, &state);//maybe take this outside the loop?? 
+              gaus_sample[a]= curand_normal(&state);
             }
 #else
-<<<<<<< HEAD
-      for(int a=0; a<num_bins_total; a++) {
-	gaus_sample[a]= (double)rangen->Gaus(0,1);
-      } 
-
-#endif
-      
-      for(int j = 0; j < num_bins_total; j++){
-	sampled_fullvector[j] = a_specin[j];
-	for(int k = 0; k < num_bins_total; k++){
-	  sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
-	}
-	if(sampled_fullvector[j]<0) sampled_fullvector[j]=0.0;
-      }
-	
-      this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
-	
-      a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
-
-     //Just to get some pvalues that were asked for.
-     for(int j=0; j< num_chival; j++){
-    #pragma acc atomic update
-        if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
-     }
-=======
             for(int a=0; a<num_bins_total; a++) {
                 gaus_sample[a]= (double)rangen->Gaus(0,1);
             }      
 #endif
-
+	    #pragma acc loop seq
             for(int j = 0; j < num_bins_total; j++){
-                sampled_fullvector[j] = a_specin[j];
+	      sampled_fullvector[j] = a_specin[j];//compiler is not sure if we are shareing memory
+	      #pragma acc loop seq
                 for(int k = 0; k < num_bins_total; k++){
-                    sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+		  // sampled_fullvector[j] += a_vec_matrix_lower_triangular[j][k] * gaus_sample[k];
+                  sampled_fullvector[j] += 1.0 * gaus_sample[k];
                 }
+
                 if(sampled_fullvector[j]<0) sampled_fullvector[j]=0.0;
             }
 
->>>>>>> 8d250ab34bc1fe06ed09343cc0267569a16b2a27
 
             this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
-
             a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
 
             //Just to get some pvalues that were asked for.
+#pragma acc loop seq
             for(int j=0; j< num_chival; j++){
 #pragma acc atomic update
                 if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
             }
-
-
         }
+
+    std::cout << "Escaping the very outer loop" << std::endl; 
 
 
     is_verbose = true;
 
 
     for(int i=0; i<num_MC; i++){
-        if (i<(int)1e3) 
+      if (i<(int)10){
+	//std::cout << "what's going on" << std::endl;  
             std::cout << "@i=" << a_vec_chis[i] << std::endl;
-        ans.Fill(a_vec_chis[i]);
+      }        
+      //std::cout << "crashing point 1" << std::endl;
+      ans.Fill(a_vec_chis[i]);
+      //std::cout << "crashing point 2" << std::endl;
+
     }
 
     for(int n =0; n< num_chival; n++){
         chival->at(n) = nlower[n]/(double)num_MC;
     }
+//std::cout << "crashing point 3" << std::endl;
 
 
-
+    delete[] a_vec_chis;
     delete[] a_corein;
     delete[] a_specin;
     delete[] nlower;
+
+//std::cout << "crashing point 4" << std::endl;
 
     for(int i=0; i < num_bins_total; i++){
         delete[] a_vec_matrix_lower_triangular[i];
@@ -1151,42 +1150,46 @@ int SBNchi::CollapseVectorStandAlone(std::vector<double> * full_vector, std::vec
 }
 
 int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vector){
+  // This function has a bug!! //
+  //std::cout << "num_modes : " << num_modes << " , num_detectors : " << num_detectors << std::endl;  
+  //std::cout << "num_bins_detector_block : " << num_bins_detector_block << " , num_bins_mode_block : " << num_bins_mode_block << std::endl;  
+  int collapsed_index = 0.;
+  for(int im = 0; im < num_modes; im++){//num modes ~ 2
+    for(int id =0; id < num_detectors; id++){// num det ~ a few
+      int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
+      //int out_edge = edge;
+      //int out_edge =0;
+      //      int chan = 0;
+      for(int ic = 0; ic < num_channels; ic++){ // num_channels ~ a few
+	int corner=edge;
 
-    //int tmp_num_bins[3] = {25,25,6};
-    //int tmp_num_subchannels[3] = {2,1,1};
+	for(int j=0; j< this->a_num_bins[ic]; j++){ // a few dozens
+	  //for(int j=0; j< tmp_num_bins[ic]; j++){
 
-    for(int im = 0; im < num_modes; im++){
-        for(int id =0; id < num_detectors; id++){
-            int edge = id*num_bins_detector_block + num_bins_mode_block*im; // This is the starting index for this detector
-            int out_edge = edge;
-            int chan = 0;
-            for(int ic = 0; ic < num_channels; ic++){
-                int corner=edge;
+	  double tempval=0.;
 
-                for(int j=0; j< this->a_num_bins[ic]; j++){
-                    //for(int j=0; j< tmp_num_bins[ic]; j++){
+	  for(int sc = 0; sc < this->a_num_subchannels[ic]; sc++){ // 1~10
+	    //for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
+	    tempval += full_vector[j+sc*this->a_num_bins[ic]+corner];
+	    //tempval += full_vector[j+sc*tmp_num_bins[ic]+corner];
+	    edge +=1;	//when your done with a channel, add on every bin you just summed
 
-                    double tempval=0;
-
-                    for(int sc = 0; sc < this->a_num_subchannels[ic]; sc++){
-                        //for(int sc = 0; sc < tmp_num_subchannels[ic]; sc++){
-                        tempval += full_vector[j+sc*this->a_num_bins[ic]+corner];
-                        //tempval += full_vector[j+sc*tmp_num_bins[ic]+corner];
-                        edge +=1;	//when your done with a channel, add on every bin you just summed
-                    }
-                    //we can size this vector beforehand and get rid of all push_back()
-
-                    int collapsed_index = chan+out_edge;
-                    collapsed_vector[collapsed_index] = tempval;
-                    chan++;
-                    }
-                }
-                }
-            }
+	    //	    std::cout << "edge : "<<edge << " , tempval : "<< tempval << " , id : " <<id << " , ic : "<<ic << std::endl;  
+	  }
+	  //we can size this vector beforehand and get rid of all push_back()
 
 
-            return 0;
-        }
+	  //  int collapsed_index = chan+out_edge;
+
+	  // std::cout << " collapsed index : " << collapsed_index << std::endl; 
+	  collapsed_vector[collapsed_index] = tempval;
+	  collapsed_index++;
+	}
+      }
+    }
+  }
+  return 0;
+}
 
 
         SBNspec SBNchi::SampleCovariance(SBNspec *specin){
@@ -1235,40 +1238,254 @@ int SBNchi::CollapseVectorStandAlone(double* full_vector, double *collapsed_vect
             std::vector<double>  tmp = {10};
             return SamplePoissonVaryInput(specin,num_MC,&tmp);
         }
-        //This one varies the input comparative spectrum, and as sucn has  only to calculate the matrix_systematics once
-        TH1D SBNchi::SamplePoissonVaryInput(SBNspec *specin, int num_MC, std::vector<double> *chival){
-            std::vector<int> nlower(chival->size(),0);
 
-            TRandom3 *rangen = new TRandom3(0);
+TH1D SBNchi::SamplePoissonVaryInput(SBNspec *specin, int num_MC, std::vector<double> *chival){
 
-            TH1D ans("","",150,0,150);
-            //So save the core one that we will sample for
-            ans.GetXaxis()->SetCanExtend(kTRUE);
-            is_verbose = false;
-            for(int i=0; i < num_MC;i++){
-                SBNspec tmp = *specin;
-                tmp.ScalePoisson(rangen);
-                tmp.CollapseVector(); //this line important isnt it!
-                //tmp.PrintFullVector();
+  int num_chival = chival->size();
+  int * nlower = new int [num_chival]; 
+  for (int i = 0; i < num_chival; i++){
+    nlower[i] = 0;
+  }
 
-                double thischi = this->CalcChi(&tmp);
-                ans.Fill(thischi);
+  TRandom3 *rangen = new TRandom3(0);
+  TH1D ans("","",150,0,150);
+  ans.GetXaxis()->SetCanExtend(kTRUE);
+  is_verbose = false;
 
-                for(int j=0; j< chival->size(); j++){
-                    if(thischi>=chival->at(j)) nlower.at(j)++;
-                }
+  double * a_specin = new double [num_bins_total]; 
+  double sampled_fullvector[1408];
+  
+  for(int i=0; i<num_bins_total; i++){
+    a_specin[i] = specin->full_vector[i];
+  }
+  double * a_vec_chis = new double [num_MC];
+  double * a_chival = (double*)chival->data();
 
-                if(i%1000==0) std::cout<<"SBNchi::SamplePoissonVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<thischi<<std::endl;
-            }
-            for(int n =0; n< nlower.size(); n++){
-                chival->at(n) = nlower.at(n)/(double)num_MC;
-            }
+  double** a_vec_matrix_inverted = new double*[num_bins_total_compressed];
+  for(int i=0; i < num_bins_total_compressed; i++){
+    a_vec_matrix_inverted[i] = new double[num_bins_total_compressed];
+  }
+  for(int i=0; i< num_bins_total_compressed; i++){
+    for(int j=0; j< num_bins_total_compressed; j++){
+      a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
+    }
+  }
 
-            is_verbose = true;
-            return ans;
+  double *a_corein = new double[num_bins_total_compressed];
+  for(int i=0; i< num_bins_total_compressed; i++) {
+    a_corein[i] = core_spectrum.collapsed_vector[i];
+  }
+
+  double collapsed[176];
+
+#ifdef USE_GPU
+
+  unsigned long long seq = 0ULL;
+  unsigned long long offset = 0ULL;
+  curandState_t state;
+
+  unsigned long long single_seed = (int)rangen->Uniform(1e8);
+
+  int seed[num_MC];///////////
+    //for(int i=0; i<num_MC; ++i) {
+  for(int i=0; i<num_seed; ++i){
+        seed[i] = (int)rangen->Uniform(1e8);
+  }
 
 
-        }
+  std::cout << "Calling the very outer loop of VaryInput" << std::endl; 
+
+#pragma acc parallel loop gang vector firstprivate(single_seed) private(sampled_fullvector[:1408],collapsed[:176], state) \
+  copyin(this[0:1],							\
+  a_specin[:num_bins_total],						\
+  a_corein[:num_bins_total_compressed],				\
+    a_vec_matrix_inverted[:num_bins_total_compressed][:num_bins_total_compressed],	\   
+    a_chival[:num_chival],						\
+    this->a_num_bins[:num_channels],				\
+    this->a_num_subchannels[:num_channels])			\    
+    copyout(a_vec_chis[:num_MC]) \
+    copy(nlower[:num_chival])
+#endif
+
+  for(int i=0; i < num_MC;i++){
+#ifdef USE_GPU
+
+	  
+    single_seed = single_seed+i;
+    //curand_init(single_seed, seq, offset, &state);//maybe take this outside the loop?? 
+    curand_init(seed[i],seq,offset,&state);
+    for(int j =0; j < num_bins_total; j++){ 
+      //sampled_fullvector[j] = curand_poisson(&state, a_specin[j]);
+      sampled_fullvector[j] += 0.1*sampled_fullvector[j]*curand_normal(&state);
+    }
+#else
+    for(int j =0; j < num_bins_total; j++){ 
+      sampled_fullvector[j] = rangen->Poisson(a_specin[j]);
+    }
+#endif  
+    this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+
+    a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
+    
+    for(int j=0; j< num_chival; j++){
+#pragma acc atomic update
+      if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
+    }
+    //delete this;
+    //if(i%1000==0) std::cout<<"SBNchi::SamplePoissonVaryInput(SBNspec*, int) on MC :"<<i<<"/"<<num_MC<<". Ans: "<<a_vec_chis[i]<<std::endl;
+  }
+
+  for(int i=0; i<num_MC; i++){
+    if (i<(int)1e2) 
+      std::cout << "@i=" << a_vec_chis[i] << std::endl;
+    ans.Fill(a_vec_chis[i]);
+  }
+  for(int n =0; n< num_chival; n++){
+    chival->at(n) = nlower[n]/(double)num_MC;
+  }
+
+  is_verbose = true;
+
+
+  
+    delete[] a_corein;
+    delete[] a_specin;
+    delete[] nlower;
+//std::cout << "crashing point 4" << std::endl;
+
+    for(int i=0; i < num_bins_total_compressed; i++){
+        delete[] a_vec_matrix_inverted[i];  
+    }
+
+
+    delete[] a_vec_matrix_inverted;
+
+
+
+  return ans;
+
+
+}
+
+
+//This one varies the input comparative spectrum, and as sucn has  only to calculate the matrix_systematics once
+
+/*
+TH1D SBNchi::SamplePoissonVaryInput(SBNspec *specin, int num_MC, std::vector<double> *chival){
+  //
+  double** a_vec_matrix_inverted = new double*[num_bins_total_compressed];
+  bool debug = true;
+  if (debug) std::cout << "num_bins_total : " << num_bins_total << " , num_bins_total_compressed : " << num_bins_total_compressed << std::endl; 
+  for(int i=0; i < num_bins_total_compressed; i++){
+    a_vec_matrix_inverted[i] = new double[num_bins_total_compressed];
+  }
+  for(int i=0; i< num_bins_total_compressed; i++){
+    for(int j=0; j< num_bins_total_compressed; j++){
+      a_vec_matrix_inverted[i][j] = vec_matrix_inverted[i][j]; 
+    }
+  }
+  double *a_specin = new double[num_bins_total];
+  double *a_corein = new double[num_bins_total_compressed];
+  for(int i=0; i< num_bins_total; i++){
+    a_specin[i] = specin->full_vector[i];
+  }
+  for(int i=0; i< num_bins_total_compressed; i++) {
+    a_corein[i] = core_spectrum.collapsed_vector[i];
+  }
+  TRandom3 * rangen = new TRandom3(0);
+
+  TH1D ans("","",150,0,150);
+  ans.GetXaxis()->SetCanExtend(kTRUE);
+  is_verbose = false;
+
+  double * a_vec_chis = new double [num_MC];
+  double* a_chival = chival->data();
+  int num_chival = chival->size();
+
+  int *nlower = new int[num_chival];
+  for(int i=0; i< num_chival; i++){
+    nlower[i]=0; 
+  }
+  double * sampled_fullvector = new double [num_bins_total];
+  double * collapsed = new double [num_bins_total_compressed];
+
+  //So save the core one that we will sample for
+  ans.GetXaxis()->SetCanExtend(kTRUE);
+  is_verbose = false;
+
+  for(int i=0; i < num_MC;i++){
+    for (int j=0; j < num_bins_total; ++j){
+      sampled_fullvector[j] = rangen->Poisson( a_specin[j]);
+      if(sampled_fullvector[j]<0) sampled_fullvector[j]=0.0;
+      if(j<5){
+	std::cout << j << " sampled_fullvector: "<<sampled_fullvector[j]<< " , specin: " << a_specin[j] << std::endl;
+      }
+    }
+	    
+    this->CollapseVectorStandAlone(sampled_fullvector, collapsed);
+    a_vec_chis[i] = this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed);
+    if (i == 0){
+      for(int ii=0; ii<num_bins_total_compressed ; ii++){
+	std::cout << "corein   "<< a_corein[ii] << std::endl;
+	for(int jj=0; jj < num_bins_total_compressed; jj++){
+	  std::cout << "invmat_ele   " << a_vec_matrix_inverted[ii][jj] << std::endl;
+	  }
+      }
+    }
+
+    std::cout << "calcchi : " << this->CalcChi(a_vec_matrix_inverted, a_corein, collapsed)<<std::endl;
+
+    for(int j=0; j< num_chival; j++){
+	
+      if(a_vec_chis[i]>=a_chival[j]) nlower[j]++;
+    }
+  }
+
+  std::cout << "Escaping the very outer loop" << std::endl;
+
+
+  is_verbose = true;
+  for(int i=0; i<num_MC; i++){
+    if (i<(int)10){
+      std::cout << "what's going on" << std::endl;
+      std::cout << "@i=" << a_vec_chis[i] << std::endl;
+    }
+    std::cout << "crashing point 1" << std::endl;
+
+    ans.Fill(a_vec_chis[i]);
+
+    std::cout << "crashing point 2" << std::endl;
+
+  }
+
+  for(int n =0; n< num_chival; n++){
+    chival->at(n) = nlower[n]/(double)num_MC;
+  }
+
+  std::cout << "crashing point 3" << std::endl;
+
+  delete[] a_vec_chis;
+  delete[] a_corein;
+  delete[] a_specin;
+  delete[] nlower;
+  std::cout << "crashing point 4" << std::endl;
+
+  for(int i=0; i < num_bins_total_compressed; i++){
+    delete[] a_vec_matrix_inverted[i];
+  }
+
+
+  delete[] a_vec_matrix_inverted;
+  std::cout << "crashing point 5" << std::endl;
+
+  return ans;
+
+
+
+
+
+
+}*/
         /*
            std::vector<double> SBNchi::SampleCovarianceVaryInput_getpval(SBNspec *specin, int num_MC, std::vector<double> chival){
            if(!cholosky_performed) this->PerformCholoskyDecomposition(specin); 
